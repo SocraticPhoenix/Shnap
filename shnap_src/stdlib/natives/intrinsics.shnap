@@ -1,0 +1,41 @@
+error = @(name,message,cause=null,parents=null){
+
+    if parents == null {
+        parents = ["shnap.Error"]
+    } else {
+        parents.append("shnap.Error")
+    }
+
+    asString = ${
+        return: name + ": " + message + if (cause != null) {", caused by:\n" + cause} else {"\n"}
+    }
+
+    is = $ (type) {
+        if type == name {
+            return: true
+        }
+
+        if type.parents != void {
+            other = type.parents
+            if other.iterator != void || (other.hasNext != void && other.next != void) {
+                for otherType : other {
+                    if parents.contains(otherType) {
+                        return: true
+                    }
+                }
+                return: false
+            }
+        }
+
+        return: parents.contains(type)
+    }
+
+    isError = true
+
+}
+
+ioError = $ (message,cause=null) return: error("shnap.IOError", message, cause)
+fileNotFoundError = $ (message,cause=null) return: error("shnap.FileNotFoundError", message, cause, ["shnap.IOError"])
+typeError = $ (message,cause=null) return: error("shnap.TypeError", message, cause)
+returnTypeError = $ (message,cause=null) return: error("shnap.ReturnTypeError", message, cause, ["shnap.TypeError"])
+accessError = $ (message,cause=null) return: error("shnap.AccessError", message, cause)

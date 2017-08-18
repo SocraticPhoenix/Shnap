@@ -1,0 +1,35 @@
+range = @(x,y=null,step=null,inclusive=false){
+    cls defMin = 0
+    cls defStep = 1
+
+    if y != null {
+        ^max = y
+        ^min = x
+    } else {
+        ^max = x
+        ^min = defMin
+    }
+
+    if step != null {
+        ^step = step
+    } else {
+        ^step = defStep
+    }
+
+    state = min
+
+    hasNext = ${
+        return: if (inclusive) state <= max else state < max
+    }
+
+    next = ${
+        ret = state
+        state += step
+        return: ret
+    }
+
+}
+
+for range(1000, step=50, inclusive=true) {
+    print(it)
+}

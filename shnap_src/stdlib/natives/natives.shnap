@@ -1,0 +1,17 @@
+import = native::sys.import
+importFrom = native::sys.importFrom
+get = native::sys.get
+set = native::sys.set
+del = native::sys.del
+fields = native::sys.fields
+
+num = native::type.num
+str = native::type.str
+bool = native::type.bool
+array = native::type.array
+newArray = native::type.newArray
+
+print = native::sys.print
+printErr = native::sys.printErr
+println = $ arg="" print(arg + "\n")
+printlnErr = $ arg="" printErr(arg + "\n")

@@ -1,0 +1,67 @@
+range_internal_exclusive = @(x,y=null,step=null) {
+
+    if (y != null) {
+        ^max = y
+        ^min = x
+    } else {
+        ^max = x
+        ^min = 0
+    }
+
+    if (step != null) {
+        ^step = step
+    } else {
+        ^step = 1
+    }
+
+    state = min
+
+    hasNext = ${
+        return: state < max
+    }
+
+    next = ${
+        ret = state
+        state += step
+        return: ret
+    }
+
+}
+
+range_internal_inclusive = @(x,y=null,step=null){
+
+    if (y != null) {
+        ^max = y
+        ^min = x
+    } else {
+        ^max = x
+        ^min = 0
+    }
+
+    if (step != null) {
+        ^step = step
+    } else {
+        ^step = 1
+    }
+
+    state = min
+
+    hasNext = ${
+        return: state <= max
+    }
+
+    next = ${
+        ret = state
+        state += step
+        return: ret
+    }
+
+}
+
+range = $(x,y=null,step=null,inclusive=false) {
+    if (inclusive) {
+        return: range_internal_inclusive(x,y,step)
+    } else {
+        return: range_internal_exclusive(x,y,step)
+    }
+}

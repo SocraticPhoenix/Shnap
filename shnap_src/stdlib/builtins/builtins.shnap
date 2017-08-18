@@ -1,0 +1,13 @@
+linkedList = importFrom("linked_list", "list")
+range = importFrom("range", "range")
+iterableStr = $ arr {
+    state = "["
+    iter = arr.iterator()
+    for iter {
+        state += it
+        if iter.hasNext() {
+            state += ", "
+        }
+    }
+    return: state + "]"
+}

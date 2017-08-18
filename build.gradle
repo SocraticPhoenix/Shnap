@@ -1,0 +1,89 @@
+//Plugins
+plugins {
+    id "net.ltgt.apt" version "0.10"
+    id "com.github.johnrengelman.shadow" version "2.0.1"
+}
+
+apply plugin : 'java'
+apply plugin : 'maven'
+apply plugin : 'idea'
+//End Plugins
+
+//Program Specific Variables
+def programVersion = "0.0.0"
+def programGroup = ""
+//End Variables
+
+//Gradle Variables
+group = "$programGroup"
+version = "$programVersion"
+sourceCompatibility = 1.8
+//End Gradle Variables
+
+configurations {
+    library
+    compile.extendsFrom library
+    runtime.extendsFrom library
+}
+
+//Repositories and Dependencies
+repositories {
+    mavenCentral()
+
+    maven {
+        name "jitpack.io"
+        url "https://jitpack.io"
+    }
+}
+
+dependencies {
+    library "org.ow2.asm:asm-debug-all:5.2"
+    library "com.github.PlutoPowered:Occurence:master-SNAPSHOT"
+    library "com.github.PlutoPowered:PIO:master-SNAPSHOT"
+    library "com.github.PlutoPowered:Parse:master-SNAPSHOT"
+    library "com.github.PlutoPowered:Collect:master-SNAPSHOT"
+    library "com.github.PlutoPowered:Conventional:master-SNAPSHOT"
+    library "com.github.PlutoPowered:Mirror:master-SNAPSHOT"
+}
+//End Repositories and Dependencies
+
+//Tasks
+task sourceJar(type: Jar) {
+    classifier = "source"
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc){
+    classifier = "javadoc"
+    from javadoc.destinationDir
+}
+
+javadoc {
+    destinationDir = file("docs")
+}
+
+shadowJar {
+    classifier = "shadow"
+    relocate "com.gmail.socraticphoenix.shnap", "com.gmail.socraticphoenix.shnap"
+    relocate "com.gmail.socraticphoenix", "com.gmail.socraticphoenix.shnap.internal.com.gmail.socraticphoenix"
+    relocate "org.nevec.rjm", "com.gmail.socraticphoenix.shnap.internal.org.nevec.rjm"
+}
+//End Tasks
+
+//Configurations
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+//End configurations
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
