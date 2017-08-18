@@ -1,4 +1,4 @@
-fibonacci = @ seedOne=0,seedTwo=1 {
+fib = @ seedOne=0,seedTwo=1 {
     currentVal = seedOne
     nextVal = seedTwo
 

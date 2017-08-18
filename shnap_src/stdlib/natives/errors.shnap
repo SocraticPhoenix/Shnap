@@ -34,8 +34,12 @@ error = @(name,message,cause=null,parents=null){
 
 }
 
-ioError = $ (message,cause=null) return: error("shnap.IOError", message, cause)
-fileNotFoundError = $ (message,cause=null) return: error("shnap.FileNotFoundError", message, cause, ["shnap.IOError"])
-typeError = $ (message,cause=null) return: error("shnap.TypeError", message, cause)
-returnTypeError = $ (message,cause=null) return: error("shnap.ReturnTypeError", message, cause, ["shnap.TypeError"])
-accessError = $ (message,cause=null) return: error("shnap.AccessError", message, cause)
+errorCls = $ (name,parents=null) return: $ (message,cause=null) return: error(name,message,cause,parents)
+noimport errorCls
+
+ioError = errorCls("shnap.IOError")
+fileNotFoundError = errorCls("shnap.FileNotFoundError", ["shnap.IOError"])
+typeError = errorCls("shnap.TypeError")
+returnTypeError = errorCls("shnap.ReturnTypeError", ["shnap.TypeError"])
+accessError = errorCls("shnap.AcessError")
+interruptedError = errorCls("shnap.InterruptedError")

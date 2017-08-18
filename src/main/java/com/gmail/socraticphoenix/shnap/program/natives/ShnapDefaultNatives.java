@@ -35,6 +35,7 @@ import java.util.Collection;
 
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.func;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.inst;
+import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.mimicJavaException;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.noArg;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.oneArg;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.param;
@@ -42,6 +43,21 @@ import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.param;
 public class ShnapDefaultNatives {
 
     public static void registerDefaults() {
+        ShnapNativeFuncRegistry.register("sys.sleep", oneArg(inst((ctx, trc) -> {
+            long order = -2;
+            ShnapObject orderObj = ctx.get("arg");
+            if (orderObj instanceof ShnapNumberNative) {
+                order = ((ShnapNumberNative) orderObj).getNumber().longValue();
+            }
+            if(order != -2) {
+                try {
+                    Thread.sleep(order);
+                } catch (InterruptedException e) {
+                    return ShnapExecution.throwing(mimicJavaException("shnap.InterruptedError", "sleep was interrupted", e), trc, ShnapLoc.BUILTIN);
+                }
+            }
+            return ShnapExecution.normal(ShnapObject.getVoid(), trc, ShnapLoc.BUILTIN);
+        })));
         ShnapNativeFuncRegistry.register("sys.args", noArg(inst((ctx, trc) -> ShnapExecution.normal(trc.getArguments(), trc, ShnapLoc.BUILTIN))));
         ShnapNativeFuncRegistry.register("sys.importFrom", func(
                 Items.buildList(param("module"), param("field")),

@@ -1,6 +1,6 @@
 range = @(x,y=null,step=null,inclusive=false){
-    cls defMin = 0
-    cls defStep = 1
+    static defMin = 0
+    static defStep = 1
 
     if y != null {
         ^max = y
@@ -18,11 +18,11 @@ range = @(x,y=null,step=null,inclusive=false){
 
     state = min
 
-    hasNext = ${
+    hasNext = $ {
         return: if (inclusive) state <= max else state < max
     }
 
-    next = ${
+    next = $ {
         ret = state
         state += step
         return: ret

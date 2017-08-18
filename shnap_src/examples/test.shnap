@@ -1,5 +1,4 @@
-math = import("math")
-
-println(math.abs)
-println(math.abs(-432))
-println(math.abs(22))
+for import("math").fib() {
+    println(it)
+    sleep(100)
+}

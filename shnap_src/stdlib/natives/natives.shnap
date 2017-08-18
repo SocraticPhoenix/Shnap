@@ -6,6 +6,7 @@ paramCount = native::sys.paramCount
 reqParamCount = native::sys.reqParamCount
 defParamCount = native::sys.defParamCount
 
+sleep = native::sys.sleep
 
 get = native::sys.get
 set = native::sys.set
