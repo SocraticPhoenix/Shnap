@@ -1,4 +1,1 @@
-for import("math").fib() {
-    println(it)
-    sleep(100)
-}
+println(iterableStr(importFrom("sys", "args")))

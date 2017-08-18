@@ -58,6 +58,7 @@ public class ArgumentParser {
         for (ArgDef arg : flags.values()) {
             builder.append("    -").append(arg.getName()).append(": ").append(arg.getHelp()).append(System.lineSeparator());
         }
+        builder.append("    -startScriptArgs: forces the remaining arguments to be used for the script, rather than the interpreter").append(System.lineSeparator());
         return builder.toString();
     }
 
@@ -89,6 +90,11 @@ public class ArgumentParser {
                 String[] pieces = next.split("=", 2);
                 String name = pieces[0];
                 String value = pieces.length > 1 ? pieces[1] : "";
+
+                if(name.equals("startScriptArgs")) {
+                    i++;
+                    break;
+                }
 
                 if(this.flags.containsKey(name) && !resFlags.containsKey(name)) {
                     String ver = this.flags.get(name).getVerify().apply(value);
