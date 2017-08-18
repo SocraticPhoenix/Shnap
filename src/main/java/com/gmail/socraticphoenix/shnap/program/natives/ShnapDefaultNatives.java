@@ -45,9 +45,11 @@ public class ShnapDefaultNatives {
     public static void registerDefaults() {
         ShnapNativeFuncRegistry.register("sys.sleep", oneArg(inst((ctx, trc) -> {
             long order = -2;
-            ShnapObject orderObj = ctx.get("arg");
-            if (orderObj instanceof ShnapNumberNative) {
-                order = ((ShnapNumberNative) orderObj).getNumber().longValue();
+            ShnapExecution num = ctx.get("arg").asNum(trc);
+            if(num.isAbnormal()) {
+                return num;
+            } else {
+                order = ((ShnapNumberNative) num.getValue()).getNumber().longValue();
             }
             if(order != -2) {
                 try {
@@ -242,9 +244,11 @@ public class ShnapDefaultNatives {
 
         ShnapNativeFuncRegistry.register("type.newArray", oneArg(inst((ctx, trc) -> {
             int order = -1;
-            ShnapObject orderObj = ctx.get("arg");
-            if (orderObj instanceof ShnapNumberNative) {
-                order = ((ShnapNumberNative) orderObj).getNumber().intValue();
+            ShnapExecution num = ctx.get("arg").asNum(trc);
+            if(num.isAbnormal()) {
+                return num;
+            } else {
+                order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
             }
 
             if (order < 0) {

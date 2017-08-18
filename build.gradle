@@ -70,9 +70,6 @@ jar {
 
 shadowJar {
     classifier = "shadow"
-    relocate "com.gmail.socraticphoenix.shnap", "com.gmail.socraticphoenix.shnap"
-    relocate "com.gmail.socraticphoenix", "com.gmail.socraticphoenix.shnap.internal.com.gmail.socraticphoenix"
-    relocate "org.nevec.rjm", "com.gmail.socraticphoenix.shnap.internal.org.nevec.rjm"
 }
 //End Tasks
 

@@ -1,8 +1,9 @@
 package org.nevec.rjm ;
 
-import java.security.* ;
-import java.util.* ;
-import java.math.* ;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.MathContext;
+import java.security.ProviderException;
 
 
 /** BigDecimal special functions.
@@ -130,7 +131,7 @@ public class BigDecimalMath
                 {
                         /* Broadhurst <a href="http://arxiv.org/abs/math/9803067">arXiv:math/9803067</a>
                         */
-                        int[] a = {1,0,0,-1,-1,-1,0,0} ; 
+                        int[] a = {1,0,0,-1,-1,-1,0,0} ;
                         BigDecimal S = broadhurstBBP(1,1,a,mc) ;
                         return multiplyRound(S,8) ;
                 }
@@ -202,7 +203,7 @@ public class BigDecimalMath
                 /* increase the local accuracy by 2 digits */
                 MathContext locmc = new MathContext(mc.getPrecision()+2,mc.getRoundingMode()) ;
 
-                /* relative accuracy requested is 10^(-precision) 
+                /* relative accuracy requested is 10^(-precision)
                 */
                 final double eps = Math.pow(10.0,-mc.getPrecision()) ;
                 for (;;)
@@ -337,7 +338,7 @@ public class BigDecimalMath
 
                 /* Truncate to the precision set by x. Absolute error = in z (square of the result) is |2*x*xerr|,
                 * where the error is 1/2 of the ulp. Two intermediate protection digits.
-                * zerr is a signed value, but used only in conjunction with err2prec(), so this feature does not harm. 
+                * zerr is a signed value, but used only in conjunction with err2prec(), so this feature does not harm.
                 */
                 double zerr = x.doubleValue()*x.ulp().doubleValue() ;
                 MathContext mc = new MathContext(  2+err2prec(z.doubleValue(),zerr) ) ;
@@ -397,7 +398,7 @@ public class BigDecimalMath
                         */
                         final double xDbl = x.doubleValue() ;
                         final double xUlpDbl = x.ulp().doubleValue() ;
-                        if ( Math.pow(xDbl,TAYLOR_NTERM) < TAYLOR_NTERM*(TAYLOR_NTERM-1.0)*(TAYLOR_NTERM-2.0)*xUlpDbl ) 
+                        if ( Math.pow(xDbl,TAYLOR_NTERM) < TAYLOR_NTERM*(TAYLOR_NTERM-1.0)*(TAYLOR_NTERM-2.0)*xUlpDbl )
                         {
                                 /* Add TAYLOR_NTERM terms of the Taylor expansion (Euler's sum formula)
                                 */
@@ -435,7 +436,7 @@ public class BigDecimalMath
                                 * to loss of accuracy.
                                 */
                                 int exSc = (int) ( 1.0-Math.log10( TAYLOR_NTERM*(TAYLOR_NTERM-1.0)*(TAYLOR_NTERM-2.0)*xUlpDbl
-                                                        /Math.pow(xDbl,TAYLOR_NTERM) ) / ( TAYLOR_NTERM-1.0) ) ; 
+                                                        /Math.pow(xDbl,TAYLOR_NTERM) ) / ( TAYLOR_NTERM-1.0) ) ;
                                 BigDecimal xby10 = x.scaleByPowerOfTen(-exSc) ;
                                 BigDecimal expxby10 = exp(xby10) ;
 
@@ -576,7 +577,7 @@ public class BigDecimalMath
                                 /* Broadhurst <a href="http://arxiv.org/abs/math/9803067">arXiv:math/9803067</a>
                                 * Error propagation: the error in log(2) is twice the error in S(2,-5,...).
                                 */
-                                int[] a = {2,-5,-2,-7,-2,-5,2,-3} ; 
+                                int[] a = {2,-5,-2,-7,-2,-5,2,-3} ;
                                 BigDecimal S = broadhurstBBP(2,1,a, new MathContext(1+mc.getPrecision()) ) ;
                                 S = S.multiply(new BigDecimal(8)) ;
                                 S = sqrt(divideRound(S,3)) ;
@@ -765,12 +766,12 @@ public class BigDecimalMath
                         BigDecimal ylogx = y.multiply(logx) ;
                         BigDecimal resul = exp(ylogx) ;
 
-                        /* The estimation of the relative error in the result is |log(x)*err(y)|+|y*err(x)/x| 
+                        /* The estimation of the relative error in the result is |log(x)*err(y)|+|y*err(x)/x|
                         */
                         double errR = Math.abs(logx.doubleValue()*y.ulp().doubleValue()/2.)
                                 + Math.abs(y.doubleValue()*x.ulp().doubleValue()/2./x.doubleValue()) ;
                         MathContext mcR = new MathContext( err2prec(1.0,errR) ) ;
-                        return resul.round(mcR) ;
+                        return resul;
                 }
         } /* BigDecimalMath.pow */
 
@@ -818,7 +819,7 @@ public class BigDecimalMath
                 */
                 if ( n.compareTo(Rational.MAX_INT) > 0 || n.compareTo(Rational.MIN_INT) < 0)
                         throw new ProviderException("Not implemented: big power "+n.toString() ) ;
-                else 
+                else
                         return powRound(x,n.intValue() ) ;
         } /* BigDecimalMath.powRound */
 
@@ -863,7 +864,7 @@ public class BigDecimalMath
                                 /* The error in x^q is q*x^(q-1)*Delta(x).
                                 * The relative error is q*Delta(x)/x, q times the relative error of x.
                                 */
-                                BigDecimal reserr = new BigDecimal( 0.5* q.abs().doubleValue() 
+                                BigDecimal reserr = new BigDecimal( 0.5* q.abs().doubleValue()
                                                                 * x.ulp().divide(x.abs(),MathContext.DECIMAL64).doubleValue() ) ;
 
                                 /* The main point in branching the cases above is that this conversion
@@ -921,7 +922,7 @@ public class BigDecimalMath
                                 * The relative error is q/x*Delta(x) + Delta(q)*log(x). Convert q to a floating point
                                 * number such that its relative error becomes negligible: Delta(q)/q << Delta(x)/x/log(x) .
                                 */
-                                int precq =  3+err2prec( (x.ulp().divide(x,MathContext.DECIMAL64)).doubleValue() 
+                                int precq =  3+err2prec( (x.ulp().divide(x,MathContext.DECIMAL64)).doubleValue()
                                                         / Math.log(x.doubleValue()) ) ;
                                 MathContext mc = new MathContext(precq) ;
 
@@ -1001,14 +1002,14 @@ public class BigDecimalMath
                                         MathContext mcTay = new MathContext( err2prec(res.doubleValue(),xUlpDbl/k) ) ;
                                         for(int i=1 ; ; i++)
                                         {
-                                                /* TBD: at which precision will 2*i or 2*i+1 overflow? 
+                                                /* TBD: at which precision will 2*i or 2*i+1 overflow?
                                                 */
                                                 ifac = ifac.multiply(new BigInteger(""+(2*i) ) ) ;
                                                 ifac = ifac.multiply( new BigInteger(""+(2*i+1)) ) ;
                                                 xpowi = xpowi.multiply(res).multiply(res).negate() ;
                                                 BigDecimal corr = xpowi.divide(new BigDecimal(ifac),mcTay) ;
                                                 resul = resul.add( corr ) ;
-                                                if ( corr.abs().doubleValue() < 0.5*xUlpDbl ) 
+                                                if ( corr.abs().doubleValue() < 0.5*xUlpDbl )
                                                         break ;
                                         }
                                         /* The error in the result is set by the error in x itself.
@@ -1087,14 +1088,14 @@ public class BigDecimalMath
                                         MathContext mcTay = new MathContext( err2prec(1.,xUlpDbl/k) ) ;
                                         for(int i=1 ; ; i++)
                                         {
-                                                /* TBD: at which precision will 2*i-1 or 2*i overflow? 
+                                                /* TBD: at which precision will 2*i-1 or 2*i overflow?
                                                 */
                                                 ifac = ifac.multiply(new BigInteger(""+(2*i-1) ) ) ;
                                                 ifac = ifac.multiply( new BigInteger(""+(2*i)) ) ;
                                                 xpowi = xpowi.multiply(res).multiply(res).negate() ;
                                                 BigDecimal corr = xpowi.divide(new BigDecimal(ifac),mcTay) ;
                                                 resul = resul.add( corr ) ;
-                                                if ( corr.abs().doubleValue() < 0.5*xUlpDbl ) 
+                                                if ( corr.abs().doubleValue() < 0.5*xUlpDbl )
                                                         break ;
                                         }
                                         /* The error in the result is governed by the error in x itself.
@@ -1163,7 +1164,7 @@ public class BigDecimalMath
                                         xpowi = multiplyRound(xpowi,xhighprSq) ;
                                         BigDecimal c = multiplyRound(xpowi,f) ;
                                         resul = resul.add(c) ;
-                                        if ( Math.abs(c.doubleValue()) < 0.1*eps) 
+                                        if ( Math.abs(c.doubleValue()) < 0.1*eps)
                                                 break;
                                 }
                                 MathContext mc = new MathContext( err2prec(resul.doubleValue(),eps) ) ;
@@ -1225,7 +1226,7 @@ public class BigDecimalMath
                                         resul = resul.add(c) ;
                                 else
                                         resul = resul.subtract(c) ;
-                                if ( Math.abs(c.doubleValue()) < 0.1*eps) 
+                                if ( Math.abs(c.doubleValue()) < 0.1*eps)
                                         break;
 
                                 fourn = fourn.shiftLeft(2) ;
@@ -1292,7 +1293,7 @@ public class BigDecimalMath
                                 resul = resul.add(c) ;
                                 /* series started 1+x/12+... which yields an estimate of the sum's error
                                 */
-                                if ( Math.abs(c.doubleValue()) < xUlpDbl/120.) 
+                                if ( Math.abs(c.doubleValue()) < xUlpDbl/120.)
                                         break;
                         }
                         /* sqrt(2*z)*(1+...)
@@ -1334,7 +1335,7 @@ public class BigDecimalMath
                                 BigDecimal c = divideRound( multiplyRound(xpowi,ifacN),
                                                                 ifacD.multiply(new BigInteger(""+(2*i+1)) ) ) ;
                                 resul = resul.add(c) ;
-                                if ( Math.abs(c.doubleValue()) < 0.1*eps) 
+                                if ( Math.abs(c.doubleValue()) < 0.1*eps)
                                         break;
                         }
                         MathContext mc = new MathContext( err2prec(resul.doubleValue(),eps) ) ;
@@ -1422,7 +1423,7 @@ public class BigDecimalMath
                                 BigDecimal c = divideRound(xpowi,2*i+1) ;
 
                                 resul = resul.add(c) ;
-                                if ( Math.abs(c.doubleValue()) < 0.1*eps) 
+                                if ( Math.abs(c.doubleValue()) < 0.1*eps)
                                         break;
                         }
                         MathContext mc = new MathContext( err2prec(resul.doubleValue(),eps) ) ;
@@ -1453,7 +1454,7 @@ public class BigDecimalMath
                                 BigDecimal c = divideRound(xpowi,2*i+1) ;
 
                                 resul = resul.add(c) ;
-                                if ( Math.abs(c.doubleValue()) < 0.1*eps) 
+                                if ( Math.abs(c.doubleValue()) < 0.1*eps)
                                         break;
                                 xpowi = multiplyRound(xpowi,xhighprSq) ;
                         }
@@ -1510,14 +1511,14 @@ public class BigDecimalMath
                                 MathContext mcTay = new MathContext( err2prec(1.,xUlpDbl/k) ) ;
                                 for(int i=1 ; ; i++)
                                 {
-                                        /* TBD: at which precision will 2*i-1 or 2*i overflow? 
+                                        /* TBD: at which precision will 2*i-1 or 2*i overflow?
                                         */
                                         ifac = ifac.multiply(new BigInteger(""+(2*i-1) ) ) ;
                                         ifac = ifac.multiply( new BigInteger(""+(2*i)) ) ;
                                         xpowi = xpowi.multiply(xhighpr).multiply(xhighpr) ;
                                         BigDecimal corr = xpowi.divide(new BigDecimal(ifac),mcTay) ;
                                         resul = resul.add( corr ) ;
-                                        if ( corr.abs().doubleValue() < 0.5*xUlpDbl ) 
+                                        if ( corr.abs().doubleValue() < 0.5*xUlpDbl )
                                                 break ;
                                 }
                                 /* The error in the result is governed by the error in x itself.
@@ -1552,7 +1553,7 @@ public class BigDecimalMath
                                 /* The error in the result is set by the error in x itself.
                                 * The first derivative of sinh(x) is cosh(x), so the absolute error
                                 * in the result is cosh(x)*errx, and the relative error is coth(x)*errx = errx/tanh(x)
-                                */ 
+                                */
                                 double eps =  Math.tanh(x.doubleValue()) ;
                                 MathContext mc = new MathContext( err2prec(0.5*x.ulp().doubleValue()/eps) ) ;
                                 return resul.round(mc) ;
@@ -1582,14 +1583,14 @@ public class BigDecimalMath
                                 MathContext mcTay = new MathContext( err2prec(x.doubleValue(),xUlpDbl/k) ) ;
                                 for(int i=1 ; ; i++)
                                 {
-                                        /* TBD: at which precision will 2*i or 2*i+1 overflow? 
+                                        /* TBD: at which precision will 2*i or 2*i+1 overflow?
                                         */
                                         ifac = ifac.multiply(new BigInteger(""+(2*i) ) ) ;
                                         ifac = ifac.multiply( new BigInteger(""+(2*i+1)) ) ;
                                         xpowi = xpowi.multiply(xhighpr).multiply(xhighpr) ;
                                         BigDecimal corr = xpowi.divide(new BigDecimal(ifac),mcTay) ;
                                         resul = resul.add( corr ) ;
-                                        if ( corr.abs().doubleValue() < 0.5*xUlpDbl ) 
+                                        if ( corr.abs().doubleValue() < 0.5*xUlpDbl )
                                                 break ;
                                 }
                                 /* The error in the result is set by the error in x itself.
@@ -1642,7 +1643,7 @@ public class BigDecimalMath
                 {
                         BigDecimal xhighpr = scalePrec(x,2) ;
 
-                        /* arcsinh(x) = log(x+hypot(1,x)) 
+                        /* arcsinh(x) = log(x+hypot(1,x))
                         */
                         BigDecimal logx = log(hypot(1,xhighpr).add(xhighpr)) ;
 
@@ -1671,7 +1672,7 @@ public class BigDecimalMath
                 {
                         BigDecimal xhighpr = scalePrec(x,2) ;
 
-                        /* arccosh(x) = log(x+sqrt(x^2-1)) 
+                        /* arccosh(x) = log(x+sqrt(x^2-1))
                         */
                         BigDecimal logx = log( sqrt(xhighpr.pow(2).subtract(BigDecimal.ONE) ) .add(xhighpr)) ;
 
@@ -1730,7 +1731,7 @@ public class BigDecimalMath
                                         /* multiplying z^n/n by zeta(n-1) means that the two relative errors add.
                                         * so the requirement in the relative error of zeta(n)-1 is that this is somewhat
                                         * smaller than the relative error in z^n/n (the absolute error of thelatter  is the
-                                        * absolute error in z) 
+                                        * absolute error in z)
                                         */
                                         BigDecimal c = divideRound(z.pow(n,mcloc),n) ;
                                         MathContext m = new MathContext( err2prec(n*z.ulp().doubleValue()/2./z.doubleValue()) ) ;
@@ -1755,14 +1756,14 @@ public class BigDecimalMath
                                                 resul = resul.add(c) ;
                                         else
                                                 resul = resul.subtract(c) ;
-        
-                                        /* alternating sum, so truncating as eps is reached suffices 
+
+                                        /* alternating sum, so truncating as eps is reached suffices
                                         */
                                         if ( Math.abs(c.doubleValue()) < eps)
                                                 break;
                                 }
                         }
-                        
+
                         /* The relative error in the result is the absolute error in the
                         * input variable times the digamma (psi) value at that point.
                         */
@@ -1983,8 +1984,8 @@ public class BigDecimalMath
                         /* Broadhurst BBP <a href="http://arxiv.org/abs/math/9803067">arXiv:math/9803067</a>
                         * Error propagation: S31 is roughly 0.087, S33 roughly 0.131
                         */
-                        int[] a31 = {1,-7,-1,10,-1,-7,1,0} ; 
-                        int[] a33 = {1,1,-1,-2,-1,1,1,0} ; 
+                        int[] a31 = {1,-7,-1,10,-1,-7,1,0} ;
+                        int[] a33 = {1,1,-1,-2,-1,1,1,0} ;
                         BigDecimal S31 = broadhurstBBP(3,1,a31,mc) ;
                         BigDecimal S33 = broadhurstBBP(3,3,a33,mc) ;
                         S31 = S31.multiply(new BigDecimal(48)) ;
@@ -1998,9 +1999,9 @@ public class BigDecimalMath
                         * 9*2048*S51/6265 = -3.28. 7*2038*S53/61651= 5.07. 738*2048*S55/61651= 0.747.
                         * The result is of the order 1.03, so we add 2 digits to S51 and S52 and one digit to S55.
                         */
-                        int[] a51 = {31,-1614,-31,-6212,-31,-1614,31,74552} ; 
-                        int[] a53 = {173,284,-173,-457,-173,284,173,-111} ; 
-                        int[] a55 = {1,0,-1,-1,-1,0,1,1} ; 
+                        int[] a51 = {31,-1614,-31,-6212,-31,-1614,31,74552} ;
+                        int[] a53 = {173,284,-173,-457,-173,284,173,-111} ;
+                        int[] a55 = {1,0,-1,-1,-1,0,1,1} ;
                         BigDecimal S51 = broadhurstBBP(5,1,a51, new MathContext(2+mc.getPrecision()) ) ;
                         BigDecimal S53 = broadhurstBBP(5,3,a53, new MathContext(2+mc.getPrecision()) ) ;
                         BigDecimal S55 = broadhurstBBP(5,5,a55, new MathContext(1+mc.getPrecision()) ) ;
@@ -2269,7 +2270,7 @@ public class BigDecimalMath
                                 resul *= xmin1*xmin1 ;
                         }
                                 /* 0.422... = 1 -gamma */
-                        return resul + 0.422784335098467139393487909917597568 
+                        return resul + 0.422784335098467139393487909917597568
                                 + 0.5/xmin1-1./(1-xmin1*xmin1)- Math.PI/( 2.*Math.tan(Math.PI*xmin1) );
                 }
         } /* psi */
@@ -2316,7 +2317,7 @@ public class BigDecimalMath
                                 tmp = tmp.divide( BigInteger.ONE.shiftLeft(pk1h) ) ;
                                 r = r.add(tmp) ;
                         }
-        
+
                         if ( Math.abs(r.doubleValue()) < eps)
                                 break;
                         MathContext mcloc = new MathContext( 1+err2prec(r.doubleValue(),eps) ) ;
@@ -2353,7 +2354,7 @@ public class BigDecimalMath
         static public BigDecimal addRound(final BigDecimal x, final BigDecimal y)
         {
                 BigDecimal resul = x.add(y) ;
-                /* The estimation of the absolute error in the result is |err(y)|+|err(x)| 
+                /* The estimation of the absolute error in the result is |err(y)|+|err(x)|
                 */
                 double errR = Math.abs( y.ulp().doubleValue()/2. ) + Math.abs( x.ulp().doubleValue()/2. ) ;
                 MathContext mc = new MathContext( err2prec(resul.doubleValue(),errR) ) ;
@@ -2394,7 +2395,7 @@ public class BigDecimalMath
         static public BigDecimal subtractRound(final BigDecimal x, final BigDecimal y)
         {
                 BigDecimal resul = x.subtract(y) ;
-                /* The estimation of the absolute error in the result is |err(y)|+|err(x)| 
+                /* The estimation of the absolute error in the result is |err(y)|+|err(x)|
                 */
                 double errR = Math.abs( y.ulp().doubleValue()/2. ) + Math.abs( x.ulp().doubleValue()/2. ) ;
                 MathContext mc = new MathContext( err2prec(resul.doubleValue(),errR) ) ;
@@ -2424,7 +2425,7 @@ public class BigDecimalMath
         {
                 BigDecimal resul = x.multiply(y) ;
                 /* The estimation of the relative error in the result is the sum of the relative
-                * errors |err(y)/y|+|err(x)/x| 
+                * errors |err(y)/y|+|err(x)/x|
                 */
                 MathContext mc = new MathContext( Math.min(x.precision(),y.precision()) ) ;
                 return resul.round(mc) ;
@@ -2464,7 +2465,7 @@ public class BigDecimalMath
         */
         static public BigDecimal multiplyRound(final BigDecimal x, final Rational f)
         {
-                if (  f.compareTo(BigInteger.ZERO) == 0 ) 
+                if (  f.compareTo(BigInteger.ZERO) == 0 )
                         return BigDecimal.ZERO ;
                 else
                 {
@@ -2517,7 +2518,7 @@ public class BigDecimalMath
         */
         static public BigDecimal divideRound(final BigDecimal x, final BigDecimal y)
         {
-                /* The estimation of the relative error in the result is |err(y)/y|+|err(x)/x| 
+                /* The estimation of the relative error in the result is |err(y)/y|+|err(x)/x|
                 */
                 MathContext mc = new MathContext( Math.min(x.precision(),y.precision()) ) ;
                 BigDecimal resul = x.divide(y,mc) ;
@@ -2549,7 +2550,7 @@ public class BigDecimalMath
                         final MathContext mc = new MathContext( z.im.precision() ) ;
                         return new BigComplex(BigDecimal.ZERO, BigDecimal.ONE.divide( z.im, mc).negate() ) ;
                 }
-                else 
+                else
                 {
                         /* 1/(x.re+I*x.im) = 1/(x.re+x.im^2/x.re) - I /(x.im +x.re^2/x.im)
                         */
@@ -2582,7 +2583,7 @@ public class BigDecimalMath
         */
         static public BigDecimal divideRound(final BigDecimal x, final int n)
         {
-                /* The estimation of the relative error in the result is |err(x)/x| 
+                /* The estimation of the relative error in the result is |err(x)/x|
                 */
                 MathContext mc = new MathContext( x.precision() ) ;
                 return x.divide(new BigDecimal(n),mc) ;
@@ -2596,7 +2597,7 @@ public class BigDecimalMath
         */
         static public BigDecimal divideRound(final BigDecimal x, final BigInteger n)
         {
-                /* The estimation of the relative error in the result is |err(x)/x| 
+                /* The estimation of the relative error in the result is |err(x)/x|
                 */
                 MathContext mc = new MathContext( x.precision() ) ;
                 return x.divide(new BigDecimal(n),mc) ;
@@ -2610,7 +2611,7 @@ public class BigDecimalMath
         */
         static public BigDecimal divideRound(final BigInteger n, final BigDecimal x)
         {
-                /* The estimation of the relative error in the result is |err(x)/x| 
+                /* The estimation of the relative error in the result is |err(x)/x|
                 */
                 MathContext mc = new MathContext( x.precision() ) ;
                 return new BigDecimal(n).divide(x,mc) ;
@@ -2630,9 +2631,9 @@ public class BigDecimalMath
                         return new BigComplex( divideRound(n,x.re),BigDecimal.ZERO ) ;
                 else if ( x.re.compareTo(BigDecimal.ZERO) == 0 )
                         return new BigComplex( BigDecimal.ZERO, divideRound(n,x.im).negate() ) ;
-                        
+
                 BigComplex z = invertRound(x) ;
-                /* n/(x+iy) = nx/(x^2+y^2) -nyi/(x^2+y^2)       
+                /* n/(x+iy) = nx/(x^2+y^2) -nyi/(x^2+y^2)
                 */
                 BigDecimal repart = multiplyRound(z.re, n) ;
                 BigDecimal impart = multiplyRound(z.im, n) ;
@@ -2647,7 +2648,7 @@ public class BigDecimalMath
         */
         static public BigDecimal divideRound(final int n, final BigDecimal x)
         {
-                /* The estimation of the relative error in the result is |err(x)/x| 
+                /* The estimation of the relative error in the result is |err(x)/x|
                 */
                 MathContext mc = new MathContext( x.precision() ) ;
                 return new BigDecimal(n).divide(x,mc) ;

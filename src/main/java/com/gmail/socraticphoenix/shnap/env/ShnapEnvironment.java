@@ -296,7 +296,7 @@ public class ShnapEnvironment {
 
     public void checkState(State state) {
         if (this.state != state) {
-            throw new IllegalArgumentException(state.name());
+            throw new IllegalStateException(state.name());
         }
     }
 

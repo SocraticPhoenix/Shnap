@@ -73,9 +73,11 @@ public class ShnapArrayNative extends ShnapObject {
         //Other functions
         this.set("remove", oneArg(inst((ctx, trc) -> {
             int order = -1;
-            ShnapObject orderObj = ctx.get("arg");
-            if (orderObj instanceof ShnapNumberNative) {
-                order = ((ShnapNumberNative) orderObj).getNumber().intValue();
+            ShnapExecution num = ctx.get("arg").asNum(trc);
+            if(num.isAbnormal()) {
+                return num;
+            } else {
+                order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
             }
 
             if (order < 0 || order >= this.value.length) {
@@ -92,9 +94,11 @@ public class ShnapArrayNative extends ShnapObject {
 
         this.set("insert", func(Items.buildList(param("index"), param("val")), inst((ctx, trc) -> {
             int order = -1;
-            ShnapObject orderObj = ctx.get("index");
-            if (orderObj instanceof ShnapNumberNative) {
-                order = ((ShnapNumberNative) orderObj).getNumber().intValue();
+            ShnapExecution num = ctx.get("arg").asNum(trc);
+            if(num.isAbnormal()) {
+                return num;
+            } else {
+                order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
             }
 
             if (order < 0 || order > this.value.length) {
@@ -115,9 +119,11 @@ public class ShnapArrayNative extends ShnapObject {
 
         this.set("get", oneArg(inst((ctx, trc) -> {
             int order = -1;
-            ShnapObject orderObj = ctx.get("arg");
-            if (orderObj instanceof ShnapNumberNative) {
-                order = ((ShnapNumberNative) orderObj).getNumber().intValue();
+            ShnapExecution num = ctx.get("arg").asNum(trc);
+            if(num.isAbnormal()) {
+                return num;
+            } else {
+                order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
             }
 
             if (order < 0 || order >= this.value.length) {
@@ -129,9 +135,11 @@ public class ShnapArrayNative extends ShnapObject {
 
         this.set("set", func(Items.buildList(param("index"), param("val")), inst((ctx, trc) -> {
             int order = -1;
-            ShnapObject orderObj = ctx.get("index");
-            if (orderObj instanceof ShnapNumberNative) {
-                order = ((ShnapNumberNative) orderObj).getNumber().intValue();
+            ShnapExecution num = ctx.get("arg").asNum(trc);
+            if(num.isAbnormal()) {
+                return num;
+            } else {
+                order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
             }
 
             if (order < 0 || order >= this.value.length) {

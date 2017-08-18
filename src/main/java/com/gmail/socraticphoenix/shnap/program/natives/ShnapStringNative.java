@@ -113,9 +113,11 @@ public class ShnapStringNative extends ShnapObject {
         this.set("len", noArg(instSimple(() -> ShnapNumberNative.valueOf(this.pts.length))));
         this.set("charAt", oneArg(inst((ctx, trc) -> {
             int order = -1;
-            ShnapObject orderObj = ctx.get("arg");
-            if (orderObj instanceof ShnapNumberNative) {
-                order = ((ShnapNumberNative) orderObj).getNumber().intValue();
+            ShnapExecution num = ctx.get("arg").asNum(trc);
+            if(num.isAbnormal()) {
+                return num;
+            } else {
+                order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
             }
 
             if(order < 0 || order >= this.pts.length) {

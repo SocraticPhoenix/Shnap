@@ -206,7 +206,7 @@ public class ShnapMain {
                 }
                 case 2: {
                     try {
-                        environment.getNormalSearchLocs().add(Paths.get(""));
+                        environment.getNormalSearchLocs().add(Paths.get(System.getProperty("user.dir")));
                         ShnapExecution nativeLoad = environment.loadNatives();
                         if (nativeLoad.isAbnormal()) {
                             notifyAbnormalState(nativeLoad, environment);
@@ -219,7 +219,6 @@ public class ShnapMain {
                             System.exit(1);
                             return;
                         }
-                        environment.loadNormal();
                         environment.loadNormal();
 
                         ShnapScript script = environment.getModule(target);

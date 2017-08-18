@@ -68,12 +68,12 @@ import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.oneArg;
 public interface ShnapNumberNative {
 
     static ShnapObject valueOf(ShnapLoc loc, Number number) {
-        if(number instanceof BigInteger) {
+        if (number instanceof BigInteger) {
             return new ShnapBigIntegerNative(loc, (BigInteger) number);
         } else if (number instanceof BigDecimal) {
             return new ShnapBigDecimalNative(loc, (BigDecimal) number);
         } else {
-            if(number instanceof Float || number instanceof Double) {
+            if (number instanceof Float || number instanceof Double) {
                 return new ShnapBigDecimalNative(loc, new BigDecimal(number.doubleValue()));
             } else {
                 return new ShnapBigIntegerNative(loc, BigInteger.valueOf(number.longValue()));
@@ -82,13 +82,13 @@ public interface ShnapNumberNative {
     }
 
     static ShnapObject valueOf(Number number) {
-        if(number instanceof BigInteger) {
+        if (number instanceof BigInteger) {
             return new ShnapBigIntegerNative(ShnapLoc.BUILTIN, (BigInteger) number);
         } else if (number instanceof BigDecimal) {
-            return new ShnapBigDecimalNative(ShnapLoc.BUILTIN,(BigDecimal) number);
+            return new ShnapBigDecimalNative(ShnapLoc.BUILTIN, (BigDecimal) number);
         } else {
-            if(number instanceof Float || number instanceof Double) {
-                return new ShnapBigDecimalNative(ShnapLoc.BUILTIN,new BigDecimal(number.doubleValue()));
+            if (number instanceof Float || number instanceof Double) {
+                return new ShnapBigDecimalNative(ShnapLoc.BUILTIN, new BigDecimal(number.doubleValue()));
             } else {
                 return new ShnapBigIntegerNative(ShnapLoc.BUILTIN, BigInteger.valueOf(number.longValue()));
             }
@@ -100,10 +100,10 @@ public interface ShnapNumberNative {
     ShnapObject copyWith(Number n);
 
     default ShnapBooleanNative convertToBool() {
-        if(this instanceof ShnapBooleanNative) {
+        if (this instanceof ShnapBooleanNative) {
             return (ShnapBooleanNative) this;
         } else {
-            if(this.getNumber().doubleValue() == 0) {
+            if (this.getNumber().doubleValue() == 0) {
                 return ShnapBooleanNative.FALSE;
             } else {
                 return ShnapBooleanNative.TRUE;
@@ -136,6 +136,20 @@ public interface ShnapNumberNative {
                 func2(alsoTarget, ShnapNumberNative::and),
                 func2(alsoTarget, ShnapNumberNative::or)
         );
+
+        target.set("round", oneArg(inst((ctx, trc) -> {
+            int order = -1;
+            ShnapExecution num = ctx.get("arg").asNum(trc);
+            if(num.isAbnormal()) {
+                return num;
+            } else {
+                order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
+            }
+
+            Number number = alsoTarget.getNumber();
+            BigDecimal dec = number instanceof BigInteger ? new BigDecimal((BigInteger) number) : number instanceof BigDecimal ? (BigDecimal) number : new BigDecimal(number.doubleValue());
+            return ShnapExecution.normal(ShnapNumberNative.valueOf(dec.setScale(order, RoundingMode.HALF_UP)), trc, ShnapLoc.BUILTIN);
+        })));
     }
 
     static ShnapFunction func2(ShnapNumberNative target, BiFunction<Number, Number, ShnapObject> op) {
@@ -151,10 +165,20 @@ public interface ShnapNumberNative {
 
                 ShnapObject obj = c.get("arg");
                 if (obj instanceof ShnapNumberNative) {
+                    Number left = target.getNumber();
+                    Number right = ((ShnapNumberNative) obj).getNumber();
+                    if (left instanceof BigDecimal && right instanceof BigDecimal) {
+                        BigDecimal leftDec = (BigDecimal) left;
+                        BigDecimal rightDec = (BigDecimal) right;
+                        int scale = Math.max(leftDec.scale(), rightDec.scale());
+                        scale = Math.max(scale, 32);
+                        left = leftDec.setScale(scale, RoundingMode.HALF_UP);
+                        right = rightDec.setScale(scale, RoundingMode.HALF_UP);
+                    }
                     if (order == 1) {
-                        return ShnapExecution.normal(op.apply(target.getNumber(), ((ShnapNumberNative) obj).getNumber()), t, ShnapLoc.BUILTIN);
+                        return ShnapExecution.normal(op.apply(left, right), t, ShnapLoc.BUILTIN);
                     } else {
-                        return ShnapExecution.normal(op.apply(((ShnapNumberNative) obj).getNumber(), target.getNumber()), t, ShnapLoc.BUILTIN);
+                        return ShnapExecution.normal(op.apply(right, left), t, ShnapLoc.BUILTIN);
                     }
                 }
                 return ShnapExecution.normal(ShnapObject.getVoid(), t, ShnapLoc.BUILTIN);
@@ -221,9 +245,67 @@ public interface ShnapNumberNative {
                 d -> operate(b, n -> d.subtract(new BigDecimal(n)), d::subtract));
     }
 
+    static Number myPow(BigDecimal a, BigDecimal b) {
+        if (a.compareTo(BigDecimal.ZERO) == 0 || a.compareTo(BigDecimal.ONE) == 0) {
+            return a.toBigInteger();
+        } else if (b.compareTo(BigDecimal.ZERO) == 0) {
+            return BigInteger.ONE;
+        }
+
+        if (a.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ArithmeticException("I don't know how to raise a negative number to a decimal power...");
+        }
+        return BigDecimalMath.exp(b.multiply(BigDecimalMath.log(a)));
+    }
+
+    static Number intPower(BigDecimal a, BigInteger b) {
+        boolean negate = false;
+        if (a.compareTo(BigDecimal.ZERO) < 0) {
+            a = a.negate();
+            negate = b.mod(TWO).compareTo(BigInteger.ZERO) != 0;
+        }
+
+        BigDecimal res = BigDecimal.ONE;
+        for (BigInteger i = BigInteger.ZERO; i.compareTo(b) < 0; i = i.add(BigInteger.ONE)) {
+            res = res.multiply(res);
+        }
+        return negate ? res.negate() : res;
+    }
+
+    static BigInteger TWO = new BigInteger("2");
+
+    static BigInteger intIntPower(BigInteger a, BigInteger b) {
+        boolean negate = false;
+        if (a.compareTo(BigInteger.ZERO) < 0) {
+            a = a.negate();
+            negate = b.mod(TWO).compareTo(BigInteger.ZERO) != 0;
+        }
+
+        BigInteger res = BigInteger.ONE;
+        while (b.compareTo(BigInteger.ZERO) != 0) {
+            if ((b.and(BigInteger.ONE)).compareTo(BigInteger.ONE) == 0) {
+                res = res.multiply(a);
+            }
+            b = b.shiftRight(1);
+            a = a.multiply(a);
+        }
+
+        return negate ? res.negate() : res;
+    }
+
+    static boolean isInt(BigDecimal dec) {
+        try {
+            dec.toBigIntegerExact();
+            return true;
+        } catch (ArithmeticException e) {
+            return false;
+        }
+    }
+
+
     static Number pow(Number a, Number b) {
-        return operate(a, n -> operate(b, n2 -> BigDecimalMath.powRound(new BigDecimal(n), n2).toBigInteger(), d -> BigDecimalMath.pow(new BigDecimal(n), d)),
-                d -> operate(b, n -> BigDecimalMath.powRound(d, n), d2 -> BigDecimalMath.pow(d, d2)));
+        return operate(a, n -> operate(b, n2 -> intIntPower(n, n2), d -> myPow(new BigDecimal(n), d)),
+                d -> operate(b, n -> intPower(d, n), d2 -> myPow(d, d2)));
     }
 
     static Number leftShift(Number a, Number b) {
