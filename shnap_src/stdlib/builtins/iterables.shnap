@@ -1,5 +1,3 @@
-linkedList = importFrom("linked_list", "list")
-range = importFrom("range", "range")
 iterableStr = $ arr {
     state = "["
     iter = arr.iterator()
@@ -11,3 +9,5 @@ iterableStr = $ arr {
     }
     return: state + "]"
 }
+
+iterator = @ hasNext, next {}

@@ -356,9 +356,9 @@ public class ShnapParser {
             primary = parseNextObj();
         } else if (isClsNext()) {
             primary = parseNextCls();
-        } else if (isSimpleSetNext() && prefixOps.isEmpty()) {
+        } else if (isSimpleSetNext()) {
             primary = parseSimpleSet();
-        } else if (isSimpleGetNext() && prefixOps.isEmpty()) {
+        } else if (isSimpleGetNext()) {
             primary = parseSimpleGet();
         } else if (stream.isNext('(')) {
             stream.next();
@@ -372,7 +372,7 @@ public class ShnapParser {
         }
 
         if (primary != null) {
-            for (int i = prefixOps.size() - 1; i > 0; i--) {
+            for (int i = prefixOps.size() - 1; i >= 0; i--) {
                 primary = new ShnapOperate(primary.getLocation(), primary, prefixOps.get(i), null);
             }
         } else {
@@ -534,7 +534,7 @@ public class ShnapParser {
         }
         while (true) {
             whitespace();
-            if (tokenIsNext("cls")) {
+            if (tokenIsNext("static")) {
                 ShnapInstruction inst = parseNextClsInst();
                 this.prepareNextStatement();
                 clsProperties.add(inst);
@@ -561,7 +561,7 @@ public class ShnapParser {
     }
 
     private ShnapInstruction parseNextClsInst() {
-        stream.next(3);
+        stream.next(4);
         whitespace();
         return safeNextInst();
     }
@@ -599,7 +599,7 @@ public class ShnapParser {
         }
         while (true) {
             whitespace();
-            if (tokenIsNext("cls")) {
+            if (tokenIsNext("static")) {
                 ShnapInstruction inst = parseNextClsInst();
                 this.prepareNextStatement();
                 clsProperties.add(inst);
@@ -703,8 +703,8 @@ public class ShnapParser {
                 whitespace();
                 int index = stream.index();
                 boolean named = false;
-                if (isIdentifierNext()) {
-                    String nxt = parseNextIdentifier();
+                if (isVarRefNext()) {
+                    String nxt = nextVarRef();
                     whitespace();
                     if (stream.isNext('=')) {
                         named = true;
@@ -751,14 +751,14 @@ public class ShnapParser {
         while (true) {
             whitespace();
             ShnapLoc loc = this.loc();
-            if (!isIdentifierNext()) {
+            if (!isVarRefNext()) {
                 whitespace();
                 if (!stream.isNext(',') && !paren) {
                     break;
                 }
                 throw err("Expected parameter identifier");
             }
-            String name = parseNextIdentifier();
+            String name = nextVarRef();
             whitespace();
             ShnapInstruction def = null;
             if (stream.isNext('=')) {
@@ -1082,7 +1082,7 @@ public class ShnapParser {
     public boolean isVarRefNext() {
         int index = stream.index();
         stream.consumeAll('^');
-        boolean flag = isIdentifierNext() && !(this.tokenIsNext("cls") || this.tokenIsNext("obj") || isFlagNext() || isFalseTrueVoidNullNext() || isNativeNext() || isForBlockNext() || isTryBlockNext() || isWhileBlockNext() || isDoWhileBlockNext() || isIfBlockNext());
+        boolean flag = isIdentifierNext() && !(this.tokenIsNext("static") || isFlagNext() || isStateChangeNext() || isFalseTrueVoidNullNext() || isNativeNext() || isForBlockNext() || isTryBlockNext() || isWhileBlockNext() || isDoWhileBlockNext() || isIfBlockNext());
         stream.jumpTo(index);
         return flag;
     }

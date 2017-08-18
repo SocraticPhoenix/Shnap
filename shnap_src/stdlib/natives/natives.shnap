@@ -1,9 +1,30 @@
 import = native::sys.import
 importFrom = native::sys.importFrom
+importAll = native::sys.importAll
+
+paramCount = native::sys.paramCount
+reqParamCount = native::sys.reqParamCount
+defParamCount = native::sys.defParamCount
+
+
 get = native::sys.get
 set = native::sys.set
 del = native::sys.del
 fields = native::sys.fields
+has = $ obj,field,params=void {
+    if params == void {
+        return: get(obj, field) != void
+    } else if params == null {
+        val = get(obj, field)
+        return: val != void && paramCount(val) != void
+    } else {
+        val = get(obj, field)
+        return: val != void && defParamCount(val) == params
+    }
+}
+hasFunction = $ (obj,field,params=null) return: has(obj, field, params)
+isIterator = $ (obj) return: hasFunction(obj,"next",0) && hasFunction(obj,"hasNext",0)
+isIterable = $ (obj) return: hasFunction(obj,"iterator",0) || isIterator(obj)
 
 num = native::type.num
 str = native::type.str
@@ -11,7 +32,9 @@ bool = native::type.bool
 array = native::type.array
 newArray = native::type.newArray
 
+
 print = native::sys.print
 printErr = native::sys.printErr
+
 println = $ arg="" print(arg + "\n")
 printlnErr = $ arg="" printErr(arg + "\n")

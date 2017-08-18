@@ -28,6 +28,8 @@ range_internal_exclusive = @(x,y=null,step=null) {
 
 }
 
+noimport range_internal_exclusive
+
 range_internal_inclusive = @(x,y=null,step=null){
 
     if (y != null) {
@@ -39,18 +41,38 @@ range_internal_inclusive = @(x,y=null,step=null){
     }
 
     if (step != null) {
-        ^step = step
+        step = step
     } else {
-        ^step = 1
+        step = 1
     }
 
     state = min
 
-    hasNext = ${
+    hasNext = $ {
         return: state <= max
     }
 
-    next = ${
+    next = $ {
+        ret = state
+        state += step
+        return: ret
+    }
+
+}
+
+noimport range_internal_inclusive
+
+infrange = @(start,step=null) {
+
+    if (step == null) {
+        step = 1
+    }
+
+    state = start
+
+    hasNext = $ return: true
+
+    next = $ {
         ret = state
         state += step
         return: ret

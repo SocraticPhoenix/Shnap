@@ -36,12 +36,14 @@ public class ZipCompiled {
     }
 
     public static void deleteDirectory(File dir) throws IOException {
-        if (dir.isDirectory()) {
-            for (File f : dir.listFiles()) {
-                deleteDirectory(f);
+        if (dir.exists()) {
+            if (dir.isDirectory()) {
+                for (File f : dir.listFiles()) {
+                    deleteDirectory(f);
+                }
             }
+            Files.delete(dir.toPath());
         }
-        Files.delete(dir.toPath());
     }
 
 }

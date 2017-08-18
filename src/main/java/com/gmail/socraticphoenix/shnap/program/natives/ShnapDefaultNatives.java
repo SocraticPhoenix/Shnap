@@ -23,6 +23,7 @@ package com.gmail.socraticphoenix.shnap.program.natives;
 
 import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.shnap.program.ShnapFactory;
+import com.gmail.socraticphoenix.shnap.program.ShnapFunction;
 import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
@@ -103,6 +104,42 @@ public class ShnapDefaultNatives {
                 })
         ));
 
+        ShnapNativeFuncRegistry.register("sys.paramCount", func(
+                Items.buildList(param("obj")),
+                inst((ctx, trc) -> {
+                    ShnapObject obj = ctx.get("obj");
+                    if(obj instanceof ShnapFunction) {
+                        return ShnapExecution.normal(ShnapNumberNative.valueOf(((ShnapFunction) obj).paramsSize()), trc, ShnapLoc.BUILTIN);
+                    } else {
+                        return ShnapExecution.normal(ShnapObject.getVoid(), trc, ShnapLoc.BUILTIN);
+                    }
+                })
+        ));
+
+        ShnapNativeFuncRegistry.register("sys.reqParamCount", func(
+                Items.buildList(param("obj")),
+                inst((ctx, trc) -> {
+                    ShnapObject obj = ctx.get("obj");
+                    if(obj instanceof ShnapFunction) {
+                        return ShnapExecution.normal(ShnapNumberNative.valueOf(((ShnapFunction) obj).paramSizeId()), trc, ShnapLoc.BUILTIN);
+                    } else {
+                        return ShnapExecution.normal(ShnapObject.getVoid(), trc, ShnapLoc.BUILTIN);
+                    }
+                })
+        ));
+
+        ShnapNativeFuncRegistry.register("sys.defParamCount", func(
+                Items.buildList(param("obj")),
+                inst((ctx, trc) -> {
+                    ShnapObject obj = ctx.get("obj");
+                    if(obj instanceof ShnapFunction) {
+                        return ShnapExecution.normal(ShnapNumberNative.valueOf(((ShnapFunction) obj).defSize()), trc, ShnapLoc.BUILTIN);
+                    } else {
+                        return ShnapExecution.normal(ShnapObject.getVoid(), trc, ShnapLoc.BUILTIN);
+                    }
+                })
+        ));
+
         ShnapNativeFuncRegistry.register("sys.del", func(
                 Items.buildList(param("obj"), param("name")),
                 inst((ctx, trc) -> {
@@ -114,7 +151,7 @@ public class ShnapDefaultNatives {
                         return str;
                     } else {
                         String nameString = ((ShnapStringNative) str.getValue()).getValue();
-                        ctx.del(nameString);
+                        obj.getContext().del(nameString);
                         return ShnapExecution.normal(ShnapObject.getVoid(), trc, ShnapLoc.BUILTIN);
                     }
                 })

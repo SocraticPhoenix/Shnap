@@ -245,7 +245,9 @@ public class ShnapEnvironment {
     }
 
     public void pushTraceback(ShnapTraceback traceback) {
-        this.tracebackStack.push(traceback);
+        if(!traceback.isMeta() || this.isMetaEnabled()) {
+            this.tracebackStack.push(traceback);
+        }
     }
 
     public void popTraceback() {

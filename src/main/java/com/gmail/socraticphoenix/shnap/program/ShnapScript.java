@@ -162,8 +162,10 @@ public class ShnapScript extends ShnapObject {
         context.setFlag(this.name, ShnapContext.Flag.DONT_IMPORT);
         for (String name : this.context.names()) {
             if (!this.context.hasFlag(name, ShnapContext.Flag.DONT_IMPORT) && !this.context.hasFlag(name, ShnapContext.Flag.PRIVATE)) {
-                context.set(name, this.context.get(name));
-                context.setFlag(name, ShnapContext.Flag.DONT_IMPORT);
+                if(!context.hasFlag(name, ShnapContext.Flag.FINALIZED)) {
+                    context.set(name, this.context.get(name));
+                    context.setFlag(name, ShnapContext.Flag.DONT_IMPORT);
+                }
             }
         }
     }

@@ -1,0 +1,16 @@
+fibonacci = @ seedOne=0,seedTwo=1 {
+    currentVal = seedOne
+    nextVal = seedTwo
+
+    hasNext = $ return: true
+
+    next = $ {
+        ret = currentVal
+        currentVal = nextVal
+        nextVal = nextVal + ret
+        return: ret
+    }
+
+}
+
+abs = $ obj {return: if(obj < 0) -obj else obj}

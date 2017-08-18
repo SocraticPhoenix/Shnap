@@ -254,7 +254,7 @@ public class ShnapContext {
     }
 
     public enum Flag {
-        DONT_IMPORT("dont_import"),
+        DONT_IMPORT("noimport"),
         PRIVATE("private"),
         FINALIZED("final");
 

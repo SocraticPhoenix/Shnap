@@ -1,1 +1,5 @@
-println(iterableStr(importFrom("sys", "args")))
+math = import("math")
+
+println(math.abs)
+println(math.abs(-432))
+println(math.abs(22))

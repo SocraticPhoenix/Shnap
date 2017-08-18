@@ -175,6 +175,10 @@ public class ShnapFunction extends ShnapObject {
         return this.required.size() + this.def.size();
     }
 
+    public int defSize() {
+        return this.def.size();
+    }
+
     public ShnapParameter getParam(int index) {
         if(index < this.required.size()) {
             return this.required.get(index);
