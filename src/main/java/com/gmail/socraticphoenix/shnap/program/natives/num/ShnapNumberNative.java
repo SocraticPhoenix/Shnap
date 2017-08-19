@@ -188,7 +188,7 @@ public interface ShnapNumberNative {
                             if (order == 1) {
                                 result = op.apply(left, right);
                             } else {
-                                result = op.apply(left, right);
+                                result = op.apply(right, left);
                             }
 
                             if(result instanceof ShnapNumberNative) {

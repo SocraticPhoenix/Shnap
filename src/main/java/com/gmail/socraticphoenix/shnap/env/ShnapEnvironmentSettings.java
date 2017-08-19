@@ -20,18 +20,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil;
+package com.gmail.socraticphoenix.shnap.env;
 
-import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-public class ZipCompiled {
+public class ShnapEnvironmentSettings {
+    private Path home;
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        File file = new File("src/main/resources/com/gmail/socraticphoenix/shnap/resources/shnap.zip");
-        ShnapCompilerUtil.deleteDirectory(file.toPath());
-        ShnapCompilerUtil.zipFile(new File("shnap_src/compiled"), file);
-        ShnapCompilerUtil.deleteDirectory(new File(System.getProperty("user.home") + File.separator + ".shnap").toPath());
+    public Path getHome() {
+        return this.home;
+    }
+
+    public ShnapEnvironmentSettings setHome(Path home) {
+        this.home = home;
+        return this;
+    }
+
+    public ShnapEnvironmentSettings setHomeToDefault() {
+        Path home;
+        String propertyHome = System.getenv("SHNAP_HOME");
+        if (propertyHome != null) {
+            home = Paths.get(propertyHome);
+        } else {
+            home = Paths.get(System.getProperty("user.home"), ".shnap");
+        }
+        return this.setHome(home);
     }
 
 }

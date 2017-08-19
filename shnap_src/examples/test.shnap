@@ -1,5 +1,1 @@
-t=0 for n:range('a','z') {
-    for range(t) print(" ")
-    if t<num(import("sys").args.get(0)) t+=1
-    println(n)
-}
+t=0for range('a','z'){for range(t)print(" ")if t<num(import("sys").args.get(0))t+=1println(it)}

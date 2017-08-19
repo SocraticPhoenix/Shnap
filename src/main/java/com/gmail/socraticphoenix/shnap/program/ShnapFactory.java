@@ -116,7 +116,7 @@ public interface ShnapFactory {
                         operate(literal(": "), ShnapOperators.ADD,
                                 operate(get("message"), ShnapOperators.ADD, branch(
                                         operate(get("cause"), ShnapOperators.NOT_EQUAL, literal(null)),
-                                        operate(literal(", caused by:\n "), ShnapOperators.ADD, get("cause")),
+                                        operate(literal(", caused by:\n"), ShnapOperators.ADD, get("cause")),
                                         literal("\n")
                                 ))))
         )).init(err));

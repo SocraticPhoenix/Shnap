@@ -19,244 +19,88 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.gmail.socraticphoenix.shnap.compiler;
 
-import com.gmail.socraticphoenix.collect.coupling.Pair;
-import com.gmail.socraticphoenix.pio.ByteStream;
-import com.gmail.socraticphoenix.pio.Bytes;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
-import com.gmail.socraticphoenix.shnap.program.ShnapParameter;
+import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.env.ShnapScriptInvalidSyntaxException;
 import com.gmail.socraticphoenix.shnap.program.ShnapScript;
-import com.gmail.socraticphoenix.shnap.program.natives.ShnapAbsentNative;
-import com.gmail.socraticphoenix.shnap.program.natives.ShnapStringNative;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapBigDecimalNative;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapBigIntegerNative;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapBooleanNative;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapCharNative;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapNumberNative;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
+import java.util.stream.Collectors;
 
 public class ShnapCompiler {
-    private static List<NodeHandler> indexedHandlers = new ArrayList<>();
-    private static Map<Class, Pair<NodeHandler, Integer>> handlerMap = new HashMap<>();
+    private ShnapCompilerSettings settings;
 
-    public static void write(ByteStream stream, ShnapInstruction instruction) throws IOException {
-        if(instruction == null) {
-            stream.put((byte) -1);
-        } else {
-            Pair<NodeHandler, Integer> handlerPair = handlerMap.get(instruction.getClass());
-            if(handlerPair == null) {
-                throw new IllegalArgumentException("No compilation handler for type: " + instruction.getClass());
+    public ShnapCompiler(ShnapCompilerSettings settings) {
+        this.settings = settings;
+    }
+
+    public void compile() throws IOException, ShnapScriptInvalidSyntaxException {
+        ShnapEnvironment environment = new ShnapEnvironment();
+        Path home = this.settings.getEnvironmentSettings().getHome();
+        if(this.settings.isReloadHome()) {
+            environment.reloadHome(home);
+        }
+
+        environment.getNormalSearchLocs().addAll(this.settings.getCompileDirs());
+        environment.transitionImmediatelyToNormal();
+        List<ShnapScript> toCompile = environment.parseAll();
+
+        Path temp = home.resolve("temp_0");
+        int k = 1;
+        while (Files.exists(temp)) {
+            temp = home.resolve("temp_" + k++);
+        }
+        Files.createDirectories(temp);
+
+        Path tempA = home.resolve("temp_0A");
+        int z = 1;
+        while (Files.exists(temp)) {
+            temp = home.resolve("temp_" + z++ + "A");
+        }
+        Files.createDirectories(tempA);
+
+        Path dest = this.settings.getOutputDir();
+        Files.createDirectories(dest);
+        List<Path> created = new ArrayList<>();
+        for(ShnapScript script : toCompile) {
+            byte[] compiled = script.compile();
+            Path targetPath = script.getCompileDstPath(temp);
+            if(Files.exists(targetPath)) {
+                ShnapCompilerUtil.deleteDirectory(targetPath);
             }
-            stream.put((byte) handlerPair.getB().intValue());
-            handlerPair.getA().write(stream, instruction);
+            Files.createDirectories(targetPath.toAbsolutePath().getParent());
+            Files.createFile(targetPath);
+            created.add(targetPath);
+            Files.write(targetPath, compiled);
         }
-    }
-
-    public static void deleteDirectory(File dir) throws IOException {
-        if (dir.exists()) {
-            if (dir.isDirectory()) {
-                for (File f : dir.listFiles()) {
-                    deleteDirectory(f);
-                }
+        for(Path additional : this.settings.getAdditionalFiles()) {
+            List<Path> children = Files.walk(additional).collect(Collectors.toList());
+            for(Path child : children) {
+                Path target = temp.resolve(additional.relativize(child));
+                Files.createDirectories(target.toAbsolutePath().getParent());
+                Files.copy(child, target);
             }
-            Files.delete(dir.toPath());
         }
-    }
-
-    public static ShnapInstruction read(ByteStream stream, ShnapScript building) throws IOException {
-        int index = stream.get();
-        if(index == -1) {
-            return null;
-        }
-        NodeHandler handler = indexedHandlers.get(index);
-        return handler.read(stream, building);
-    }
-
-    public static void register(NodeHandler handler) {
-        if(handlerMap.containsKey(handler.type())) {
-            throw new IllegalArgumentException("Duplicate handler for type: " + handler.type());
-        }
-
-        int index = indexedHandlers.size();
-        indexedHandlers.add(handler);
-        handlerMap.put(handler.type(), Pair.of(handler, index));
-    }
-
-    public static void writeLoc(ByteStream stream, ShnapLoc loc) throws IOException {
-        stream.putInt(loc.getLine());
-        stream.putInt(loc.getCol());
-    }
-
-    public static ShnapLoc readLoc(ByteStream stream, ShnapScript building) throws IOException {
-        return new ShnapLoc(stream.getInt(), stream.getInt(), building);
-    }
-
-    public static void writeEnum(ByteStream stream, Enum enu) throws IOException {
-        byte ord = (byte) (enu == null ? -1 : enu.ordinal());
-        stream.put(ord);
-    }
-
-    public static <T extends Enum> T readEnum(ByteStream stream, Class<T> enu) throws IOException {
-        byte ord = stream.get();
-        if(ord == -1){
-            return null;
-        } else {
-            return enu.getEnumConstants()[ord];
-        }
-    }
-
-    public static void writeParam(ByteStream stream, ShnapParameter parameter) throws IOException {
-        writeLoc(stream, parameter.getLocation());
-        Bytes.writeString(stream, parameter.getName());
-        write(stream, parameter.getValue());
-    }
-
-    public static ShnapParameter readParam(ByteStream stream, ShnapScript building) throws IOException {
-        ShnapLoc loc = readLoc(stream, building);
-        String name = Bytes.readString(stream);
-        return new ShnapParameter(loc, name, read(stream, building));
-    }
-
-    public static void writeNativeVal(ByteStream stream, ShnapObject object) throws IOException {
-        writeLoc(stream, object.getLocation());
-        if (object instanceof ShnapAbsentNative) {
-            stream.put((byte) 0);
-            if (object == ShnapAbsentNative.NULL) {
-                stream.put((byte) 0);
-            } else if (object == ShnapAbsentNative.VOID) {
-                stream.put((byte) 1);
-            } else {
-                throw new IllegalArgumentException("Unknown native: " + object);
+        Path archive = dest.resolve(this.settings.getArchiveName() + ".sar");
+        Files.deleteIfExists(archive);
+        Path tempArchive = tempA.resolve("archive.sar");
+        ShnapCompilerUtil.zipFile(temp.toFile(), tempArchive.toFile());
+        Files.copy(tempArchive, archive, StandardCopyOption.REPLACE_EXISTING);
+        if(this.settings.isKeepScripts()) {
+            for(Path script : created) {
+                Files.copy(script, dest.resolve(temp.relativize(script)));
             }
-        } else if (object instanceof ShnapBooleanNative) {
-            stream.put((byte) 1);
-            stream.put((byte) (((ShnapBooleanNative) object).getValue() ? 1 : 0));
-        } else if (object instanceof ShnapBigIntegerNative) {
-            stream.put((byte) 2);
-            Bytes.writeBigInt(stream, ((ShnapBigIntegerNative) object).getNumber());
-        } else if (object instanceof ShnapBigDecimalNative) {
-            stream.put((byte) 3);
-            Bytes.writeBigDecimal(stream, ((ShnapBigDecimalNative) object).getNumber().stripTrailingZeros());
-        } else if (object instanceof ShnapStringNative) {
-            stream.put((byte) 4);
-            Bytes.writeString(stream, ((ShnapStringNative) object).getValue());
-        } else if (object instanceof ShnapCharNative) {
-            stream.put((byte) 5);
-            stream.putInt(((ShnapCharNative) object).getNumber().intValue());
-        } else {
-            throw new IllegalArgumentException("Unknown native: " + object);
         }
-    }
 
-    public static ShnapObject readNativeVal(ByteStream stream, ShnapScript building) throws IOException {
-        ShnapLoc loc = readLoc(stream, building);
-        byte id = stream.get();
-        switch (id) {
-            case 0:
-                return stream.get() == 0 ? ShnapAbsentNative.NULL : ShnapAbsentNative.VOID;
-            case 1:
-                return ShnapBooleanNative.of(stream.get() != 0);
-            case 2:
-                return ShnapNumberNative.valueOf(loc, Bytes.readBigInt(stream));
-            case 3:
-                return ShnapNumberNative.valueOf(loc, Bytes.readBigDecimal(stream));
-            case 4:
-                return new ShnapStringNative(loc, Bytes.readString(stream));
-            case 5:
-                return new ShnapCharNative(loc, BigInteger.valueOf(stream.getInt()));
-            default:
-                throw new IllegalArgumentException("Unknown native: " + id);
-        }
-    }
-
-    public static void zipFile(File source, File targetZip) throws IOException {
-        targetZip.mkdirs();
-        targetZip.delete();
-        targetZip.createNewFile();
-        FileOutputStream fos = new FileOutputStream(targetZip);
-        ZipOutputStream zos = new ZipOutputStream(fos);
-        recurse(zos, source, source);
-        zos.close();
-    }
-
-    private static void recurse(ZipOutputStream stream, File file, File source) throws IOException {
-        if (file.isDirectory()) {
-            for (File sub : file.listFiles()) {
-                recurse(stream, sub, source);
-            }
-        } else {
-            byte[] buffer = new byte[1024];
-            ZipEntry entry = new ZipEntry(name(file, source));
-            stream.putNextEntry(entry);
-            FileInputStream in = new FileInputStream(file);
-            int len;
-            while ((len = in.read(buffer)) > 0) {
-                stream.write(buffer, 0, len);
-            }
-            in.close();
-            stream.closeEntry();
-        }
-    }
-
-    public static void unZipFile(File zip, File dir)
-            throws IOException {
-        if (!dir.exists() || !dir.isDirectory()) {
-            dir.mkdirs();
-        }
-        // Open the zip file
-        ZipFile zipFile = new ZipFile(zip);
-        Enumeration<?> enu = zipFile.entries();
-        while (enu.hasMoreElements()) {
-            ZipEntry zipEntry = (ZipEntry) enu.nextElement();
-            String name = zipEntry.getName();
-            // Do we need to create a directory ?
-            File file = new File(dir, name);
-            if (name.endsWith("/")) {
-                file.mkdirs();
-                continue;
-            }
-
-            File parent = file.getParentFile();
-            if (parent != null) {
-                parent.mkdirs();
-            }
-
-            // Extract the file
-            InputStream is = zipFile.getInputStream(zipEntry);
-            FileOutputStream fos = new FileOutputStream(file);
-            byte[] bytes = new byte[1024];
-            int length;
-            while ((length = is.read(bytes)) >= 0) {
-                fos.write(bytes, 0, length);
-
-            }
-            is.close();
-            fos.close();
-
-        }
-        zipFile.close();
-    }
-
-    private static String name(File file, File source) {
-        return file.getAbsolutePath().substring(source.getAbsolutePath().length() + 1, file.getAbsolutePath().length()).replace(File.separator, "/").replace("\\", "/");
+        ShnapCompilerUtil.deleteDirectory(temp);
+        ShnapCompilerUtil.deleteDirectory(tempA);
     }
 
 }

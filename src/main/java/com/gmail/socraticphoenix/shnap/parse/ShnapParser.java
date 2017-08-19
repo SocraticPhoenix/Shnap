@@ -182,11 +182,6 @@ public class ShnapParser {
         this.stream = new CharacterStream(this.content);
     }
 
-    public ShnapParser(String content, String original) {
-        this.content = content;
-        this.original = original;
-    }
-
     public ShnapInstructionSequence parseAll() {
         ShnapLoc loc = this.loc();
         List<ShnapInstruction> instructions = new ArrayList<>();

@@ -53,17 +53,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler.read;
-import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler.readEnum;
-import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler.readLoc;
-import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler.readNativeVal;
-import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler.readParam;
-import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler.register;
-import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler.write;
-import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler.writeEnum;
-import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler.writeLoc;
-import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler.writeNativeVal;
-import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler.writeParam;
+import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil.read;
+import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil.readEnum;
+import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil.readLoc;
+import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil.readNativeVal;
+import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil.readParam;
+import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil.register;
+import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil.write;
+import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil.writeEnum;
+import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil.writeLoc;
+import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil.writeNativeVal;
+import static com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil.writeParam;
 
 public class ShnapDefaultHandlers {
 

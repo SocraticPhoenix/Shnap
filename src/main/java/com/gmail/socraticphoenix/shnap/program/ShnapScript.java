@@ -24,7 +24,7 @@ package com.gmail.socraticphoenix.shnap.program;
 import com.gmail.socraticphoenix.pio.ByteStream;
 import com.gmail.socraticphoenix.pio.Bytes;
 import com.gmail.socraticphoenix.shnap.compiler.DangerousSupplier;
-import com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler;
+import com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil;
 import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.env.ShnapTraceback;
 import com.gmail.socraticphoenix.shnap.parse.ShnapParser;
@@ -141,7 +141,7 @@ public class ShnapScript extends ShnapObject {
         ByteStream stream = ByteStream.of(out);
         Bytes.writeString(stream, this.content.get());
         try {
-            ShnapCompiler.write(stream, this.val);
+            ShnapCompilerUtil.write(stream, this.val);
         } catch (IOException e) {
             throw new IllegalStateException("ByteArrayOutputStream threw IOException", e);
         }
@@ -149,7 +149,7 @@ public class ShnapScript extends ShnapObject {
     }
 
     public static ShnapScript readCompiled(ByteStream stream, ShnapScript building) throws IOException {
-        building.setVal(ShnapCompiler.read(stream, building));
+        building.setVal(ShnapCompilerUtil.read(stream, building));
         return building;
     }
 

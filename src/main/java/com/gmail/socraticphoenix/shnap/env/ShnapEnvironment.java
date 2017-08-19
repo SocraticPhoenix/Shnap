@@ -23,7 +23,7 @@ package com.gmail.socraticphoenix.shnap.env;
 
 import com.gmail.socraticphoenix.collect.coupling.Pair;
 import com.gmail.socraticphoenix.parse.Strings;
-import com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler;
+import com.gmail.socraticphoenix.shnap.compiler.ShnapCompilerUtil;
 import com.gmail.socraticphoenix.shnap.parse.ShnapParseError;
 import com.gmail.socraticphoenix.shnap.program.ShnapFactory;
 import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
@@ -31,15 +31,16 @@ import com.gmail.socraticphoenix.shnap.program.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.ShnapScript;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.program.natives.ShnapArrayNative;
+import com.gmail.socraticphoenix.shnap.program.natives.ShnapStringNative;
 import com.gmail.socraticphoenix.shnap.resources.ShnapResourceManager;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.literalObj;
@@ -57,7 +58,6 @@ public class ShnapEnvironment {
     private List<Path> workingSearchLocs;
     private ReferenceFactory referenceFactory;
     private State state;
-    private Path shnaphome;
 
     private ShnapObject arguments;
 
@@ -89,20 +89,16 @@ public class ShnapEnvironment {
         return this.referenceFactory;
     }
 
-    public void addAndSetupDefaultPaths(boolean reloadHome) throws IOException {
-        Path home;
-        String propertyHome = System.getenv("SHNAP_HOME");
-        if (propertyHome != null) {
-            home = Paths.get(propertyHome);
-        } else {
-            home = Paths.get(System.getProperty("user.home"), ".shnap");
-        }
+    public void reloadHome(Path home) throws IOException {
+        Files.createDirectories(home);
+        ShnapResourceManager.exportResource("shnap.zip", home.resolve("shnap.zip").toFile());
+        ShnapCompilerUtil.unZipFile(home.resolve("shnap.zip").toFile(), home.toFile());
+        Files.deleteIfExists(home.resolve("shnap.zip"));
+    }
 
+    public void addAndSetupDefaultPaths(Path home, boolean reloadHome) throws IOException {
         if (!Files.exists(home) || reloadHome) {
-            Files.createDirectories(home);
-            ShnapResourceManager.exportResource("shnap.zip", home.resolve("shnap.zip").toFile());
-            ShnapCompiler.unZipFile(home.resolve("shnap.zip").toFile(), home.toFile());
-            Files.deleteIfExists(home.resolve("shnap.zip"));
+            this.reloadHome(home);
         }
 
         this.preNormalSearchLocs.add(Pair.of(home.resolve("builtins"), true));
@@ -110,12 +106,6 @@ public class ShnapEnvironment {
 
         this.nativeSearchLocs.add(home.resolve("natives"));
         this.normalSearchLocs.add(home.resolve("lib"));
-
-        this.shnaphome = home;
-    }
-
-    public Path getShnapHome() {
-        return this.shnaphome;
     }
 
     public ShnapExecution loadNatives() throws IOException {
@@ -192,13 +182,17 @@ public class ShnapEnvironment {
     }
 
     public List<ShnapScript> parseAll() throws IOException {
-        this.workingSearchLocs = this.normalSearchLocs;
-        this.referenceFactory.indexArchives();
-        List<ShnapScript> scripts = new ArrayList<>();
-        for (String module : this.referenceFactory.findAllModules()) {
-            scripts.add(this.referenceFactory.load(this, module));
+        try {
+            this.workingSearchLocs = this.normalSearchLocs;
+            this.referenceFactory.indexArchives();
+            List<ShnapScript> scripts = new ArrayList<>();
+            for (String module : this.referenceFactory.findAllModules()) {
+                scripts.add(this.referenceFactory.load(this, module));
+            }
+            return scripts;
+        } catch (ShnapParseError e) {
+            throw new ShnapScriptInvalidSyntaxException(e);
         }
-        return scripts;
     }
 
     public ShnapScript getModule(String name) {
@@ -224,6 +218,10 @@ public class ShnapEnvironment {
         return;
     }
 
+    public List<Pair<Path, Boolean>> getPreNormalSearchLocs() {
+        return this.preNormalSearchLocs;
+    }
+
     public List<Path> getNativeSearchLocs() {
         return this.nativeSearchLocs;
     }
@@ -245,7 +243,7 @@ public class ShnapEnvironment {
     }
 
     public void pushTraceback(ShnapTraceback traceback) {
-        if(!traceback.isMeta() || this.isMetaEnabled()) {
+        if (!traceback.isMeta() || this.isMetaEnabled()) {
             this.tracebackStack.push(traceback);
         }
     }
@@ -268,7 +266,7 @@ public class ShnapEnvironment {
         ShnapLoc lastLoc = null;
         for (ShnapTraceback traceback : this.getTracebacks()) {
             ShnapLoc loc = traceback.getLoc();
-            lastLoc = loc == ShnapLoc.BUILTIN ? lastLoc : loc;
+            lastLoc = loc == ShnapLoc.BUILTIN && lastLoc != null ? lastLoc : loc;
             if (!traceback.isMeta() || this.isMetaEnabled()) {
                 if (traceback.isDetail()) {
                     builder.append(Strings.indent(1));
@@ -277,13 +275,13 @@ public class ShnapEnvironment {
                     }
                 }
                 builder.append("(line: ").append(loc.getLine() + 1).append(", col: ").append(loc.getCol() + 1).append(", script: ").append(loc.getScript().getName()).append(") ").append(traceback.getDesc()).append(System.lineSeparator());
-                if(this.isMetaEnabled()) {
+                if (this.isMetaEnabled()) {
                     int indent = (traceback.isMeta() ? 1 : 0) + (traceback.isDetail() ? 1 : 0);
                     String error = null;
                     try {
                         error = ShnapParseError.format(lastLoc, traceback.getDesc(), lineCount, false, true, false, indent);
                     } catch (IOException e) {
-                        error = Strings.indent(indent) + "<unknown source>"  + System.lineSeparator();
+                        error = Strings.indent(indent) + "<unknown source>" + System.lineSeparator();
                     }
                     builder.append(error);
                 }
@@ -307,6 +305,21 @@ public class ShnapEnvironment {
 
     public Stack<ShnapTraceback> getTracebackStack() {
         return tracebackStack;
+    }
+
+    public void notifyAbnormalState(Consumer<String> log, ShnapExecution ex) {
+        log.accept("Warning: abnormal state: " + ex.getState() + System.lineSeparator());
+        if(!this.getTracebacks().isEmpty()) {
+            log.accept("Traceback:" + System.lineSeparator());
+            log.accept(this.formatTraceback());
+        }
+        log.accept("State value:" + System.lineSeparator());
+        ShnapExecution stringAttempt = ex.getValue().asString(this);
+        if (stringAttempt.isAbnormal()) {
+            log.accept("void" + System.lineSeparator());
+        } else {
+            log.accept(((ShnapStringNative) stringAttempt.getValue()).getValue() + System.lineSeparator());
+        }
     }
 
     private enum State {
