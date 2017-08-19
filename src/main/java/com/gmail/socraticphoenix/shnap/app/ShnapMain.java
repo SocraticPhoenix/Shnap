@@ -114,13 +114,13 @@ public class ShnapMain {
                 .flag("natives", "A semi-colon separated list of files to use as native builtins", validMultiPath)
                 .flag("prelib", "A semi-colon separated list of files to use as prelibs", validMultiPath)
                 .flag("builtin", "A semi-colon separated list of files to use as builtins", validMultiPath)
-                .flag("path", "A semi-colon seperated list of files to use when searching for imports and scripts", validMultiPath)
+                .flag("path", "A semi-colon separated list of files to use when searching for imports and scripts", validMultiPath)
                 .flag("compile", "The directory to compile", validPath)
                 .flag("keepScripts", "If present, scripts and .sar files will be compiled", s -> null)
                 .flag("archive", "The name of the archive", s -> null)
                 .flag("exec", "A name of a script to execute", validScript)
                 .flag("reloadHome", "If present, update the standard libraries", s -> null)
-                .flag("debug", "If present, tracebacks will be consdierably more detailed", s -> null);
+                .flag("debug", "If present, tracebacks will be considerably more detailed", s -> null);
 
         Switch<Arguments, String> as = parser.parse(a);
         boolean needsHelp = false;
