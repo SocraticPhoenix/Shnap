@@ -69,13 +69,34 @@ public class ShnapCharNative extends ShnapObject implements ShnapNumberNative {
 
     @Override
     public ShnapObject copyWith(Number n) {
-        if(n.doubleValue() == 0) {
-            return ShnapBooleanNative.FALSE;
-        } else if (n.doubleValue() == 1) {
-            return ShnapBooleanNative.TRUE;
+        if(n instanceof BigInteger) {
+            BigInteger i = (BigInteger) n;
+            try {
+                i.intValueExact();
+                return new ShnapCharNative(ShnapLoc.BUILTIN, i);
+            } catch (ArithmeticException ignore) {
+
+            }
         }
 
+
         return ShnapNumberNative.valueOf(n);
+    }
+
+    @Override
+    public int castingPrecedence(Number result) {
+        if(result instanceof BigInteger) {
+            BigInteger i = (BigInteger) result;
+            try {
+                i.intValueExact();
+                return 100;
+            } catch (ArithmeticException ignore) {
+
+            }
+        }
+
+
+        return 0;
     }
 
 }

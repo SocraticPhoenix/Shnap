@@ -103,7 +103,7 @@ public class ShnapForBlock extends AbstractShnapNode implements ShnapInstruction
 
                 ShnapObject iterElem = nextExe.getValue();
                 ShnapContext sub = ShnapContext.childOf(context);
-                sub.set(this.varName, iterElem);
+                sub.setLocally(this.varName, iterElem);
                 ShnapExecution block = this.instruction.exec(sub, tracer);
                 ret = block;
 

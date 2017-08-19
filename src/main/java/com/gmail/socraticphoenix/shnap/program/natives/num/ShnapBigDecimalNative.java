@@ -67,4 +67,12 @@ public class ShnapBigDecimalNative extends ShnapObject implements ShnapNumberNat
         return ShnapNumberNative.valueOf(n);
     }
 
+    @Override
+    public int castingPrecedence(Number result) {
+        if (result instanceof BigDecimal) {
+            return 60;
+        }
+        return 50;
+    }
+
 }

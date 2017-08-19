@@ -1,16 +1,5 @@
-range = @ (min,max,step=void) {
-    static defStep = 1
-
-    if (step == void) step = defStep
-
-    hasNext = $ return: min < max
-
-    next = $  {
-        ret = min
-        min += step
-        return: ret
-    }
-
+t=0 for n:range('a','z') {
+    for range(t) print(" ")
+    if t<num(import("sys").args.get(0)) t+=1
+    println(n)
 }
-
-for (range(0,max=10)) println(it)

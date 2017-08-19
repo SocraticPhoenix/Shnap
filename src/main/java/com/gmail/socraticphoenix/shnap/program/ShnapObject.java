@@ -46,7 +46,7 @@ public class ShnapObject extends AbstractShnapNode {
     public ShnapObject(ShnapLoc loc) {
         super(loc);
         this.context = new ShnapContext();
-        context.set("this", this);
+        context.setLocally("this", this);
         context.setFlag("this", ShnapContext.Flag.DONT_IMPORT);
     }
 
@@ -105,8 +105,8 @@ public class ShnapObject extends AbstractShnapNode {
             return ShnapExecution.normal(this, tracer, this.getLocation());
         } else if (this.hasFunction(AS_NUMBER, 0)) {
             ShnapExecution e = this.getFunction(AS_NUMBER).invoke(tracer);
-            if (!e.isAbnormal() && !(e.getValue() instanceof ShnapBooleanNative)) {
-                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_NUMBER + "() function returned a non-number object", null, "shnap.TypeError"), tracer, this.getLocation());
+            if (!e.isAbnormal() && !(e.getValue() instanceof ShnapNumberNative)) {
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_NUMBER + "() function returned a non-number object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, this.getLocation());
             }
             return e;
         } else {
@@ -123,7 +123,7 @@ public class ShnapObject extends AbstractShnapNode {
         } else if (this.hasFunction(AS_STRING, 0)) {
             ShnapExecution e = this.getFunction(AS_STRING).invoke(tracer);
             if (!e.isAbnormal() && !(e.getValue() instanceof ShnapStringNative)) {
-                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_STRING + "() function returned a non-string object", null, "shnap.TypeError"), tracer, this.getLocation());
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_STRING + "() function returned a non-string object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, this.getLocation());
             }
             return e;
         } else {
@@ -148,7 +148,7 @@ public class ShnapObject extends AbstractShnapNode {
         } else if (this.hasFunction(AS_ARRAY, 0)) {
             ShnapExecution e = this.getFunction(AS_ARRAY).invoke(tracer);
             if (!e.isAbnormal() && !(e.getValue() instanceof ShnapArrayNative)) {
-                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_ARRAY + "() function returned a non-array object", null, "shnap.TypeError"), tracer, this.getLocation());
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_ARRAY + "() function returned a non-array object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, this.getLocation());
             }
             return e;
         } else {
@@ -165,7 +165,7 @@ public class ShnapObject extends AbstractShnapNode {
         } else if (this.hasFunction(AS_BOOLEAN, 0)) {
             ShnapExecution e = this.getFunction(AS_BOOLEAN).invoke(tracer);
             if (!e.isAbnormal() && !(e.getValue() instanceof ShnapBooleanNative)) {
-                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_BOOLEAN + "() function returned a non-boolean object", null, "shnap.TypeError"), tracer, this.getLocation());
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_BOOLEAN + "() function returned a non-boolean object( " + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, this.getLocation());
             }
             return e;
         } else {

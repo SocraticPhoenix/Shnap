@@ -173,7 +173,7 @@ public class ShnapCompiler {
             case 0:
                 return stream.get() == 0 ? ShnapAbsentNative.NULL : ShnapAbsentNative.VOID;
             case 1:
-                return ShnapBooleanNative.of(loc, stream.get() != 0);
+                return ShnapBooleanNative.of(stream.get() != 0);
             case 2:
                 return ShnapNumberNative.valueOf(loc, Bytes.readBigInt(stream));
             case 3:

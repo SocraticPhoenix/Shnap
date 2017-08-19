@@ -21,13 +21,14 @@
  */
 package com.gmail.socraticphoenix.shnap.program.instructions;
 
+import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.program.AbstractShnapNode;
+import com.gmail.socraticphoenix.shnap.program.ShnapFactory;
 import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
 
 public class ShnapGet extends AbstractShnapNode implements ShnapInstruction {
     private ShnapInstruction target;
@@ -50,6 +51,10 @@ public class ShnapGet extends AbstractShnapNode implements ShnapInstruction {
                 ShnapObject object = e.getValue();
                 targetContext = object.getContext();
             }
+        }
+
+        if (!context.isChildOf(targetContext) && targetContext.hasFlag(this.name, ShnapContext.Flag.PRIVATE)) {
+            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.AccessError", "field " + name + " is flagged with PRIVATE", null), tracer, this.getLocation());
         }
 
         return ShnapExecution.normal(targetContext.get(this.name), tracer, this.getLocation());

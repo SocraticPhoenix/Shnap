@@ -63,7 +63,8 @@ public class ShnapFunction extends ShnapObject {
             }
         }
 
-        this.set("thisFunc", this);
+        context.setLocally("thisFunc", this);
+        context.setFlag("thisFunc", ShnapContext.Flag.DONT_IMPORT);
     }
 
     @Override
@@ -78,8 +79,8 @@ public class ShnapFunction extends ShnapObject {
 
     public void init(ShnapContext context) {
         this.context = ShnapContext.childOf(context);
-        this.set("thisFunc", this);
-    }
+        context.setLocally("thisFunc", this);
+        context.setFlag("thisFunc", ShnapContext.Flag.DONT_IMPORT);    }
 
     public ShnapFunction copyPreInit() {
         return new ShnapFunction(this.loc, this.params, this.body);

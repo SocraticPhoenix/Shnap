@@ -65,6 +65,21 @@ public class ShnapContext {
         return flags != null && flags.contains(flag);
     }
 
+    public void setLocally(String name, ShnapObject object) {
+        this.variables.remove(name);
+        this.flags.remove(name);
+        if (name.startsWith("^")) {
+            this.getParentSafely().setLocally(Strings.cutFirst(name), object);
+            return;
+        }
+
+        if (name.indexOf('.') == -1) {
+            this.variables.put(name, object);
+        } else {
+            this.pathSetLocally(name.split(Pattern.quote(".")), object);
+        }
+    }
+
     public void set(String name, ShnapObject object) {
         this.del(name); //Remove previous value (takes care of flags)
 
@@ -85,16 +100,17 @@ public class ShnapContext {
     }
 
     public void setFlag(String name, Flag flag) {
-        if(name.startsWith("^")) {
+        if (name.startsWith("^")) {
             this.getParentSafely().setFlag(Strings.cutFirst(name), flag);
             return;
         }
 
-        if(name.indexOf('.') == -1) {
-            if(this.parent != null && this.parent.contains(name)) {
-                this.parent.setFlag(name, flag);
-            } else {
+        if (name.indexOf('.') == -1) {
+            if(this.variables.containsKey(name)) {
                 this.flags.computeIfAbsent(name, k -> new ArrayList<>()).add(flag);
+
+            } else if (this.parent != null) {
+                this.parent.setFlag(name, flag);
             }
         } else {
             this.pathSetFlag(name.split(Pattern.quote(".")), flag);
@@ -103,7 +119,7 @@ public class ShnapContext {
 
     public ShnapObject get(String name) {
         if (name.startsWith("^")) {
-            if(this.parent == null) {
+            if (this.parent == null) {
                 return ShnapObject.getVoid();
             } else {
                 return this.parent.get(Strings.cutFirst(name));
@@ -126,18 +142,18 @@ public class ShnapContext {
     }
 
     public List<Flag> getFlags(String name) {
-        if(name.startsWith("^")) {
-            if(this.parent == null) {
+        if (name.startsWith("^")) {
+            if (this.parent == null) {
                 return null;
             } else {
                 return this.parent.getFlags(Strings.cutFirst(name));
             }
         }
 
-        if(name.indexOf('.') == -1) {
+        if (name.indexOf('.') == -1) {
             List<Flag> flag = this.flags.get(name);
-            if(flag == null) {
-                if(this.parent != null) {
+            if (flag == null) {
+                if (this.parent != null) {
                     return this.parent.getFlags(name);
                 }
                 return null;
@@ -177,6 +193,22 @@ public class ShnapContext {
         }
 
         context.set(path[path.length - 1], object);
+    }
+
+    private void pathSetLocally(String[] path, ShnapObject object) {
+        ShnapContext context = this;
+        for (int i = 0; i < path.length - 1; i++) {
+            if (!context.contains(path[i])) {
+                ShnapObject obj = new ShnapObject(ShnapLoc.BUILTIN);
+                obj.init(context);
+                context.setLocally(path[i], object);
+            }
+
+            ShnapObject obj = context.get(path[i]);
+            context = obj.getContext();
+        }
+
+        context.setLocally(path[path.length - 1], object);
     }
 
     private void pathSetFlag(String[] path, Flag flag) {
@@ -253,6 +285,10 @@ public class ShnapContext {
         return other;
     }
 
+    public boolean isChildOf(ShnapContext targetContext) {
+        return targetContext == this || this.parent != null && this.parent.isChildOf(targetContext);
+    }
+
     public enum Flag {
         DONT_IMPORT("noimport"),
         PRIVATE("private"),
@@ -269,8 +305,8 @@ public class ShnapContext {
         }
 
         public static Flag getByRep(String rep) {
-            for(Flag flag : values()) {
-                if(flag.rep.equals(rep)) {
+            for (Flag flag : values()) {
+                if (flag.rep.equals(rep)) {
                     return flag;
                 }
             }

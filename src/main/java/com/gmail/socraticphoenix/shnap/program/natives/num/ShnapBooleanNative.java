@@ -81,16 +81,20 @@ public class ShnapBooleanNative extends ShnapObject implements ShnapNumberNative
         return ShnapNumberNative.valueOf(n);
     }
 
+    @Override
+    public int castingPrecedence(Number result) {
+        if(result.doubleValue() == 0 || result.doubleValue() == 1) {
+            return 65;
+        }
+        return 0;
+    }
+
     public boolean getValue() {
         return this.value;
     }
 
     public static ShnapBooleanNative of(boolean b) {
         return b ? ShnapBooleanNative.TRUE : ShnapBooleanNative.FALSE;
-    }
-
-    public static ShnapBooleanNative of(ShnapLoc loc, boolean b) {
-        return new ShnapBooleanNative(loc, b);
     }
 
 }

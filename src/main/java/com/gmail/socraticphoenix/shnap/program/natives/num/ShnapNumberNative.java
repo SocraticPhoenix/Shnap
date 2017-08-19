@@ -172,6 +172,7 @@ public interface ShnapNumberNative {
 
                         ShnapObject obj = c.get("arg");
                         if (obj instanceof ShnapNumberNative) {
+                            ShnapNumberNative argNative = (ShnapNumberNative) obj;
                             Number left = target.getNumber();
                             Number right = ((ShnapNumberNative) obj).getNumber();
                             if (left instanceof BigDecimal && right instanceof BigDecimal) {
@@ -182,11 +183,24 @@ public interface ShnapNumberNative {
                                 left = leftDec.setScale(scale, RoundingMode.HALF_UP);
                                 right = rightDec.setScale(scale, RoundingMode.HALF_UP);
                             }
+
+                            ShnapObject result;
                             if (order == 1) {
-                                return ShnapExecution.normal(op.apply(left, right), t, ShnapLoc.BUILTIN);
+                                result = op.apply(left, right);
                             } else {
-                                return ShnapExecution.normal(op.apply(right, left), t, ShnapLoc.BUILTIN);
+                                result = op.apply(left, right);
                             }
+
+                            if(result instanceof ShnapNumberNative) {
+                                Number resNum = ((ShnapNumberNative) result).getNumber();
+                                if (argNative.castingPrecedence(resNum) > target.castingPrecedence(resNum)) {
+                                    result = argNative.copyWith(resNum);
+                                } else {
+                                    result = target.copyWith(resNum);
+                                }
+                            }
+
+                            return ShnapExecution.normal(result, t, ShnapLoc.BUILTIN);
                         }
                         return ShnapExecution.normal(ShnapObject.getVoid(), t, ShnapLoc.BUILTIN);
                     } catch (ArithmeticException e) {
@@ -195,8 +209,10 @@ public interface ShnapNumberNative {
                 }));
     }
 
+    int castingPrecedence(Number result);
+
     static ShnapFunction func(ShnapNumberNative target, BinaryOperator<Number> op) {
-        return func2(target, (n1, n2) -> ShnapNumberNative.valueOf(op.apply(n1, n2)));
+        return func2(target, (n1, n2) -> target.copyWith(op.apply(n1, n2)));
     }
 
     static Number negate(Number number) {

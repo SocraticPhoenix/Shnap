@@ -80,6 +80,8 @@ public class ShnapSet extends AbstractShnapNode implements ShnapInstruction {
 
         if(targetContext.hasFlag(this.name, ShnapContext.Flag.FINALIZED)) {
             return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.AccessError", "field " + name + " is flagged with FINALIZED", null), tracer, this.getLocation());
+        } else if (!context.isChildOf(targetContext) && targetContext.hasFlag(this.name, ShnapContext.Flag.PRIVATE)) {
+            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.AccessError", "field " + name + " is flagged with PRIVATE", null), tracer, this.getLocation());
         }
 
         ShnapExecution execution = this.val.exec(context, tracer);

@@ -67,4 +67,12 @@ public class ShnapBigIntegerNative extends ShnapObject implements ShnapNumberNat
         return ShnapNumberNative.valueOf(n);
     }
 
+    @Override
+    public int castingPrecedence(Number result) {
+        if (result instanceof BigInteger) {
+            return 60;
+        }
+        return 50;
+    }
+
 }

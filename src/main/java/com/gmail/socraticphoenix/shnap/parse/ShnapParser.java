@@ -1171,10 +1171,10 @@ public class ShnapParser {
         ShnapLoc loc = this.loc();
         if (stream.isNext("false")) {
             stream.next(5);
-            return new ShnapLiteral(loc, ShnapBooleanNative.of(loc, false));
+            return new ShnapLiteral(loc, ShnapBooleanNative.of(false));
         } else if (stream.isNext("true")) {
             stream.next(4);
-            return new ShnapLiteral(loc, ShnapBooleanNative.of(loc, true));
+            return new ShnapLiteral(loc, ShnapBooleanNative.of(true));
         } else if (stream.isNext("null")) {
             stream.next(4);
             return new ShnapLiteral(loc, ShnapObject.getNull());
