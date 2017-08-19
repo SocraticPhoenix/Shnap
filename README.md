@@ -1,5 +1,5 @@
 # Shnap
-###Snap but with an h!    
+#### Snap but with an h!    
    
    
 Shnap is a dynamically typed, object-oriented, classless scripting langauge where every statement is an expression.
