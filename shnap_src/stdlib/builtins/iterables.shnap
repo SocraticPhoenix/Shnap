@@ -10,4 +10,15 @@ iterableStr = $ arr {
     return: state + "]"
 }
 
-iterator = @ hasNext, next {}
+iterator = @ hasNext, next {
+    if !has(this, "hasNext", 0) {
+        throw typeError("hasNext must be function with 0 required parameters")
+    }
+
+    if !has(this, "next", 0) {
+        throw typeError("hasNext must be function with 0 required parameters")
+    }
+}
+
+isIterator = $ (obj) return: hasFunction(obj,"next",0) && hasFunction(obj,"hasNext",0)
+isIterable = $ (obj) return: hasFunction(obj,"iterator",0) || isIterator(obj)

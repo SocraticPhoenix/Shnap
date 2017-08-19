@@ -226,4 +226,8 @@ public class ShnapScript extends ShnapObject {
         return this;
     }
 
+    public ShnapInstruction getBody() {
+        return this.val;
+    }
+
 }

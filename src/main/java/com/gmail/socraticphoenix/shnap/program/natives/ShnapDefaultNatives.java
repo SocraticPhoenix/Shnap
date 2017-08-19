@@ -29,8 +29,10 @@ import com.gmail.socraticphoenix.shnap.program.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapBooleanNative;
+import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapCharNative;
 import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapNumberNative;
 
+import java.math.BigInteger;
 import java.util.Collection;
 
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.func;
@@ -241,6 +243,15 @@ public class ShnapDefaultNatives {
         ShnapNativeFuncRegistry.register("type.str", oneArg(inst((ctx, trc) -> ctx.get("arg").asString(trc))));
         ShnapNativeFuncRegistry.register("type.array", oneArg(inst((ctx, trc) -> ctx.get("arg").asArray(trc))));
         ShnapNativeFuncRegistry.register("type.bool", oneArg(inst((ctx, trc) -> ShnapExecution.normal(ShnapBooleanNative.of(ctx.get("arg").isTruthy(trc)), trc, ShnapLoc.BUILTIN))));
+
+        ShnapNativeFuncRegistry.register("type.char", oneArg(inst((ctx, trc) -> {
+            ShnapExecution number = ctx.get("arg").asNum(trc);
+            if(number.isAbnormal()) {
+                return number;
+            }
+
+            return ShnapExecution.normal(new ShnapCharNative(ShnapLoc.BUILTIN, BigInteger.valueOf(((ShnapNumberNative) number.getValue()).getNumber().intValue())), trc, ShnapLoc.BUILTIN);
+        })));
 
         ShnapNativeFuncRegistry.register("type.newArray", oneArg(inst((ctx, trc) -> {
             int order = -1;

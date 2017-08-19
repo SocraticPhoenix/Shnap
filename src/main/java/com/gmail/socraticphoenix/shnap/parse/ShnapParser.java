@@ -75,6 +75,7 @@ import java.util.function.Predicate;
 public class ShnapParser {
     private static Predicate<Character> whitespace = Character::isWhitespace;
     private static ParserData stringData = Strings.javaEscapeFormat().quote('"');
+    private static ParserData tripleQuoteData = new ParserData().escapeChar('\\').escape('"');
     private static ParserData charData = Strings.javaEscapeFormat().quote('\'');
     private static String tripleQuote = "\"\"\"";
     private static char[] digits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
@@ -330,6 +331,8 @@ public class ShnapParser {
             }
         }
 
+        whitespace();
+
         if (isLiteralNext()) {
             primary = nextLiteral();
         } else if (isNativeNext()) {
@@ -561,7 +564,7 @@ public class ShnapParser {
     }
 
     private ShnapInstruction parseNextClsInst() {
-        stream.next(4);
+        stream.next(6);
         whitespace();
         return safeNextInst();
     }
@@ -699,21 +702,28 @@ public class ShnapParser {
                 stream.next();
                 return Pair.of(Collections.emptyList(), Collections.emptyMap());
             }
+            boolean defaulting = false;
             while (true) {
                 whitespace();
                 int index = stream.index();
                 boolean named = false;
+                ShnapLoc loc = this.loc();
                 if (isVarRefNext()) {
                     String nxt = nextVarRef();
                     whitespace();
-                    if (stream.isNext('=')) {
+                    if (stream.isNext('=') && !stream.isNext("==")) {
+                        defaulting = true;
                         named = true;
                         stream.consume('=');
                         whitespace();
                         namedParams.put(nxt, safeNextInst());
+                    } else if (defaulting) {
+                        throw err(loc, "non-default parameter after default parameter");
                     } else {
                         stream.jumpTo(index);
                     }
+                } else if (defaulting) {
+                    throw err(loc, "non-default parameter after default parameter");
                 }
 
                 if (!named) {
@@ -746,8 +756,10 @@ public class ShnapParser {
         }
         whitespace();
         if (paren && stream.isNext(')')) {
+            stream.next();
             return Collections.emptyList();
         }
+        boolean defaulting = false;
         while (true) {
             whitespace();
             ShnapLoc loc = this.loc();
@@ -762,9 +774,12 @@ public class ShnapParser {
             whitespace();
             ShnapInstruction def = null;
             if (stream.isNext('=')) {
+                defaulting = true;
                 stream.next();
                 whitespace();
                 def = safeNextInst();
+            } else if (defaulting) {
+                throw err(loc, "non-default parameter after default parameter");
             }
             whitespace();
 
@@ -1227,10 +1242,20 @@ public class ShnapParser {
         ShnapLoc loc = this.loc();
         String val;
         if (stream.isNext(tripleQuote)) {
-            stream.next(tripleQuote);
-            String str = stream.nextUntil(tripleQuote);
-            stream.next(tripleQuote);
-            val = str;
+            stream.next(3);
+            StringBuilder str = new StringBuilder();
+            tripleQuoteData = tripleQuoteData.reset();
+            while (stream.hasNext()) {
+                char z = stream.next().get();
+                String s = tripleQuoteData.consider(z);
+                str.append(s);
+                if(tripleQuoteData.shouldConsider() && stream.isNext(tripleQuote)) {
+                    break;
+                }
+            }
+            str.append(tripleQuoteData.subTrailing());
+            stream.next(3);
+            val = str.toString();
         } else {
             val = Strings.cutFirst(Strings.cutLast(stream.nextUntil(stringData.reset())));
         }

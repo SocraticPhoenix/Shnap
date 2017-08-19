@@ -21,6 +21,7 @@
  */
 package com.gmail.socraticphoenix.shnap.program.natives;
 
+import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.parse.Strings;
 import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.ShnapObject;
@@ -34,11 +35,13 @@ import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapNumberNative;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.func;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.inst;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.instSimple;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.mimicJavaException;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.noArg;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.oneArg;
+import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.param;
 
 public class ShnapStringNative extends ShnapObject {
     private String value;
@@ -88,39 +91,39 @@ public class ShnapStringNative extends ShnapObject {
             String comp = ((ShnapStringNative) otherAsString.getValue()).getValue();
             return ShnapExecution.normal(ShnapNumberNative.valueOf(this.getValue().compareTo(comp)), trc, this.getLocation());
         })));
-        this.set("add", oneArg(inst((ctx, trc) -> {
-            int order = 1;
-            if (ctx.directlyContains("order")) {
-                ShnapObject orderObj = ctx.get("order");
-                if (orderObj instanceof ShnapNumberNative) {
-                    order = ((ShnapNumberNative) orderObj).getNumber().intValue();
-                }
-            }
+        this.set("add", func(
+                Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
+                inst((ctx, trc) -> {
+                    int order = 1;
+                    ShnapObject orderObj = ctx.get("order");
+                    if (orderObj instanceof ShnapNumberNative) {
+                        order = ((ShnapNumberNative) orderObj).getNumber().intValue();
+                    }
 
-            ShnapObject other = ctx.get("arg");
-            ShnapExecution otherAsString = other.asString(trc);
-            if (otherAsString.isAbnormal()) {
-                return otherAsString;
-            }
-            String comp = ((ShnapStringNative) otherAsString.getValue()).getValue();
+                    ShnapObject other = ctx.get("arg");
+                    ShnapExecution otherAsString = other.asString(trc);
+                    if (otherAsString.isAbnormal()) {
+                        return otherAsString;
+                    }
+                    String comp = ((ShnapStringNative) otherAsString.getValue()).getValue();
 
-            if (order == 1) {
-                return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, this.value + comp), trc, this.getLocation());
-            } else {
-                return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, comp + this.value), trc, this.getLocation());
-            }
-        })));
+                    if (order == 1) {
+                        return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, this.value + comp), trc, this.getLocation());
+                    } else {
+                        return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, comp + this.value), trc, this.getLocation());
+                    }
+                })));
         this.set("len", noArg(instSimple(() -> ShnapNumberNative.valueOf(this.pts.length))));
-        this.set("charAt", oneArg(inst((ctx, trc) -> {
+        this.set("get", oneArg(inst((ctx, trc) -> {
             int order = -1;
             ShnapExecution num = ctx.get("arg").asNum(trc);
-            if(num.isAbnormal()) {
+            if (num.isAbnormal()) {
                 return num;
             } else {
                 order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
             }
 
-            if(order < 0 || order >= this.pts.length) {
+            if (order < 0 || order >= this.pts.length) {
                 return ShnapExecution.normal(ShnapObject.getVoid(), trc, this.getLocation());
             } else {
                 return ShnapExecution.normal(new ShnapCharNative(this.getLocation(), BigInteger.valueOf(this.pts[order])), trc, this.getLocation());
@@ -132,7 +135,7 @@ public class ShnapStringNative extends ShnapObject {
             iterator.set("index", ShnapNumberNative.valueOf(0));
             iterator.set("hasNext", noArg(instSimple(() -> {
                 ShnapObject val = iterator.get("index");
-                if(val instanceof ShnapNumberNative) {
+                if (val instanceof ShnapNumberNative) {
                     return ShnapBooleanNative.of(((ShnapNumberNative) val).getNumber().intValue() < this.pts.length);
                 } else {
                     return ShnapBooleanNative.FALSE;
@@ -140,9 +143,9 @@ public class ShnapStringNative extends ShnapObject {
             })));
             iterator.set("next", noArg(instSimple(() -> {
                 ShnapObject val = iterator.get("index");
-                if(val instanceof ShnapNumberNative) {
+                if (val instanceof ShnapNumberNative) {
                     int index = ((ShnapNumberNative) val).getNumber().intValue();
-                    if(index < 0 || index >= this.pts.length) {
+                    if (index < 0 || index >= this.pts.length) {
                         return ShnapObject.getVoid();
                     }
                     iterator.set("index", ShnapNumberNative.valueOf(index + 1));

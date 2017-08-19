@@ -1,4 +1,4 @@
-range_internal_exclusive = @(x,y=null,step=null) {
+range_internal_exclusive = @(x,y=null,step=1) {
 
     if (y != null) {
         ^max = y
@@ -6,12 +6,6 @@ range_internal_exclusive = @(x,y=null,step=null) {
     } else {
         ^max = x
         ^min = 0
-    }
-
-    if (step != null) {
-        ^step = step
-    } else {
-        ^step = 1
     }
 
     state = min
@@ -30,7 +24,7 @@ range_internal_exclusive = @(x,y=null,step=null) {
 
 noimport range_internal_exclusive
 
-range_internal_inclusive = @(x,y=null,step=null){
+range_internal_inclusive = @(x,y=null,step=1){
 
     if (y != null) {
         ^max = y
@@ -38,12 +32,6 @@ range_internal_inclusive = @(x,y=null,step=null){
     } else {
         ^max = x
         ^min = 0
-    }
-
-    if (step != null) {
-        step = step
-    } else {
-        step = 1
     }
 
     state = min
@@ -62,11 +50,7 @@ range_internal_inclusive = @(x,y=null,step=null){
 
 noimport range_internal_inclusive
 
-infrange = @(start,step=null) {
-
-    if (step == null) {
-        step = 1
-    }
+infrange = @(start,step=1) {
 
     state = start
 
@@ -80,7 +64,7 @@ infrange = @(start,step=null) {
 
 }
 
-range = $(x,y=null,step=null,inclusive=false) {
+range = $(x,y=null,step=1,inclusive=false) {
     if (inclusive) {
         return: range_internal_inclusive(x,y,step)
     } else {

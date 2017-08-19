@@ -17,9 +17,9 @@ error = @(name,message,cause=null,parents=null){
 
         if type.parents != void {
             other = type.parents
-            if other.iterator != void || (other.hasNext != void && other.next != void) {
+            if isIterable(other) {
                 for otherType : other {
-                    if parents.contains(otherType) {
+                    if parents.contains(otherType) or type == other {
                         return: true
                     }
                 }
@@ -43,3 +43,4 @@ typeError = errorCls("shnap.TypeError")
 returnTypeError = errorCls("shnap.ReturnTypeError", ["shnap.TypeError"])
 accessError = errorCls("shnap.AcessError")
 interruptedError = errorCls("shnap.InterruptedError")
+importError = errorCls("shnap.ImportError")

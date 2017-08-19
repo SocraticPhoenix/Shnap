@@ -78,7 +78,7 @@ public class ShnapWhileBlock extends AbstractShnapNode implements ShnapInstructi
 
             if (block.getState() == State.RETURNING || block.getState() == State.THROWING) {
                 return block;
-            } else if (name.isEqualTo(block.getValue(), tracer)) {
+            } else if (block.getValue() == ShnapObject.getVoid() || name.isEqualTo(block.getValue(), tracer)) {
                 if (block.getState() == State.BREAKING) {
                     return ShnapExecution.normal(block.getValue(), tracer, this.getLocation());
                 }

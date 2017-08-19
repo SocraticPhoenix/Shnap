@@ -43,6 +43,7 @@
  */
 package com.gmail.socraticphoenix.shnap.program.natives.num;
 
+import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.shnap.program.ShnapFactory;
 import com.gmail.socraticphoenix.shnap.program.ShnapFunction;
 import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
@@ -50,7 +51,7 @@ import com.gmail.socraticphoenix.shnap.program.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.program.natives.ShnapArrayNative;
 import com.gmail.socraticphoenix.shnap.program.natives.ShnapStringNative;
-import org.nevec.rjm.BigDecimalMath;
+import com.gmail.socraticphoenix.shnap.repack.org.nevec.rjm.BigDecimalMath;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -64,8 +65,12 @@ import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.inst;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.instSimple;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.noArg;
 import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.oneArg;
+import static com.gmail.socraticphoenix.shnap.program.ShnapFactory.param;
 
 public interface ShnapNumberNative {
+    ShnapObject ONE = ShnapNumberNative.valueOf(1);
+    ShnapObject ZERO = ShnapNumberNative.valueOf(-1);
+
 
     static ShnapObject valueOf(ShnapLoc loc, Number number) {
         if (number instanceof BigInteger) {
@@ -140,7 +145,7 @@ public interface ShnapNumberNative {
         target.set("round", oneArg(inst((ctx, trc) -> {
             int order = -1;
             ShnapExecution num = ctx.get("arg").asNum(trc);
-            if(num.isAbnormal()) {
+            if (num.isAbnormal()) {
                 return num;
             } else {
                 order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
@@ -153,39 +158,41 @@ public interface ShnapNumberNative {
     }
 
     static ShnapFunction func2(ShnapNumberNative target, BiFunction<Number, Number, ShnapObject> op) {
-        return oneArg(inst((c, t) -> {
-            try {
-                int order = 1;
-                if (c.directlyContains("order")) {
-                    ShnapObject orderObj = c.get("order");
-                    if (orderObj instanceof ShnapNumberNative) {
-                        order = ((ShnapNumberNative) orderObj).getNumber().intValue();
-                    }
-                }
+        return ShnapFactory.func(
+                Items.buildList(param("arg"), param("order", ONE)),
+                inst((c, t) -> {
+                    try {
+                        int order = 1;
+                        if (c.directlyContains("order")) {
+                            ShnapObject orderObj = c.get("order");
+                            if (orderObj instanceof ShnapNumberNative) {
+                                order = ((ShnapNumberNative) orderObj).getNumber().intValue();
+                            }
+                        }
 
-                ShnapObject obj = c.get("arg");
-                if (obj instanceof ShnapNumberNative) {
-                    Number left = target.getNumber();
-                    Number right = ((ShnapNumberNative) obj).getNumber();
-                    if (left instanceof BigDecimal && right instanceof BigDecimal) {
-                        BigDecimal leftDec = (BigDecimal) left;
-                        BigDecimal rightDec = (BigDecimal) right;
-                        int scale = Math.max(leftDec.scale(), rightDec.scale());
-                        scale = Math.max(scale, 32);
-                        left = leftDec.setScale(scale, RoundingMode.HALF_UP);
-                        right = rightDec.setScale(scale, RoundingMode.HALF_UP);
+                        ShnapObject obj = c.get("arg");
+                        if (obj instanceof ShnapNumberNative) {
+                            Number left = target.getNumber();
+                            Number right = ((ShnapNumberNative) obj).getNumber();
+                            if (left instanceof BigDecimal && right instanceof BigDecimal) {
+                                BigDecimal leftDec = (BigDecimal) left;
+                                BigDecimal rightDec = (BigDecimal) right;
+                                int scale = Math.max(leftDec.scale(), rightDec.scale());
+                                scale = Math.max(scale, 32);
+                                left = leftDec.setScale(scale, RoundingMode.HALF_UP);
+                                right = rightDec.setScale(scale, RoundingMode.HALF_UP);
+                            }
+                            if (order == 1) {
+                                return ShnapExecution.normal(op.apply(left, right), t, ShnapLoc.BUILTIN);
+                            } else {
+                                return ShnapExecution.normal(op.apply(right, left), t, ShnapLoc.BUILTIN);
+                            }
+                        }
+                        return ShnapExecution.normal(ShnapObject.getVoid(), t, ShnapLoc.BUILTIN);
+                    } catch (ArithmeticException e) {
+                        return ShnapExecution.normal(ShnapObject.getVoid(), t, ShnapLoc.BUILTIN);
                     }
-                    if (order == 1) {
-                        return ShnapExecution.normal(op.apply(left, right), t, ShnapLoc.BUILTIN);
-                    } else {
-                        return ShnapExecution.normal(op.apply(right, left), t, ShnapLoc.BUILTIN);
-                    }
-                }
-                return ShnapExecution.normal(ShnapObject.getVoid(), t, ShnapLoc.BUILTIN);
-            } catch (ArithmeticException e) {
-                return ShnapExecution.normal(ShnapObject.getVoid(), t, ShnapLoc.BUILTIN);
-            }
-        }));
+                }));
     }
 
     static ShnapFunction func(ShnapNumberNative target, BinaryOperator<Number> op) {

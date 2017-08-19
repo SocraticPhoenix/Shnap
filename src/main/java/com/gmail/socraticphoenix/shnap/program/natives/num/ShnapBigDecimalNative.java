@@ -64,12 +64,6 @@ public class ShnapBigDecimalNative extends ShnapObject implements ShnapNumberNat
 
     @Override
     public ShnapObject copyWith(Number n) {
-        if(n.doubleValue() == 0) {
-            return ShnapBooleanNative.FALSE;
-        } else if (n.doubleValue() == 1) {
-            return ShnapBooleanNative.TRUE;
-        }
-
         return ShnapNumberNative.valueOf(n);
     }
 

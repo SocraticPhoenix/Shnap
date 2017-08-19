@@ -94,17 +94,18 @@ public class ShnapFunction extends ShnapObject {
     }
 
     public ShnapExecution invokeOperator(List<ShnapObject> values, Map<String, ShnapObject> defValues, int order, ShnapEnvironment tracer) {
+        values.add(ShnapNumberNative.valueOf(order));
         ShnapContext functionContext = this.getContext().copy();
         this.trace(tracer);
-        functionContext.set("order", ShnapNumberNative.valueOf(order));
-        for (int i = 0; i < this.paramsSize(); i++) {
+        for (int i = 0, k = 0; i < this.paramsSize(); i++, k++) {
             String name = this.getParam(i).getName();
             ShnapObject val;
             if(defValues.containsKey(name)) {
                 val = defValues.get(name);
-            } else if (i < values.size()) {
-                val = values.get(i);
+            } else if (k < values.size()) {
+                val = values.get(k);
             } else {
+                k--;
                 ShnapInstruction param = this.getParam(i).getValue();
                 ShnapExecution ex = param.exec(functionContext, tracer);
                 if(ex.isAbnormal()) {
@@ -140,14 +141,15 @@ public class ShnapFunction extends ShnapObject {
     private ShnapExecution invokePrivate(List<ShnapObject> values, Map<String, ShnapObject> defValues, ShnapEnvironment tracer) {
         ShnapContext functionContext = this.getContext().copy();
         functionContext.set("func", this);
-        for (int i = 0; i < this.paramsSize(); i++) {
+        for (int i = 0, k = 0; i < this.paramsSize(); i++, k++) {
             String name = this.getParam(i).getName();
             ShnapObject val;
             if(defValues.containsKey(name)) {
                 val = defValues.get(name);
-            } else if (i < values.size()) {
-                val = values.get(i);
+            } else if (k < values.size()) {
+                val = values.get(k);
             } else {
+                k--;
                 ShnapInstruction param = this.getParam(i).getValue();
                 ShnapExecution ex = param.exec(functionContext, tracer);
                 if(ex.isAbnormal()) {

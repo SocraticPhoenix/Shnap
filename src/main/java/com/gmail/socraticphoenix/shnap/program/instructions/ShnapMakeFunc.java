@@ -74,7 +74,7 @@ public class ShnapMakeFunc extends AbstractShnapNode implements ShnapInstruction
         if(this.body instanceof ShnapInstructionSequence) {
             builder.append("{").append(System.lineSeparator());
             for (ShnapInstruction instruction : this.objInstructions) {
-                builder.append(Strings.indent(indent)).append("obj ").append(instruction.decompile(indent + 1)).append(System.lineSeparator());
+                builder.append(Strings.indent(indent)).append("static ").append(instruction.decompile(indent + 1)).append(System.lineSeparator());
             }
             for (ShnapInstruction instruction : ((ShnapInstructionSequence) body).getSequence()) {
                 builder.append(Strings.indent(indent)).append(instruction.decompile(indent + 1)).append(System.lineSeparator());

@@ -21,6 +21,7 @@
  */
 package com.gmail.socraticphoenix.shnap.program.natives;
 
+import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
@@ -42,7 +43,9 @@ public class ShnapAbsentNative extends ShnapObject {
         this.set(ShnapObject.AS_NUMBER, noArg(instSimple(() -> ShnapNumberNative.valueOf(0))));
         this.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(false))));
         this.set(ShnapObject.AS_ARRAY, noArg(instSimple(() -> new ShnapArrayNative(ShnapLoc.BUILTIN, this))));
-        this.set("equals", oneArg(inst((ctx, trc) -> {
+        this.set("equals", func(
+                Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
+                inst((ctx, trc) -> {
             ShnapObject object = ctx.get("arg");
             if(object instanceof ShnapAbsentNative && ((ShnapAbsentNative) object).getName().equals(this.name)) {
                 return ShnapExecution.normal(ShnapBooleanNative.TRUE, trc, ShnapLoc.BUILTIN);

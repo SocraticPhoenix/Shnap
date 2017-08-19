@@ -1,7 +1,50 @@
-package org.nevec.rjm ;
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2017 socraticphoenix@gmail.com
+ * Copyright (c) 2017 contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2017 socraticphoenix@gmail.com
+ * Copyright (c) 2017 contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.gmail.socraticphoenix.shnap.repack.org.nevec.rjm;
 
 import java.lang.* ;
-import java.security.* ;
 import java.util.* ;
 import java.math.* ;
 
@@ -16,9 +59,9 @@ public class Wigner3j
 {
         /** Test programs.
         * This supports three types of direct evaluations:<br>
-        * java -cp . org.nevec.rjm.Wigner3j 3jm 2j1+1 2j2+1 2j3+1 2m1+1 2m2+1 2m3+1<br>
-        * java -cp . org.nevec.rjm.Wigner3j 6j 2j1+1 2j2+2 .. 2j6+1<br>
-        * java -cp . org.nevec.rjm.Wigner3j 9j 2j1+1 2j2+2 .. 2j9+1<br>
+        * java -cp . Wigner3j 3jm 2j1+1 2j2+1 2j3+1 2m1+1 2m2+1 2m3+1<br>
+        * java -cp . Wigner3j 6j 2j1+1 2j2+2 .. 2j6+1<br>
+        * java -cp . Wigner3j 9j 2j1+1 2j2+2 .. 2j9+1<br>
         * The first command line argument is one of the three tags which determine
         * whether a 3jm, a 6j or a 9j symbol will be computed. The other arguments are 6 or 9 integer
         * values, which are the physical (half-integer) values multplied by 2 and augmented by 1.

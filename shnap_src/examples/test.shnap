@@ -1,2 +1,16 @@
-fib = importFrom("math", "fib")
-for fib(10) println(it)
+range = @ (min,max,step=void) {
+    static defStep = 1
+
+    if (step == void) step = defStep
+
+    hasNext = $ return: min < max
+
+    next = $  {
+        ret = min
+        min += step
+        return: ret
+    }
+
+}
+
+for (range(0,max=10)) println(it)

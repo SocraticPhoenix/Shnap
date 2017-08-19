@@ -259,7 +259,14 @@ public class ShnapMain {
                             }
                             Path arch = dst.resolve(args.getFlag("archive", "archive") + ".sar");
                             Files.deleteIfExists(arch);
-                            ShnapCompiler.zipFile(dst.toFile(), arch.toFile());
+                            Path temp = environment.getShnapHome().resolve("temp");
+                            int k = 0;
+                            while (Files.exists(temp)) {
+                                temp = environment.getShnapHome().resolve("temp" + k++);
+                            }
+                            Files.createDirectories(temp);
+                            Path archTemp = temp.resolve("archive.sar");
+                            ShnapCompiler.zipFile(dst.toFile(), archTemp.toFile());
                             if (!args.hasFlag("keepScripts")) {
                                 for (Path cre : created) {
                                     Files.deleteIfExists(cre);
@@ -270,7 +277,8 @@ public class ShnapMain {
                                     }
                                 }
                             }
-
+                            Files.copy(archTemp, arch);
+                            ShnapCompiler.deleteDirectory(temp.toFile());
                         } else {
                             System.out.println(vf);
                             needsHelp = true;

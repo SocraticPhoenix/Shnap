@@ -177,13 +177,13 @@ public class ShnapEnvironment {
             }
             return ShnapExecution.normal(script, this, script.getLocation());
         } catch (ShnapScriptAbsentException e) {
-            return ShnapExecution.throwing(makeExceptionObj("shnap.FailedLoad", e.getMessage(), literalObj("shnap.load.AbsetScript")), this, ShnapLoc.BUILTIN);
+            return ShnapExecution.throwing(makeExceptionObj("shnap.ImportError", e.getMessage(), literalObj("shnap.load.AbsetScript")), this, ShnapLoc.BUILTIN);
         } catch (ShnapScriptCircularInitException e) {
-            return ShnapExecution.throwing(makeExceptionObj("shnap.FailedLoad", e.getMessage(), literalObj("shnap.load.CircularInit")), this, ShnapLoc.BUILTIN);
+            return ShnapExecution.throwing(makeExceptionObj("shnap.ImportError", e.getMessage(), literalObj("shnap.load.CircularInit")), this, ShnapLoc.BUILTIN);
         } catch (ShnapScriptInvalidSyntaxException e) {
-            return ShnapExecution.throwing(makeExceptionObj("shnap.FailedLoad", e.getMessage(), literalObj("shnap.load.InvalidSyntax")), this, ShnapLoc.BUILTIN);
+            return ShnapExecution.throwing(makeExceptionObj("shnap.ImportError", e.getMessage(), literalObj("shnap.load.InvalidSyntax")), this, ShnapLoc.BUILTIN);
         } catch (ShnapScriptLoadingFailedException e) {
-            return ShnapExecution.throwing(ShnapFactory.mimicJavaException("shnap.FailedLoad", "Failed to load script internally", e), this, ShnapLoc.BUILTIN);
+            return ShnapExecution.throwing(ShnapFactory.mimicJavaException("shnap.ImportError", "Failed to load script internally", e), this, ShnapLoc.BUILTIN);
         }
     }
 

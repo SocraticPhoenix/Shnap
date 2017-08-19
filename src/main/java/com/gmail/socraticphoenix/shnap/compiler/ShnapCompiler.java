@@ -43,6 +43,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -66,6 +67,17 @@ public class ShnapCompiler {
             }
             stream.put((byte) handlerPair.getB().intValue());
             handlerPair.getA().write(stream, instruction);
+        }
+    }
+
+    public static void deleteDirectory(File dir) throws IOException {
+        if (dir.exists()) {
+            if (dir.isDirectory()) {
+                for (File f : dir.listFiles()) {
+                    deleteDirectory(f);
+                }
+            }
+            Files.delete(dir.toPath());
         }
     }
 
