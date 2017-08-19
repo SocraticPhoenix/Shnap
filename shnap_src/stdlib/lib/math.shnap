@@ -1,10 +1,29 @@
-fib = @ seedOne=0,seedTwo=1 {
+inffib = @ seedOne=0,seedTwo=1 {
     currentVal = seedOne
     nextVal = seedTwo
 
     hasNext = $ return: true
 
     next = $ {
+        ret = currentVal
+        currentVal = nextVal
+        nextVal = nextVal + ret
+        return: ret
+    }
+
+}
+
+fib = @ count,seedOne=0,seedTwo=1 {
+    currentVal = seedOne
+    nextVal = seedTwo
+    counter = 0
+
+    hasNext = $ {
+        return: counter < count
+    }
+
+    next = $ {
+        counter += 1
         ret = currentVal
         currentVal = nextVal
         nextVal = nextVal + ret

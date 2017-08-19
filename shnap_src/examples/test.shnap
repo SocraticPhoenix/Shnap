@@ -1,1 +1,2 @@
-println(iterableStr(importFrom("sys", "args")))
+fib = importFrom("math", "fib")
+for fib(10) println(it)
