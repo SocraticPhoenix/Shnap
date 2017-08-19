@@ -202,7 +202,7 @@ public class ShnapParser {
         }
         whitespace();
         if (stream.hasNext()) {
-            throw err("Unexpected trailing sequence");
+            throw err("Expected statement");
         }
 
         return new ShnapInstructionSequence(loc, instructions);
@@ -1365,6 +1365,8 @@ public class ShnapParser {
             if (stream.hasNext()) {
                 char c = stream.next().get();
                 flag = !Character.isJavaIdentifierPart(c);
+            } else {
+                flag = true;
             }
             stream.jumpTo(index);
             return flag;

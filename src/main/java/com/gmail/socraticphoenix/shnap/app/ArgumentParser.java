@@ -50,10 +50,6 @@ public class ArgumentParser {
 
     public String help() {
         StringBuilder builder = new StringBuilder();
-        builder.append("Arguments:").append(System.lineSeparator());
-        for (ArgDef arg : args) {
-            builder.append("    <").append(arg.getName()).append(">: ").append(arg.getHelp()).append(System.lineSeparator());
-        }
         builder.append("Flags:").append(System.lineSeparator());
         for (ArgDef arg : flags.values()) {
             builder.append("    -").append(arg.getName()).append(": ").append(arg.getHelp()).append(System.lineSeparator());

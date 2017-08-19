@@ -305,6 +305,10 @@ public class ShnapEnvironment {
         this.state = to;
     }
 
+    public Stack<ShnapTraceback> getTracebackStack() {
+        return tracebackStack;
+    }
+
     private enum State {
         NATIVES,
         BUILTINS,

@@ -22,14 +22,18 @@
 package com.gmail.socraticphoenix.shnap.app;
 
 import com.gmail.socraticphoenix.collect.coupling.Switch;
+import com.gmail.socraticphoenix.parse.Strings;
 import com.gmail.socraticphoenix.shnap.compiler.ShnapCompiler;
 import com.gmail.socraticphoenix.shnap.compiler.ShnapDefaultHandlers;
 import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.env.ShnapScriptInvalidSyntaxException;
+import com.gmail.socraticphoenix.shnap.parse.ShnapParseError;
+import com.gmail.socraticphoenix.shnap.parse.ShnapParser;
 import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.ShnapScript;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstructionSequence;
 import com.gmail.socraticphoenix.shnap.program.natives.ShnapArrayNative;
 import com.gmail.socraticphoenix.shnap.program.natives.ShnapDefaultNatives;
 import com.gmail.socraticphoenix.shnap.program.natives.ShnapStringNative;
@@ -42,6 +46,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -102,7 +107,7 @@ public class ShnapMain {
         };
 
         ArgumentParser parser = new ArgumentParser()
-                .arg("file", "The file(s)/script(s) to execute/compile", s -> {
+                .flag("arg", "The file(s)/script(s) to execute/compile", s -> {
                     String vs = validScript.apply(s);
                     String vf = validPath.apply(s);
                     if (vs == null || vf == null) {
@@ -120,7 +125,8 @@ public class ShnapMain {
                 .flag("archive", "The name of the archive", s -> null)
                 .flag("exec", "A name of a script to execute", validScript)
                 .flag("reloadHome", "If present, update the standard libraries", s -> null)
-                .flag("debug", "If present, tracebacks will be considerably more detailed", s -> null);
+                .flag("debug", "If present, tracebacks will be considerably more detailed", s -> null)
+                .flag("shell", "If present, arg, exec and compile flags will be ignored and the Shnap shell will start", s -> null);
 
         Switch<Arguments, String> as = parser.parse(a);
         boolean needsHelp = false;
@@ -132,25 +138,42 @@ public class ShnapMain {
 
             List<String> scriptArgsList = new ArrayList<>();
             scriptArgsList.addAll(args.getArguments());
-            scriptArgsList.remove(0);
             ShnapObject[] scriptArgsArr = new ShnapObject[scriptArgsList.size()];
             for (int i = 0; i < scriptArgsList.size(); i++) {
                 scriptArgsArr[i] = new ShnapStringNative(ShnapLoc.BUILTIN, scriptArgsList.get(i));
             }
             ShnapArrayNative scriptArgs = new ShnapArrayNative(ShnapLoc.BUILTIN, scriptArgsArr);
 
-            String file = args.getArg(0);
+            String file = args.getFlag("arg");
             int mode = 0;
             String target;
             if (args.hasFlag("exec")) {
                 mode = 1;
                 target = args.getFlag("exec");
+                if (file == null) {
+                    needsHelp = true;
+                    mode = -1;
+                    System.out.println("required -arg flag");
+                }
             } else if (args.hasFlag("compile")) {
                 mode = 3;
                 target = args.getFlag("compile");
+                if (file == null) {
+                    needsHelp = true;
+                    mode = -1;
+                    System.out.println("required -arg flag");
+                }
+            } else if (args.hasFlag("shell")) {
+                mode = 4;
+                target = null;
             } else {
                 mode = 2;
                 target = file;
+                if (file == null) {
+                    needsHelp = true;
+                    mode = -1;
+                    System.out.println("required -arg flag");
+                }
             }
 
             ShnapEnvironment environment = new ShnapEnvironment();
@@ -298,6 +321,91 @@ public class ShnapMain {
                     }
                     break;
                 }
+                case 4: {
+                    try {
+                        System.out.println("Starting shell...");
+                        System.out.println("Loading natives...");
+                        ShnapExecution nativeLoad = environment.loadNatives();
+                        if (nativeLoad.isAbnormal()) {
+                            notifyAbnormalState(nativeLoad, environment);
+                            System.exit(1);
+                            return;
+                        }
+                        System.out.println("Loaded natives.");
+                        System.out.println("Loading builtins...");
+                        ShnapExecution builtinsLoad = environment.loadBuiltins();
+                        if (builtinsLoad.isAbnormal()) {
+                            notifyAbnormalState(builtinsLoad, environment);
+                            System.exit(1);
+                            return;
+                        }
+                        System.out.println("Loaded builtins");
+                        System.out.println("Shell started...");
+                        System.out.println("----------------------------------");
+                        System.out.println("Welcome to the Shnap shell!");
+                        System.out.println("Type in statements to evaluate them");
+                        System.out.println("Type 'return' to exit");
+                        System.out.println("Prefix a line with & to store it");
+                        System.out.println("Stored lines will be parsed and executed with the next line not prefixed with &");
+                        System.out.println("----------------------------------");
+                        environment.loadNormal();
+
+                        ShnapScript script = new ShnapScript("shell", "shell");
+                        environment.applyDefaults(script);
+
+                        StringBuilder content = new StringBuilder();
+                        Scanner scanner = new Scanner(System.in);
+                        while (true) {
+                            System.out.print("> ");
+                            String line = scanner.nextLine();
+
+                            if (line.startsWith("&")) {
+                                content.append(Strings.cutFirst(line)).append("\n");
+                            } else {
+                                content.append(line);
+                                String contentStr = content.toString();
+                                script.setContent(() -> contentStr);
+                                content = new StringBuilder();
+                                ShnapParser shnapParser = new ShnapParser(contentStr, script);
+                                try {
+                                    ShnapInstructionSequence seq = shnapParser.parseAll();
+                                    environment.getTracebackStack().clear();
+
+                                    ShnapExecution execution = seq.exec(script.getContext(), environment);
+                                    if(execution.getState() == ShnapExecution.State.RETURNING) {
+                                        System.out.println("Shell terminated");
+                                        return;
+                                    } else if (execution.isAbnormal()) {
+                                        notifyAbnormalState(execution, environment);
+                                    } else {
+                                        System.out.print("Execution Value: ");
+                                        ShnapExecution str = execution.getValue().asString(environment);
+                                        if(str.isAbnormal()) {
+                                            System.out.println();
+                                            System.out.println("Failed to convert to string: ");
+                                            notifyAbnormalState(execution, environment);
+                                        } else {
+                                            System.out.println(((ShnapStringNative) str.getValue()).getValue());
+                                        }
+                                    }
+                                } catch (ShnapScriptInvalidSyntaxException e) {
+                                    System.out.println(e.getCause().formatSafely());
+                                } catch (ShnapParseError e) {
+                                    System.out.println(e.formatSafely());
+                                }
+
+
+                            }
+                        }
+
+
+                    } catch (IOException e) {
+                        System.out.println("IOException occured");
+                        e.printStackTrace(System.out);
+                        needsHelp = true;
+                    }
+                    break;
+                }
             }
         }
 
@@ -309,9 +417,11 @@ public class ShnapMain {
     }
 
     private static void notifyAbnormalState(ShnapExecution ex, ShnapEnvironment environment) {
-        System.out.println("Warning: ended in abnormal state: " + ex.getState());
-        System.out.println("Traceback:");
-        System.out.print(environment.formatTraceback());
+        System.out.println("Warning: abnormal state: " + ex.getState());
+        if(!environment.getTracebacks().isEmpty()) {
+            System.out.println("Traceback:");
+            System.out.print(environment.formatTraceback());
+        }
         System.out.println("State value:");
         ShnapExecution stringAttempt = ex.getValue().asString(environment);
         if (stringAttempt.isAbnormal()) {
