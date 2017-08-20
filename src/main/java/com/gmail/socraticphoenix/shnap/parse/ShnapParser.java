@@ -280,7 +280,7 @@ public class ShnapParser {
                     operands.push(new OperatorTree(element.getA().get()));
                 } else {
                     ShnapOperators operator = element.getB().get().getA();
-                    if (operator.getPrecedence() > operators.peek().getPrecedence() || (operator.isLeftAssociative() && operator.getPrecedence() == operators.peek().getPrecedence())) {
+                    if (operator.getPrecedence() > operators.peek().getPrecedence() || (!operator.isLeftAssociative() && operator.getPrecedence() == operators.peek().getPrecedence())) {
                         operators.push(operator);
                         operatorLocs.push(element.getB().get().getB());
                     } else {

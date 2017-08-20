@@ -31,6 +31,7 @@ import com.gmail.socraticphoenix.shnap.program.natives.ShnapArrayNative;
 import com.gmail.socraticphoenix.shnap.program.natives.ShnapStringNative;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +80,7 @@ ShnapExecutionSettings {
         if(this.environmentSettings == null) {
             throw new IllegalStateException("call to applyHomeSettings(ShnapEnvironment) with null environment settings");
         }
-        if(this.reloadHome) {
+        if(this.reloadHome || !Files.exists(this.environmentSettings.getHome())) {
             environment.reloadHome(this.environmentSettings.getHome());
         }
     }
