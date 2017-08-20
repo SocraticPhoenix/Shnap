@@ -21,17 +21,16 @@
  */
 package com.gmail.socraticphoenix.shnap.program.instructions;
 
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
-import com.gmail.socraticphoenix.shnap.program.AbstractShnapNode;
-import com.gmail.socraticphoenix.shnap.program.ShnapFactory;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.program.AbstractShnapLocatable;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.ShnapOperators;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 
-public class ShnapSet extends AbstractShnapNode implements ShnapInstruction {
+public class ShnapSet extends AbstractShnapLocatable implements ShnapInstruction {
     private ShnapInstruction target;
     private String name;
     private ShnapInstruction val;
@@ -69,7 +68,7 @@ public class ShnapSet extends AbstractShnapNode implements ShnapInstruction {
     public ShnapExecution exec(ShnapContext context, ShnapEnvironment tracer) {
         ShnapContext targetContext = context;
         if(this.target != null) {
-            ShnapExecution e = this.target.exec(context, tracer);
+            ShnapExecution e = this.target.exec(context, tracer).resolve(tracer);
             if(e.isAbnormal()) {
                 return e;
             } else {
@@ -93,13 +92,16 @@ public class ShnapSet extends AbstractShnapNode implements ShnapInstruction {
             targetContext.set(this.name, execution.getValue());
             return execution;
         } else {
-            ShnapObject prev = targetContext.get(this.name);
-            ShnapExecution op = prev.operate(execution.getValue(), this.op, tracer);
-            if(op.isAbnormal()) {
+            ShnapContext finalTargetContext = targetContext;
+            return targetContext.get(this.name, tracer).mapIfNormal(e -> {
+                ShnapObject prev = e.getValue();
+                ShnapExecution op = prev.operate(execution.getValue(), this.op, tracer);
+                if(op.isAbnormal()) {
+                    return op;
+                }
+                finalTargetContext.set(this.name, op.getValue());
                 return op;
-            }
-            targetContext.set(this.name, op.getValue());
-            return op;
+            });
         }
     }
 

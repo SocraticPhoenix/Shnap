@@ -21,9 +21,10 @@
  */
 package com.gmail.socraticphoenix.shnap.program;
 
-import com.gmail.socraticphoenix.shnap.program.instructions.ShnapLiteral;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 
-public class ShnapParameter extends AbstractShnapNode {
+public class ShnapParameter extends AbstractShnapLocatable {
     private String name;
     private ShnapInstruction value;
 

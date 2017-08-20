@@ -22,17 +22,17 @@
 package com.gmail.socraticphoenix.shnap.program.instructions.block;
 
 import com.gmail.socraticphoenix.parse.Strings;
-import com.gmail.socraticphoenix.shnap.program.AbstractShnapNode;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
+import com.gmail.socraticphoenix.shnap.program.AbstractShnapLocatable;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution.State;
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapLiteral;
 
-public class ShnapDoWhileBlock extends AbstractShnapNode implements ShnapInstruction {
+public class ShnapDoWhileBlock extends AbstractShnapLocatable implements ShnapInstruction {
     private ShnapInstruction name;
     private ShnapInstruction val;
     private ShnapInstruction instruction;
@@ -81,7 +81,7 @@ public class ShnapDoWhileBlock extends AbstractShnapNode implements ShnapInstruc
                 return block;
             }
 
-            ShnapExecution e2 = this.val.exec(context, tracer);
+            ShnapExecution e2 = this.val.exec(context, tracer).mapIfNormal(exn -> exn.getValue().resolve(tracer));
             if (e2.isAbnormal()) {
                 return e2;
             }

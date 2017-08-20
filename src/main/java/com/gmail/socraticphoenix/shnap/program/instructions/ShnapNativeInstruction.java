@@ -21,16 +21,15 @@
  */
 package com.gmail.socraticphoenix.shnap.program.instructions;
 
-import com.gmail.socraticphoenix.shnap.program.AbstractShnapNode;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.program.AbstractShnapLocatable;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 
 import java.util.function.BiFunction;
 
-public class ShnapNativeInstruction extends AbstractShnapNode implements ShnapInstruction {
+public class ShnapNativeInstruction extends AbstractShnapLocatable implements ShnapInstruction {
     private BiFunction<ShnapContext, ShnapEnvironment, ShnapExecution> exec;
 
     public ShnapNativeInstruction(ShnapLoc loc, BiFunction<ShnapContext, ShnapEnvironment, ShnapExecution> exec) {

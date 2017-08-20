@@ -22,22 +22,21 @@
 package com.gmail.socraticphoenix.shnap.program.instructions;
 
 import com.gmail.socraticphoenix.parse.Strings;
-import com.gmail.socraticphoenix.shnap.program.AbstractShnapNode;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
+import com.gmail.socraticphoenix.shnap.program.AbstractShnapLocatable;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapBooleanNative;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapCharNative;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapNumberNative;
-import com.gmail.socraticphoenix.shnap.program.natives.ShnapStringNative;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapCharNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-public class ShnapLiteral extends AbstractShnapNode implements ShnapInstruction {
+public class ShnapLiteral extends AbstractShnapLocatable implements ShnapInstruction {
     private ShnapObject value;
 
     public ShnapLiteral(ShnapLoc loc, ShnapObject value) {

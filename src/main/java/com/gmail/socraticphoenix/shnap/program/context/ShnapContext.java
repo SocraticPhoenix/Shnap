@@ -22,15 +22,16 @@
 package com.gmail.socraticphoenix.shnap.program.context;
 
 import com.gmail.socraticphoenix.parse.Strings;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapResolver;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public class ShnapContext {
     private ShnapContext parent;
@@ -48,15 +49,17 @@ public class ShnapContext {
     }
 
     public void del(String name) {
-        if (name.indexOf('.') == -1) {
-            if (name.startsWith("^")) {
-                this.getParentSafely().del(Strings.cutFirst(name));
-            } else {
+        if (name.startsWith("^")) {
+            this.getParentSafely().del(Strings.cutFirst(name));
+        } else {
+            if(this.contains(name)) {
+                this.variables.remove(name);
+                this.flags.remove(name);
+            } else if (this.parent != null) {
+                this.parent.del(name);
                 this.variables.remove(name);
                 this.flags.remove(name);
             }
-        } else {
-            this.pathDel(name.split(Pattern.quote(".")));
         }
     }
 
@@ -73,10 +76,26 @@ public class ShnapContext {
             return;
         }
 
-        if (name.indexOf('.') == -1) {
-            this.variables.put(name, object);
+        this.variables.put(name, object);
+    }
+
+    public ShnapObject getExactly(String name) {
+        if (name.startsWith("^")) {
+            if (this.parent == null) {
+                return ShnapObject.getVoid();
+            } else {
+                return this.parent.getExactly(Strings.cutFirst(name));
+            }
+        }
+
+        ShnapObject obj = this.variables.get(name);
+        if (obj == null) {
+            if (this.parent != null) {
+                return this.parent.getExactly(name);
+            }
+            return ShnapObject.getVoid();
         } else {
-            this.pathSetLocally(name.split(Pattern.quote(".")), object);
+            return obj;
         }
     }
 
@@ -88,14 +107,10 @@ public class ShnapContext {
             return;
         }
 
-        if (name.indexOf('.') == -1) {
-            if (this.parent != null && this.parent.contains(name)) {
-                this.parent.set(name, object);
-            } else {
-                this.variables.put(name, object);
-            }
+        if (this.parent != null && this.parent.contains(name)) {
+            this.parent.set(name, object);
         } else {
-            this.pathSet(name.split(Pattern.quote(".")), object);
+            this.variables.put(name, object);
         }
     }
 
@@ -105,39 +120,33 @@ public class ShnapContext {
             return;
         }
 
-        if (name.indexOf('.') == -1) {
-            if(this.variables.containsKey(name)) {
-                this.flags.computeIfAbsent(name, k -> new ArrayList<>()).add(flag);
+        if (this.variables.containsKey(name)) {
+            this.flags.computeIfAbsent(name, k -> new ArrayList<>()).add(flag);
 
-            } else if (this.parent != null) {
-                this.parent.setFlag(name, flag);
-            }
-        } else {
-            this.pathSetFlag(name.split(Pattern.quote(".")), flag);
+        } else if (this.parent != null) {
+            this.parent.setFlag(name, flag);
         }
     }
 
-    public ShnapObject get(String name) {
+    public ShnapExecution get(String name, ShnapEnvironment environment) {
         if (name.startsWith("^")) {
             if (this.parent == null) {
-                return ShnapObject.getVoid();
+                return ShnapExecution.normal(ShnapObject.getVoid(), environment, ShnapLoc.BUILTIN);
             } else {
-                return this.parent.get(Strings.cutFirst(name));
+                return this.parent.get(Strings.cutFirst(name), environment);
             }
         }
 
-        if (name.indexOf('.') == -1) {
-            ShnapObject obj = this.variables.get(name);
-            if (obj == null) {
-                if (this.parent != null) {
-                    return this.parent.get(name);
-                }
-                return ShnapObject.getVoid();
-            } else {
-                return obj;
+        ShnapObject obj = this.variables.get(name);
+        if (obj == null) {
+            if (this.parent != null) {
+                return this.parent.get(name, environment);
             }
+            return ShnapExecution.normal(ShnapObject.getVoid(), environment, ShnapLoc.BUILTIN);
+        } else if (obj instanceof ShnapResolver) {
+            return obj.resolve(environment);
         } else {
-            return this.pathGet(name.split(Pattern.quote(".")));
+            return ShnapExecution.normal(obj, environment, ShnapLoc.BUILTIN);
         }
     }
 
@@ -150,107 +159,15 @@ public class ShnapContext {
             }
         }
 
-        if (name.indexOf('.') == -1) {
-            List<Flag> flag = this.flags.get(name);
-            if (flag == null) {
-                if (this.parent != null) {
-                    return this.parent.getFlags(name);
-                }
-                return null;
-            } else {
-                return flag;
+        List<Flag> flag = this.flags.get(name);
+        if (flag == null) {
+            if (this.parent != null) {
+                return this.parent.getFlags(name);
             }
+            return null;
         } else {
-            return this.pathGetFlags(name.split(Pattern.quote(".")));
+            return flag;
         }
-    }
-
-    private void pathDel(String[] path) {
-        ShnapContext context = this;
-        for (int i = 0; i < path.length - 1; i++) {
-            if (!context.contains(path[i])) {
-                return;
-            }
-
-            ShnapObject obj = context.get(path[i]);
-            context = obj.getContext();
-        }
-
-        context.del(path[path.length - 1]);
-    }
-
-    private void pathSet(String[] path, ShnapObject object) {
-        ShnapContext context = this;
-        for (int i = 0; i < path.length - 1; i++) {
-            if (!context.contains(path[i])) {
-                ShnapObject obj = new ShnapObject(ShnapLoc.BUILTIN);
-                obj.init(context);
-                context.set(path[i], object);
-            }
-
-            ShnapObject obj = context.get(path[i]);
-            context = obj.getContext();
-        }
-
-        context.set(path[path.length - 1], object);
-    }
-
-    private void pathSetLocally(String[] path, ShnapObject object) {
-        ShnapContext context = this;
-        for (int i = 0; i < path.length - 1; i++) {
-            if (!context.contains(path[i])) {
-                ShnapObject obj = new ShnapObject(ShnapLoc.BUILTIN);
-                obj.init(context);
-                context.setLocally(path[i], object);
-            }
-
-            ShnapObject obj = context.get(path[i]);
-            context = obj.getContext();
-        }
-
-        context.setLocally(path[path.length - 1], object);
-    }
-
-    private void pathSetFlag(String[] path, Flag flag) {
-        ShnapContext context = this;
-        for (int i = 0; i < path.length - 1; i++) {
-            if (!context.contains(path[i])) {
-                return;
-            }
-
-            ShnapObject obj = context.get(path[i]);
-            context = obj.getContext();
-        }
-
-        context.setFlag(path[path.length - 1], flag);
-    }
-
-    private ShnapObject pathGet(String[] path) {
-        ShnapContext context = this;
-        for (int i = 0; i < path.length - 1; i++) {
-            if (!context.contains(path[i])) {
-                return ShnapObject.getVoid();
-            }
-
-            ShnapObject obj = context.get(path[i]);
-            context = obj.getContext();
-        }
-
-        return context.get(path[path.length - 1]);
-    }
-
-    private List<Flag> pathGetFlags(String[] path) {
-        ShnapContext context = this;
-        for (int i = 0; i < path.length - 1; i++) {
-            if (!context.contains(path[i])) {
-                return null;
-            }
-
-            ShnapObject obj = context.get(path[i]);
-            context = obj.getContext();
-        }
-
-        return context.getFlags(path[path.length - 1]);
     }
 
     public ShnapContext getParentSafely() {
@@ -280,7 +197,7 @@ public class ShnapContext {
     public ShnapContext copy() {
         ShnapContext other = new ShnapContext(this.parent);
         for (String name : this.names()) {
-            other.set(name, this.get(name));
+            other.set(name, this.variables.get(name));
         }
         return other;
     }

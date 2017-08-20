@@ -1,1 +1,3 @@
-t=0for range('a','z'){for range(t)print(" ")if t<num(import("sys").args.get(0))t+=1println(it)}
+javaSystem = javaClass("java.lang.System")
+javaOut = javaSystem.static_field_out
+javaOut.method_println("success!")

@@ -21,16 +21,15 @@
  */
 package com.gmail.socraticphoenix.shnap.program.instructions;
 
-import com.gmail.socraticphoenix.shnap.program.AbstractShnapNode;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.program.AbstractShnapLocatable;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.ShnapOperators;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapBooleanNative;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
 
-public class ShnapOperate extends AbstractShnapNode implements ShnapInstruction {
+public class ShnapOperate extends AbstractShnapLocatable implements ShnapInstruction {
     private ShnapInstruction left;
     private ShnapOperators operator;
     private ShnapInstruction right;
@@ -56,7 +55,7 @@ public class ShnapOperate extends AbstractShnapNode implements ShnapInstruction 
 
     @Override
     public ShnapExecution exec(ShnapContext context, ShnapEnvironment tracer) {
-        ShnapExecution left = this.left.exec(context, tracer);
+        ShnapExecution left = this.left.exec(context, tracer).resolve(tracer);
         if (left.isAbnormal()) {
             return left;
         }
@@ -70,7 +69,7 @@ public class ShnapOperate extends AbstractShnapNode implements ShnapInstruction 
                 }
             }
 
-            ShnapExecution right = this.right.exec(context, tracer);
+            ShnapExecution right = this.right.exec(context, tracer).resolve(tracer);
             if (right.isAbnormal()) {
                 return right;
             }

@@ -22,7 +22,6 @@
 package com.gmail.socraticphoenix.shnap.parse;
 
 import com.gmail.socraticphoenix.parse.Strings;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
 
 import java.io.IOException;
 

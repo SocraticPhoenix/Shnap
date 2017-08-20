@@ -10,7 +10,7 @@ apply plugin : 'idea'
 //End Plugins
 
 //Program Specific Variables
-def programVersion = "0.0.5"
+def programVersion = "0.0.6"
 def programGroup = "com.gmail.socraticphoenix"
 //End Variables
 
@@ -64,12 +64,13 @@ javadoc {
 
 jar {
     manifest {
-        attributes("Main-Class":"com.gmail.socraticphoenix.shnap.app.ShnapMain")
+        attributes("Main-Class":"com.gmail.socraticphoenix.shnap.run.app.ShnapMain")
     }
 }
 
 shadowJar {
     classifier = "shadow"
+    relocate "org.ow2.asm", "com.gmail.socraticphoenix.shnap.repack.org.ow2.asm"
 }
 //End Tasks
 

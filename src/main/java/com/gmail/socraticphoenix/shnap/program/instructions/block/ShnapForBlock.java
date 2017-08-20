@@ -22,17 +22,18 @@
 package com.gmail.socraticphoenix.shnap.program.instructions.block;
 
 import com.gmail.socraticphoenix.parse.Strings;
-import com.gmail.socraticphoenix.shnap.program.AbstractShnapNode;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
+import com.gmail.socraticphoenix.shnap.program.AbstractShnapLocatable;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapFunction;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution.State;
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapLiteral;
 
-public class ShnapForBlock extends AbstractShnapNode implements ShnapInstruction {
+public class ShnapForBlock extends AbstractShnapLocatable implements ShnapInstruction {
     private ShnapInstruction name;
     private String varName;
     private ShnapInstruction val;
@@ -70,23 +71,48 @@ public class ShnapForBlock extends AbstractShnapNode implements ShnapInstruction
         }
 
         ShnapObject name = e.getValue();
-        ShnapExecution e2 = this.val.exec(context, tracer);
+        ShnapExecution e2 = this.val.exec(context, tracer).resolve(tracer);
         if (e2.isAbnormal()) {
             return e2;
         }
         ShnapObject iterator = e2.getValue();
-        if (iterator.hasFunction("iterator", 0)) {
-            ShnapExecution iterEx = iterator.getFunction("iterator").invoke(tracer);
-            if (!iterEx.isAbnormal()) {
-                iterator = iterEx.getValue();
+
+        ShnapExecution iteratorE = iterator.get("iterator", tracer);
+        if (!iteratorE.isAbnormal() && iteratorE.getValue() instanceof ShnapFunction) {
+            ShnapFunction iterfunc = (ShnapFunction) iteratorE.getValue();
+            if(iterfunc.paramSizeId() == 1) {
+                ShnapExecution exe = iterfunc.invoke(tracer);
+                if(exe.isAbnormal()) {
+                    return exe;
+                } else {
+                    iterator = exe.getValue();
+                }
             }
         }
 
-        boolean flag = iterator.hasFunction("hasNext", 0) && iterator.hasFunction("next", 0);
+        boolean flag = false;
+        ShnapFunction nextFunc = null;
+        ShnapFunction hasNextFunc = null;
+
+        ShnapExecution nextE = iterator.get("next", tracer);
+        ShnapExecution hasNextE = iterator.get("hasNext", tracer);
+
+        if(nextE.getState() == State.THROWING) {
+            return nextE;
+        } else if (hasNextE.getState() == State.THROWING) {
+            return hasNextE;
+        }
+
+        if (!nextE.isAbnormal() && !hasNextE.isAbnormal() && nextE.getValue() instanceof ShnapFunction && hasNextE.getValue() instanceof ShnapFunction) {
+            nextFunc = (ShnapFunction) nextE.getValue();
+            hasNextFunc = (ShnapFunction) hasNextE.getValue();
+            flag = nextFunc.paramSizeId() == 0 && hasNextFunc.paramSizeId() == 0;
+        }
+
         ShnapExecution ret = ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
         if (flag) {
             while (flag) {
-                ShnapExecution cond = iterator.getFunction("hasNext").invoke(tracer);
+                ShnapExecution cond = hasNextFunc.invoke(tracer).resolve(tracer);
                 if (cond.isAbnormal()) {
                     return cond;
                 } else {
@@ -96,7 +122,7 @@ public class ShnapForBlock extends AbstractShnapNode implements ShnapInstruction
                     }
                 }
 
-                ShnapExecution nextExe = iterator.getFunction("next").invoke(tracer);
+                ShnapExecution nextExe = nextFunc.invoke(tracer);
                 if (nextExe.isAbnormal()) {
                     return nextExe;
                 }
@@ -117,7 +143,22 @@ public class ShnapForBlock extends AbstractShnapNode implements ShnapInstruction
                     return block;
                 }
 
-                flag = iterator.hasFunction("hasNext", 0) && iterator.hasFunction("next", 0);
+                nextE = iterator.get("next", tracer);
+                hasNextE = iterator.get("hasNext", tracer);
+
+                if(nextE.getState() == State.THROWING) {
+                    return nextE;
+                } else if (hasNextE.getState() == State.THROWING) {
+                    return hasNextE;
+                }
+
+                if (!nextE.isAbnormal() && !hasNextE.isAbnormal() && nextE.getValue() instanceof ShnapFunction && hasNextE.getValue() instanceof ShnapFunction) {
+                    nextFunc = (ShnapFunction) nextE.getValue();
+                    hasNextFunc = (ShnapFunction) hasNextE.getValue();
+                    flag = nextFunc.paramSizeId() == 0 && hasNextFunc.paramSizeId() == 0;
+                } else {
+                    flag = false;
+                }
             }
 
             return ret;

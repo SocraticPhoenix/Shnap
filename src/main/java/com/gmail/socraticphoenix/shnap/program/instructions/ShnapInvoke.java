@@ -21,13 +21,12 @@
  */
 package com.gmail.socraticphoenix.shnap.program.instructions;
 
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
-import com.gmail.socraticphoenix.shnap.env.ShnapTraceback;
-import com.gmail.socraticphoenix.shnap.program.AbstractShnapNode;
-import com.gmail.socraticphoenix.shnap.program.ShnapFunction;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapTraceback;
+import com.gmail.socraticphoenix.shnap.program.AbstractShnapLocatable;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapFunction;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 
@@ -36,7 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ShnapInvoke extends AbstractShnapNode implements ShnapInstruction {
+public class ShnapInvoke extends AbstractShnapLocatable implements ShnapInstruction {
     private ShnapInstruction target;
     private List<ShnapInstruction> args;
     private Map<String, ShnapInstruction> defArgs;
@@ -72,39 +71,41 @@ public class ShnapInvoke extends AbstractShnapNode implements ShnapInstruction {
         if(execution.getState().isAbnormal()) {
             return execution;
         }
-        ShnapObject object = execution.getValue();
-        if(object instanceof ShnapFunction) {
-            ShnapFunction function = (ShnapFunction) object;
-            List<ShnapObject> values = new ArrayList<>();
-            for(ShnapInstruction arg : this.args) {
-                ShnapExecution argExec = arg.exec(context, tracer);
-                if(argExec.isAbnormal()) {
-                    return argExec;
-                } else {
-                    values.add(argExec.getValue());
+        return execution.getValue().resolve(tracer).mapIfNormal(e -> {
+            ShnapObject object = e.getValue();
+            if(object instanceof ShnapFunction) {
+                ShnapFunction function = (ShnapFunction) object;
+                List<ShnapObject> values = new ArrayList<>();
+                for(ShnapInstruction arg : this.args) {
+                    ShnapExecution argExec = arg.exec(context, tracer);
+                    if(argExec.isAbnormal()) {
+                        return argExec;
+                    } else {
+                        values.add(argExec.getValue());
+                    }
                 }
-            }
-            Map<String, ShnapObject> defValues = new LinkedHashMap<>();
-            for(Map.Entry<String, ShnapInstruction> defArg : this.defArgs.entrySet()) {
-                ShnapExecution argExec = defArg.getValue().exec(context, tracer);
-                if(argExec.isAbnormal()) {
-                    return argExec;
-                } else {
-                    defValues.put(defArg.getKey(), argExec.getValue());
+                Map<String, ShnapObject> defValues = new LinkedHashMap<>();
+                for(Map.Entry<String, ShnapInstruction> defArg : this.defArgs.entrySet()) {
+                    ShnapExecution argExec = defArg.getValue().exec(context, tracer);
+                    if(argExec.isAbnormal()) {
+                        return argExec;
+                    } else {
+                        defValues.put(defArg.getKey(), argExec.getValue());
+                    }
                 }
-            }
-            function.trace(tracer);
-            tracer.pushTraceback(ShnapTraceback.detail(this.getLocation(), "target: " + this.target.decompile(0)));
-            ShnapExecution res = function.invokeWithoutTrace(values, defValues, tracer);
+                function.trace(tracer);
+                tracer.pushTraceback(ShnapTraceback.detail(this.getLocation(), "target: " + this.target.decompile(0)));
+                ShnapExecution res = function.invokeWithoutTrace(values, defValues, tracer);
 
-            if(res.isAbnormal()) {
+                if(res.isAbnormal()) {
+                    return res;
+                }
+
                 return res;
+            } else {
+                return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
             }
-
-            return res;
-        } else {
-            return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
-        }
+        });
     }
 
     @Override

@@ -22,17 +22,16 @@
 package com.gmail.socraticphoenix.shnap.program.instructions;
 
 import com.gmail.socraticphoenix.parse.Strings;
-import com.gmail.socraticphoenix.shnap.program.AbstractShnapNode;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
+import com.gmail.socraticphoenix.shnap.program.AbstractShnapLocatable;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 
 import java.util.List;
 
-public class ShnapInstructionSequence extends AbstractShnapNode implements ShnapInstruction {
+public class ShnapInstructionSequence extends AbstractShnapLocatable implements ShnapInstruction {
     private List<ShnapInstruction> sequence;
 
     public ShnapInstructionSequence(ShnapLoc loc, List<ShnapInstruction> sequence) {

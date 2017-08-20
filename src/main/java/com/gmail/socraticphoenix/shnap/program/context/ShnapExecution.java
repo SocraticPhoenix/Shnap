@@ -21,10 +21,10 @@
  */
 package com.gmail.socraticphoenix.shnap.program.context;
 
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
-import com.gmail.socraticphoenix.shnap.env.ShnapTraceback;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapTraceback;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -39,6 +39,20 @@ public class ShnapExecution {
         if(state.isAbnormal()) {
             trc.pushTraceback(ShnapTraceback.meta(loc, "abnormal state: " + state));
         }
+    }
+
+    public ShnapExecution resolve(ShnapEnvironment trc) {
+        return this.isAbnormal() ? this : this.value.resolve(trc);
+    }
+
+    public ShnapExecution setValue(ShnapObject value) {
+        this.value = value;
+        return this;
+    }
+
+    public ShnapExecution setState(State state) {
+        this.state = state;
+        return this;
     }
 
     public ShnapExecution ifAbnormal(Consumer<ShnapExecution> action) {

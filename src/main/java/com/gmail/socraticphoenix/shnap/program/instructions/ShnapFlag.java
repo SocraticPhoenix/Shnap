@@ -22,15 +22,14 @@
 
 package com.gmail.socraticphoenix.shnap.program.instructions;
 
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
-import com.gmail.socraticphoenix.shnap.program.AbstractShnapNode;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.program.AbstractShnapLocatable;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 
-public class ShnapFlag extends AbstractShnapNode implements ShnapInstruction {
+public class ShnapFlag extends AbstractShnapLocatable implements ShnapInstruction {
     private ShnapInstruction target;
     private String name;
     private ShnapContext.Flag flag;
@@ -69,7 +68,7 @@ public class ShnapFlag extends AbstractShnapNode implements ShnapInstruction {
 
         targetContext.setFlag(this.name, this.flag);
 
-        return ShnapExecution.normal(targetContext.get(this.name), tracer, this.getLocation());
+        return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
     }
 
     @Override

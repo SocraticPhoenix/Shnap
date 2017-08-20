@@ -21,16 +21,15 @@
  */
 package com.gmail.socraticphoenix.shnap.program.instructions;
 
-import com.gmail.socraticphoenix.shnap.env.ShnapEnvironment;
-import com.gmail.socraticphoenix.shnap.program.AbstractShnapNode;
-import com.gmail.socraticphoenix.shnap.program.ShnapFactory;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.program.AbstractShnapLocatable;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 
-public class ShnapGet extends AbstractShnapNode implements ShnapInstruction {
+public class ShnapGet extends AbstractShnapLocatable implements ShnapInstruction {
     private ShnapInstruction target;
     private String name;
 
@@ -44,7 +43,7 @@ public class ShnapGet extends AbstractShnapNode implements ShnapInstruction {
     public ShnapExecution exec(ShnapContext context, ShnapEnvironment tracer) {
         ShnapContext targetContext = context;
         if(this.target != null) {
-            ShnapExecution e = this.target.exec(context, tracer);
+            ShnapExecution e = this.target.exec(context, tracer).resolve(tracer);
             if(e.isAbnormal()) {
                 return e;
             } else {
@@ -57,7 +56,7 @@ public class ShnapGet extends AbstractShnapNode implements ShnapInstruction {
             return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.AccessError", "field " + name + " is flagged with PRIVATE", null), tracer, this.getLocation());
         }
 
-        return ShnapExecution.normal(targetContext.get(this.name), tracer, this.getLocation());
+        return ShnapExecution.normal(targetContext.getExactly(this.name), tracer, this.getLocation());
     }
 
     @Override

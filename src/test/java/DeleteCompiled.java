@@ -28,6 +28,7 @@ public class DeleteCompiled {
 
     public static void main(String[] args) throws IOException {
         deleteDirectory(new File("shnap_src/compiled"));
+        deleteDirectory(new File(System.getProperty("user.home") + File.separator + ".shnap"));
     }
 
     public static void deleteDirectory(File dir) throws IOException {

@@ -26,13 +26,13 @@ import com.gmail.socraticphoenix.collect.coupling.Switch;
 import com.gmail.socraticphoenix.parse.CharacterStream;
 import com.gmail.socraticphoenix.parse.ParserData;
 import com.gmail.socraticphoenix.parse.Strings;
-import com.gmail.socraticphoenix.shnap.program.ShnapFactory;
-import com.gmail.socraticphoenix.shnap.program.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.program.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapObject;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapMakeResolver;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.ShnapOperators;
 import com.gmail.socraticphoenix.shnap.program.ShnapParameter;
-import com.gmail.socraticphoenix.shnap.program.ShnapScript;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapScript;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution.State;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapArrayLiteral;
@@ -54,10 +54,10 @@ import com.gmail.socraticphoenix.shnap.program.instructions.block.ShnapIfBlock;
 import com.gmail.socraticphoenix.shnap.program.instructions.block.ShnapScopeBlock;
 import com.gmail.socraticphoenix.shnap.program.instructions.block.ShnapTryCatchBlock;
 import com.gmail.socraticphoenix.shnap.program.instructions.block.ShnapWhileBlock;
-import com.gmail.socraticphoenix.shnap.program.natives.ShnapStringNative;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapBooleanNative;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapCharNative;
-import com.gmail.socraticphoenix.shnap.program.natives.num.ShnapNumberNative;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapCharNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -350,6 +350,8 @@ public class ShnapParser {
             primary = parseNextScopeBlock();
         } else if (isFunctionNext()) {
             primary = parseNextFunc();
+        } else if (isResolverNext()) {
+            primary = parseNextResolver();
         } else if (isObjNext()) {
             primary = parseNextObj();
         } else if (isClsNext()) {
@@ -577,6 +579,19 @@ public class ShnapParser {
         return new ShnapMakeObj(loc, body);
     }
 
+    public boolean isResolverNext() {
+        return stream.isNext("?");
+    }
+
+    public ShnapMakeResolver parseNextResolver() {
+        whitespace();
+        ShnapLoc loc = this.loc();
+        stream.next();
+        whitespace();
+
+        return new ShnapMakeResolver(loc, safeNextInst());
+    }
+
     public boolean isFunctionNext() {
         return stream.isNext("$");
     }
@@ -624,8 +639,8 @@ public class ShnapParser {
     }
 
     public boolean isFlagNext() {
-        for(ShnapContext.Flag flag : ShnapContext.Flag.values()) {
-            if(this.tokenIsNext(flag.getRep())) {
+        for (ShnapContext.Flag flag : ShnapContext.Flag.values()) {
+            if (this.tokenIsNext(flag.getRep())) {
                 return true;
             }
         }
@@ -637,15 +652,15 @@ public class ShnapParser {
         whitespace();
         ShnapLoc loc = this.loc();
         ShnapContext.Flag flag = null;
-        for(ShnapContext.Flag test : ShnapContext.Flag.values()) {
-            if(stream.isNext(test.getRep())) {
+        for (ShnapContext.Flag test : ShnapContext.Flag.values()) {
+            if (stream.isNext(test.getRep())) {
                 stream.next(test.getRep().length());
                 flag = test;
                 break;
             }
         }
         whitespace();
-        if(!this.isSimpleGetNext()) {
+        if (!this.isSimpleGetNext()) {
             throw err("expected variable identifier");
         }
         ShnapGet res = this.parseSimpleGet();
@@ -654,7 +669,7 @@ public class ShnapParser {
             ShnapLoc loc2 = this.loc();
             stream.next();
             whitespace();
-            if(!this.isSimpleGetNext()) {
+            if (!this.isSimpleGetNext()) {
                 throw err("expected variable identifier");
             } else {
                 res = new ShnapGet(loc2, res, this.nextVarRef());
@@ -876,14 +891,13 @@ public class ShnapParser {
         ShnapInstruction tryBlock = parseNextScopeBlock();
         whitespace();
         ShnapInstruction catchBlock;
-        String varName = "ex";
+        String varName = "it";
         if (this.tokenIsNext("catch")) {
             stream.next(5);
             whitespace();
-            if (!isVarRefNext()) {
-                throw err("Expected variable identifier");
+            if (isVarRefNext()) {
+                varName = nextVarRef();
             }
-            varName = nextVarRef();
             whitespace();
             catchBlock = parseNextScopeBlock();
         } else {
@@ -1225,7 +1239,7 @@ public class ShnapParser {
         if (val.codePoints().count() > 1) {
             throw err(loc, "Expected single character");
         } else {
-            return new ShnapLiteral(loc, new ShnapCharNative(loc, BigInteger.valueOf(val.codePoints().toArray()[0])));
+            return new ShnapLiteral(loc, new ShnapCharNative(loc, val.codePoints().toArray()[0]));
         }
     }
 
@@ -1244,7 +1258,7 @@ public class ShnapParser {
                 char z = stream.next().get();
                 String s = tripleQuoteData.consider(z);
                 str.append(s);
-                if(tripleQuoteData.shouldConsider() && stream.isNext(tripleQuote)) {
+                if (tripleQuoteData.shouldConsider() && stream.isNext(tripleQuote)) {
                     break;
                 }
             }
