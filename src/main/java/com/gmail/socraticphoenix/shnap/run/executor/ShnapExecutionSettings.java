@@ -76,11 +76,11 @@ ShnapExecutionSettings {
         return environment;
     }
 
-    public void applyHomeSettings(ShnapEnvironment environment) throws IOException {
+    public void applyHomeSettings(ShnapEnvironment environment, List<Path> others)  throws IOException {
         if(this.environmentSettings == null) {
             throw new IllegalStateException("call to applyHomeSettings(ShnapEnvironment) with null environment settings");
         }
-        if(this.reloadHome || !Files.exists(this.environmentSettings.getHome())) {
+        if(this.reloadHome || !Files.exists(this.environmentSettings.getHome()) || others.stream().anyMatch(f -> !Files.exists(f)) || this.normal.stream().anyMatch(f -> !Files.exists(f)) || this.prelib.stream().anyMatch(f -> !Files.exists(f)) || this.builtin.stream().anyMatch(f -> !Files.exists(f)) || this.natives.stream().anyMatch(f -> !Files.exists(f))) {
             environment.reloadHome(this.environmentSettings.getHome());
         }
     }

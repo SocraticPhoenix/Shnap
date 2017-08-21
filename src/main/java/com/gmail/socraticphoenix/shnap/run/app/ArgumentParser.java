@@ -30,21 +30,14 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class ArgumentParser {
-    private List<ArgDef> args;
     private Map<String, ArgDef> flags;
 
     public ArgumentParser() {
-        this.args = new ArrayList<>();
         this.flags = new LinkedHashMap<>();
     }
 
     public ArgumentParser flag(String name, String help, Function<String, String> verify) {
         this.flags.put(name, new ArgDef(name, help, verify));
-        return this;
-    }
-
-    public ArgumentParser arg(String name, String help, Function<String, String> verify) {
-        this.args.add(new ArgDef(name, help, verify));
         return this;
     }
 
@@ -59,28 +52,20 @@ public class ArgumentParser {
     }
 
     public Switch<Arguments, String> parse(String... args) {
-        if(args.length < this.args.size()) {
-            return Switch.ofB("Expected at least " + this.args.size() + " argument(s), but got " + args.length);
-        }
-
         List<String> resArgs = new ArrayList<>();
         Map<String, String> resFlags = new LinkedHashMap<>();
 
-        int i;
-        for (i = 0; i < this.args.size(); i++) {
-            ArgDef next = this.args.get(i);
-            String ver = next.getVerify().apply(args[i]);
-            if(ver == null) {
-                resArgs.add(args[i]);
-            } else {
-                return Switch.ofB("Unexpected argument for " + next.getName() + ": " + ver);
-            }
-        }
+        int i = 0;
 
         for (; i < args.length; i++) {
             String next = args[i];
             if(!next.startsWith("-")) {
-                resArgs.add(next);
+                if(!resFlags.containsKey("arg")) {
+                    resFlags.put("arg", next);
+                } else {
+                    resArgs.add(next);
+                    break;
+                }
             } else {
                 next = next.replaceFirst("-", "");
                 String[] pieces = next.split("=", 2);

@@ -24,7 +24,6 @@ package com.gmail.socraticphoenix.shnap.type.natives;
 import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.parse.Strings;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.ShnapOperators;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBigDecimalNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBigIntegerNative;
@@ -32,23 +31,17 @@ import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapCharNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
-import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.forBlock;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.func;
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.ifTrue;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.inst;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.instSimple;
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.literal;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.mimicJavaException;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.noArg;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.oneArg;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.param;
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.returning;
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.sequence;
 
 public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNative {
     private String value;
@@ -132,9 +125,9 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
                         String comp = ((ShnapStringNative) otherAsString.getValue()).getValue();
 
                         if (finalOrder == 1) {
-                            return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, this.value + comp), trc, this.getLocation());
+                            return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), this.value + comp), trc, this.getLocation());
                         } else {
-                            return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, comp + this.value), trc, this.getLocation());
+                            return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), comp + this.value), trc, this.getLocation());
                         }
                     });
                 })));
@@ -154,8 +147,16 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
                 return ShnapExecution.normal(new ShnapCharNative(this.getLocation(), this.pts[order]), trc, this.getLocation());
             }
         })));
+        this.set("contains", oneArg(inst((ctx, trc) -> {
+            ShnapExecution arg = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asString(trc));
+            if (arg.isAbnormal()) {
+                return arg;
+            }
+
+            return ShnapExecution.normal(ShnapBooleanNative.of(this.value.contains(((ShnapStringNative) arg.getValue()).getValue())), trc, this.getLocation());
+        })));
         this.set("iterator", noArg(inst((ctx, trc) -> {
-            ShnapObject iterator = new ShnapObject(ShnapLoc.BUILTIN);
+            ShnapObject iterator = new ShnapObject(this.getLocation());
             iterator.init(ctx);
             iterator.set("index", ShnapNumberNative.valueOf(0));
             iterator.set("hasNext", noArg(inst((con, tra) -> {
@@ -165,7 +166,7 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
                 }
 
                 int index = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
-                return ShnapExecution.normal(ShnapBooleanNative.of(index < this.pts.length), tra, ShnapLoc.BUILTIN);
+                return ShnapExecution.normal(ShnapBooleanNative.of(index < this.pts.length), tra, this.getLocation());
             })));
             iterator.set("next", noArg(inst((con, tra) -> {
                 ShnapExecution num = ctx.get("index", trc).mapIfNormal(e -> e.getValue().asNum(trc));
@@ -175,21 +176,13 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
 
                 int index = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
                 if (index < 0 || index >= this.pts.length) {
-                    return ShnapExecution.normal(ShnapObject.getVoid(), tra, ShnapLoc.BUILTIN);
+                    return ShnapExecution.normal(ShnapObject.getVoid(), tra, this.getLocation());
                 }
                 iterator.set("index", ShnapNumberNative.valueOf(index + 1));
-                return ShnapExecution.normal(new ShnapCharNative(ShnapLoc.BUILTIN, this.pts[index]), tra, ShnapLoc.BUILTIN);
+                return ShnapExecution.normal(new ShnapCharNative(this.getLocation(), this.pts[index]), tra, this.getLocation());
             })));
             return ShnapExecution.normal(iterator, trc, this.getLocation());
         })));
-
-        this.set("contains", oneArg(sequence(
-                forBlock("it", ShnapFactory.get("this"), ifTrue(
-                        ShnapFactory.operate(ShnapFactory.get("it"), ShnapOperators.EQUAL, ShnapFactory.get("arg")),
-                        returning(literal(true))
-                )),
-                returning(literal(false))
-        )));
     }
 
     public String getValue() {

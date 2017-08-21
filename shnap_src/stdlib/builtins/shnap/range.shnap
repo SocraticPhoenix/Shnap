@@ -13,8 +13,6 @@ range_internal_exclusive = @(min,max,step=1) {
 
 }
 
-noimport range_internal_exclusive
-
 range_internal_inclusive = @(min,max,step=1){
     state = min
 
@@ -30,7 +28,8 @@ range_internal_inclusive = @(min,max,step=1){
 
 }
 
-noimport range_internal_inclusive
+private range_internal_exclusive
+private range_internal_inclusive
 
 infrange = @(start,step=1) {
 

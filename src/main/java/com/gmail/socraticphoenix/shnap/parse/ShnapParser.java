@@ -213,15 +213,14 @@ public class ShnapParser {
         if (primary == null) {
             return null;
         }
-        whitespace();
 
         List<Switch<ShnapInstruction, Pair<ShnapOperators, ShnapLoc>>> sequence = new ArrayList<>();
         sequence.add(Switch.ofA(primary));
         while (true) {
             int index = stream.index();
-            whitespace();
             ShnapLoc loc = this.loc();
             if (this.isOperatorNext()) {
+                whitespace();
                 ShnapOperators operator = this.nextOperator();
                 whitespace();
                 if (operator == ShnapOperators.NEGATIVE) { //That moment when they're the same symbol!!
@@ -242,26 +241,29 @@ public class ShnapParser {
                 Pair<List<ShnapInstruction>, Map<String, ShnapInstruction>> params = parseFilledParenthesizedParams();
                 primary = new ShnapInvoke(loc, primary, params.getA(), params.getB());
                 sequence.set(sequence.size() - 1, Switch.ofA(primary));
-            } else if (stream.isNext('.')) {
-                stream.next();
-                ShnapLoc subLoc = this.loc();
+            } else {
                 whitespace();
-                if (isAppendedSetNext()) {
-                    ShnapSet set = this.parseSimpleSet();
-                    set.setTarget(primary);
-                    primary = set;
-                    sequence.set(sequence.size() - 1, Switch.ofA(primary));
-                } else if (isAppendedGetNext()) {
-                    String name = this.nextVarRef();
-                    primary = new ShnapGet(subLoc, primary, name);
-                    sequence.set(sequence.size() - 1, Switch.ofA(primary));
+                if (stream.isNext('.')) {
+                    stream.next();
+                    ShnapLoc subLoc = this.loc();
+                    whitespace();
+                    if (isAppendedSetNext()) {
+                        ShnapSet set = this.parseSimpleSet();
+                        set.setTarget(primary);
+                        primary = set;
+                        sequence.set(sequence.size() - 1, Switch.ofA(primary));
+                    } else if (isAppendedGetNext()) {
+                        String name = this.nextVarRef();
+                        primary = new ShnapGet(subLoc, primary, name);
+                        sequence.set(sequence.size() - 1, Switch.ofA(primary));
+                    } else {
+                        stream.jumpTo(index);
+                        break;
+                    }
                 } else {
                     stream.jumpTo(index);
                     break;
                 }
-            } else {
-                stream.jumpTo(index);
-                break;
             }
         }
 
@@ -402,13 +404,17 @@ public class ShnapParser {
     }
 
     private boolean isOperatorNext() {
+        int index = stream.index();
+        boolean flag = false;
+        whitespace();
         for (ShnapOperators op : ShnapOperators.values()) {
             if (stream.isNext(op.getRep())) {
-                return true;
+                flag = true;
             }
         }
 
-        return false;
+        stream.jumpTo(index);
+        return flag;
     }
 
     private boolean isAppendedInvokeNext() {
@@ -1099,6 +1105,9 @@ public class ShnapParser {
         while (stream.isNext('^')) {
             ref.append(stream.next().get());
         }
+        if(stream.isNext(':')) {
+            ref.append(stream.next().get());
+        }
         ref.append(parseNextIdentifier());
         return ref.toString();
     }
@@ -1106,6 +1115,7 @@ public class ShnapParser {
     public boolean isVarRefNext() {
         int index = stream.index();
         stream.consumeAll('^');
+        stream.consume(':');
         boolean flag = isIdentifierNext() && !(this.tokenIsNext("static") || isFlagNext() || isStateChangeNext() || isFalseTrueVoidNullNext() || isNativeNext() || isForBlockNext() || isTryBlockNext() || isWhileBlockNext() || isDoWhileBlockNext() || isIfBlockNext());
         stream.jumpTo(index);
         return flag;

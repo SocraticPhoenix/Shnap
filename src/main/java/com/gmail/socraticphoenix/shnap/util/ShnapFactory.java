@@ -150,7 +150,7 @@ public interface ShnapFactory {
                 ShnapExecution nStr = nameE.getValue().asString(trc);
                 ShnapExecution mStr = messageE.getValue().asString(trc);
 
-                if(nStr.isAbnormal()) {
+                if (nStr.isAbnormal()) {
                     return nStr;
                 } else if (mStr.isAbnormal()) {
                     return mStr;
@@ -161,11 +161,11 @@ public interface ShnapFactory {
                     String result = n + ": " + m;
 
                     ShnapExecution cas = err.get("cause", trc);
-                    if(cas.isAbnormal()) {
+                    if (cas.isAbnormal()) {
                         return cas;
                     } else if (cas.getValue() != ShnapObject.getNull()) {
                         ShnapExecution casStr = cas.getValue().asString(trc);
-                        if(casStr.isAbnormal()) {
+                        if (casStr.isAbnormal()) {
                             return casStr;
                         } else {
                             result += ", caused by:\n" + ((ShnapStringNative) casStr.getValue()).getValue();
@@ -178,7 +178,10 @@ public interface ShnapFactory {
                 }
             }));
         })));
-        err.set("is", func(Items.buildList(param("type")), sequence(
+        err.set("is", funcExactly(Items.buildList(param("type")), sequence(
+                ifTrue(operate(operate(get("cause"), ShnapOperators.NOT_EQUAL, literal(ShnapObject.getNull())), ShnapOperators.LOGICAL_AND, invoke(get("cause", "is"), get("type"))),
+                        returning(literal(true))
+                ),
                 ifTrue(operate(get("type"), ShnapOperators.EQUAL, get("name")),
                         returning(literal(true))
                 ),
@@ -268,6 +271,10 @@ public interface ShnapFactory {
 
     static ShnapFunction func(List<ShnapParameter> params, ShnapInstruction instruction) {
         return new ShnapFunction(ShnapLoc.BUILTIN, params, new ShnapInstructionSequence(ShnapLoc.BUILTIN, Items.buildList(new ShnapStateChange(ShnapLoc.BUILTIN, State.RETURNING, instruction))));
+    }
+
+    static ShnapFunction funcExactly(List<ShnapParameter> params, ShnapInstruction instruction) {
+        return new ShnapFunction(ShnapLoc.BUILTIN, params, instruction);
     }
 
     static ShnapFunction oneArg(ShnapInstruction instruction) {

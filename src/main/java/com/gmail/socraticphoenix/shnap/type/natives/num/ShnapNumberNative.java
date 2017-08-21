@@ -45,6 +45,7 @@ package com.gmail.socraticphoenix.shnap.type.natives.num;
 
 import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLocatable;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.repack.org.nevec.rjm.BigDecimalMath;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapArrayNative;
@@ -68,7 +69,7 @@ import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.noArg;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.oneArg;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.param;
 
-public interface ShnapNumberNative extends ShnapJavaBackedNative {
+public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable {
     ShnapObject ONE = ShnapNumberNative.valueOf(1);
     ShnapObject ZERO = ShnapNumberNative.valueOf(-1);
 
@@ -118,9 +119,9 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative {
     }
 
     static void implementFunctions(ShnapObject target, ShnapNumberNative alsoTarget) {
-        //Conversion functions; bool() is not needed as numbers are implicitly converted to bools if necessary
-        target.set(ShnapObject.AS_STRING, noArg(instSimple(() -> new ShnapStringNative(ShnapLoc.BUILTIN, String.valueOf(alsoTarget.getNumber())))));
-        target.set(ShnapObject.AS_ARRAY, noArg(instSimple(() -> new ShnapArrayNative(ShnapLoc.BUILTIN, target))));
+        target.set(ShnapObject.AS_STRING, noArg(instSimple(() -> new ShnapStringNative(target.getLocation(), String.valueOf(alsoTarget.getNumber())))));
+        target.set(ShnapObject.AS_ARRAY, noArg(instSimple(() -> new ShnapArrayNative(target.getLocation(), target))));
+        target.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(alsoTarget.getNumber().doubleValue() != 0))));
 
         //Other functions
         ShnapFactory.implementOperators(target,
@@ -154,7 +155,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative {
 
             Number number = alsoTarget.getNumber();
             BigDecimal dec = number instanceof BigInteger ? new BigDecimal((BigInteger) number) : number instanceof BigDecimal ? (BigDecimal) number : new BigDecimal(number.doubleValue());
-            return ShnapExecution.normal(ShnapNumberNative.valueOf(dec.setScale(order, RoundingMode.HALF_UP)), trc, ShnapLoc.BUILTIN);
+            return ShnapExecution.normal(ShnapNumberNative.valueOf(dec.setScale(order, RoundingMode.HALF_UP)), trc, target.getLocation());
         })));
     }
 
@@ -205,12 +206,12 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative {
                                     }
                                 }
 
-                                return ShnapExecution.normal(result, t, ShnapLoc.BUILTIN);
+                                return ShnapExecution.normal(result, t, target.getLocation());
                             }
-                            return ShnapExecution.normal(ShnapObject.getVoid(), t, ShnapLoc.BUILTIN);
+                            return ShnapExecution.normal(ShnapObject.getVoid(), t, target.getLocation());
                         });
                     } catch (ArithmeticException e) {
-                        return ShnapExecution.normal(ShnapObject.getVoid(), t, ShnapLoc.BUILTIN);
+                        return ShnapExecution.normal(ShnapObject.getVoid(), t, target.getLocation());
                     }
                 }));
     }
@@ -414,20 +415,10 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative {
             return ifInt.apply((BigInteger) number);
         } else if (number instanceof BigDecimal) {
             return ifDec.apply((BigDecimal) number);
-        } else {
+        } else if (number instanceof Float || number instanceof Double) {
             return ifDec.apply(new BigDecimal(number.doubleValue()));
-        }
-    }
-
-    static ShnapObject operate2(Number number,
-                                Function<BigInteger, ShnapObject> ifInt,
-                                Function<BigDecimal, ShnapObject> ifDec) {
-        if (number instanceof BigInteger) {
-            return ifInt.apply((BigInteger) number);
-        } else if (number instanceof BigDecimal) {
-            return ifDec.apply((BigDecimal) number);
         } else {
-            return ifDec.apply(new BigDecimal(number.doubleValue()));
+            return ifInt.apply(BigInteger.valueOf(number.longValue()));
         }
     }
 

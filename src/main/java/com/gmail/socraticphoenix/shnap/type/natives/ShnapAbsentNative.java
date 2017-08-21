@@ -39,7 +39,7 @@ public class ShnapAbsentNative extends ShnapObject implements ShnapJavaBackedNat
     private ShnapAbsentNative(ShnapLoc loc, String name) {
         super(loc);
         this.name = name;
-        this.set(ShnapObject.AS_STRING, noArg(instSimple(() -> new ShnapStringNative(ShnapLoc.BUILTIN, this.name))));
+        this.set(ShnapObject.AS_STRING, noArg(instSimple(() -> new ShnapStringNative(this.getLocation(), this.name))));
         this.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(false))));
         this.set("equals", func(
                 Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
@@ -47,9 +47,9 @@ public class ShnapAbsentNative extends ShnapObject implements ShnapJavaBackedNat
                     return ctx.get("arg", trc).mapIfNormal(e -> {
                         ShnapObject object = e.getValue();
                         if (object instanceof ShnapAbsentNative && ((ShnapAbsentNative) object).getName().equals(this.name)) {
-                            return ShnapExecution.normal(ShnapBooleanNative.TRUE, trc, ShnapLoc.BUILTIN);
+                            return ShnapExecution.normal(ShnapBooleanNative.TRUE, trc, this.getLocation());
                         } else {
-                            return ShnapExecution.normal(ShnapBooleanNative.FALSE, trc, ShnapLoc.BUILTIN);
+                            return ShnapExecution.normal(ShnapBooleanNative.FALSE, trc, this.getLocation());
                         }
                     });
                 })));

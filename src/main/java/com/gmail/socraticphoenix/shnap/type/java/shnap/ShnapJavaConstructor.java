@@ -65,26 +65,6 @@ public class ShnapJavaConstructor extends ShnapFunction {
     }
 
     @Override
-    public ShnapExecution invokeOperator(List<ShnapObject> values, int order, ShnapEnvironment tracer) {
-        if (order == 2) {
-            tracer.popTraceback();
-            return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
-        }
-
-        ShnapExecution e = this.constructor.execute(values, tracer);
-
-        if(e.getState() == ShnapExecution.State.THROWING) {
-            return e;
-        } else if (e.getState() == ShnapExecution.State.RETURNING) {
-            tracer.popTraceback();
-            return ShnapExecution.normal(e.getValue(), tracer, this.getLocation());
-        } else {
-            tracer.popTraceback();
-            return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
-        }
-    }
-
-    @Override
     protected ShnapExecution invokePrivate(List<ShnapObject> values, Map<String, ShnapObject> defValues, ShnapEnvironment tracer) {
         ShnapExecution e = this.constructor.execute(values, tracer);
 
@@ -98,4 +78,5 @@ public class ShnapJavaConstructor extends ShnapFunction {
             return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
         }
     }
+
 }

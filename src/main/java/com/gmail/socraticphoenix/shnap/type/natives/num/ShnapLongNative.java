@@ -20,29 +20,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.gmail.socraticphoenix.shnap.type.object;
+package com.gmail.socraticphoenix.shnap.type.natives.num;
 
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
-import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 
-import java.util.function.Function;
+public class ShnapLongNative extends ShnapObject implements ShnapNumberNative {
+    private Long aLong;
 
-public class ShnapResolver extends ShnapObject {
-    protected Function<ShnapEnvironment, ShnapExecution> resolver;
-
-    public ShnapResolver(ShnapLoc loc, Function<ShnapEnvironment, ShnapExecution> resolver) {
+    public ShnapLongNative(ShnapLoc loc, Long aLong) {
         super(loc);
-        this.resolver = resolver;
+        this.aLong = aLong;
+        ShnapNumberNative.implementFunctions(this, this);
     }
 
     @Override
-    public ShnapExecution resolve(ShnapEnvironment env) {
-        return this.resolver.apply(env);
+    public Number getNumber() {
+        return this.aLong;
     }
 
     @Override
-    public String defaultToString() {
-        return "resolvable::" + this.identityStr();
+    public ShnapObject copyWith(Number n) {
+        return new ShnapLongNative(this.loc, n.longValue());
     }
+
+    @Override
+    public int castingPrecedence(Number result) {
+        return 200;
+    }
+
+    @Override
+    public Object getJavaBacker() {
+        return this.aLong;
+    }
+
 }

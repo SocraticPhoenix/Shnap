@@ -45,16 +45,24 @@
 package com.gmail.socraticphoenix.shnap.type.java.provider;
 
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.type.java.MultiJavaConstructor;
 import com.gmail.socraticphoenix.shnap.type.java.MultiJavaMethod;
 import com.gmail.socraticphoenix.shnap.type.java.ShnapJavaInterface;
 import com.gmail.socraticphoenix.shnap.type.java.TypedJavaConstructor;
 import com.gmail.socraticphoenix.shnap.type.java.TypedJavaMethod;
+import com.gmail.socraticphoenix.shnap.type.java.shnap.ShnapJavaClass;
 import com.gmail.socraticphoenix.shnap.type.java.shnap.ShnapJavaConstructor;
 import com.gmail.socraticphoenix.shnap.type.java.shnap.ShnapJavaField;
-import com.gmail.socraticphoenix.shnap.type.java.shnap.ShnapJavaClass;
 import com.gmail.socraticphoenix.shnap.type.java.shnap.ShnapJavaMethod;
 import com.gmail.socraticphoenix.shnap.type.java.shnap.ShnapJavaObject;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapCharNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.util.DeepArrays;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -64,6 +72,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.inst;
+import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.instSimple;
+import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.noArg;
+import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.oneArg;
 
 public class ShnapReflectiveJavaClassProvider implements ShnapJavaClassProvider {
     public static final String STATIC_PREFIX = "static";
@@ -157,12 +170,19 @@ public class ShnapReflectiveJavaClassProvider implements ShnapJavaClassProvider 
     @Override
     public ShnapJavaClass createClassObject() {
         ShnapLoc loc = ShnapJavaInterface.createJavaLoc(this.cls);
-        ShnapJavaClass javaClass = new ShnapJavaClass(loc);
+        ShnapJavaClass javaClass = new ShnapJavaClass(loc, this.cls);
         if(!this.constructor.isEmpty()) {
             javaClass.set("new", new ShnapJavaConstructor(loc, this.constructor));
         }
         this.staticFields.forEach((s, f) -> javaClass.set(s, new ShnapJavaField(loc, null, f)));
         this.staticMethods.forEach((s, m) -> javaClass.set(s, new ShnapJavaMethod(loc, m, null)));
+        javaClass.set(ShnapObject.AS_STRING, oneArg(inst((ctx, trc) -> {
+            try {
+                return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, this.cls.toString()), trc, loc);
+            } catch (Throwable e) {
+                return ShnapExecution.throwing(ShnapFactory.mimicJavaException("shnap.JavaInterfaceError", "Failed to invoke java method: " + "Class#toString()", e), trc, loc);
+            }
+        })));
         return javaClass;
     }
 
@@ -178,6 +198,24 @@ public class ShnapReflectiveJavaClassProvider implements ShnapJavaClassProvider 
 
         this.fields.forEach((s, f) -> javaObject.set(s, new ShnapJavaField(loc, javaObject, f)));
         this.methods.forEach((s, m) -> javaObject.set(s, new ShnapJavaMethod(loc, m, javaObject)));
+        javaObject.set(ShnapObject.AS_STRING, noArg(inst((ctx, trc) -> {
+            try {
+                return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, String.valueOf(object)), trc, loc);
+            } catch (Throwable e) {
+                return ShnapExecution.throwing(ShnapFactory.mimicJavaException("shnap.JavaInterfaceError", "Failed to invoke java method: " + "Class#toString()", e), trc, loc);
+            }
+        })));
+        if(object instanceof Number || object instanceof Character) {
+            javaObject.set(ShnapObject.AS_NUMBER, noArg(instSimple(() -> object instanceof Character ? new ShnapCharNative(loc, (int) (Character) object) : ShnapNumberNative.valueOf(loc, (Number) object))));
+        }
+        if(object instanceof Boolean) {
+            javaObject.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of((Boolean) object))));
+        }
+        if (object.getClass().isArray()) {
+            javaObject.set(ShnapObject.AS_ARRAY, noArg(inst((ctx, trc) -> {
+                return DeepArrays.deeplyConvertToShnap(object, trc);
+            })));
+        }
         return javaObject;
     }
 

@@ -133,7 +133,6 @@ public class ShnapScript extends ShnapObject {
                 }
             };
             script.setContent(content);
-
             ByteBuffer byteBuffer = ByteBuffer.wrap(bytes.get());
             int contLen = byteBuffer.getInt();
             byteBuffer.position(byteBuffer.position() + contLen);

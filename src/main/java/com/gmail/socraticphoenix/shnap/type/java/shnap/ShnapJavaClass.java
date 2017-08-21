@@ -45,12 +45,20 @@
 package com.gmail.socraticphoenix.shnap.type.java.shnap;
 
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapJavaBackedNative;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 
-public class ShnapJavaClass extends ShnapObject {
+public class ShnapJavaClass extends ShnapObject implements ShnapJavaBackedNative {
+    private Class cls;
 
-    public ShnapJavaClass(ShnapLoc loc) {
+    public ShnapJavaClass(ShnapLoc loc, Class cls) {
         super(loc);
+        this.cls = cls;
+    }
+
+    @Override
+    public Object getJavaBacker() {
+        return this.cls;
     }
 
 }

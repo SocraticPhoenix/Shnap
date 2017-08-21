@@ -83,7 +83,7 @@ public class ShnapCompilerUtil {
             }
         }
 
-        path.toFile().delete();
+        Files.deleteIfExists(path);
     }
 
     public static ShnapInstruction read(ByteStream stream, ShnapScript building) throws IOException {
@@ -242,6 +242,10 @@ public class ShnapCompilerUtil {
             File parent = file.getParentFile();
             if (parent != null) {
                 parent.mkdirs();
+            }
+
+            if(file.exists()) {
+                Files.deleteIfExists(file.toPath());
             }
 
             // Extract the file

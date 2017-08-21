@@ -20,12 +20,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import com.gmail.socraticphoenix.shnap.parse.ShnapParser;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapScript;
+
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 public class QuickTest {
+    //89898 = 89.89800 seconds : parsed
 
-    public static void main(String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
+    public static void main(String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < 10_000; i++) {
+            builder.append("someRandomValue = 1 + 2 * 3" + System.lineSeparator());
+        }
+        ShnapParser parser = new ShnapParser(builder.toString(), new ShnapScript("false", "fake"));
+        long ms = System.currentTimeMillis();
+        parser.parseAll();
+        System.out.println("Took: " + (System.currentTimeMillis() - ms));
     }
 
 }

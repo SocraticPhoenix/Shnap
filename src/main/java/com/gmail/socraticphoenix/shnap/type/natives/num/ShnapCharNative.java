@@ -59,7 +59,7 @@ public class ShnapCharNative extends ShnapObject implements ShnapNumberNative {
         super(loc);
         this.value = value;
         ShnapNumberNative.implementFunctions(this, this);
-        this.set(ShnapObject.AS_STRING, ShnapFactory.noArg(instSimple(() -> new ShnapStringNative(ShnapLoc.BUILTIN, new String(new int[]{this.value}, 0, 1)))));
+        this.set(ShnapObject.AS_STRING, ShnapFactory.noArg(instSimple(() -> new ShnapStringNative(this.getLocation(), new String(new int[]{this.value}, 0, 1)))));
     }
 
     @Override
@@ -72,7 +72,7 @@ public class ShnapCharNative extends ShnapObject implements ShnapNumberNative {
         if(n instanceof BigInteger) {
             BigInteger i = (BigInteger) n;
             try {
-                return new ShnapCharNative(ShnapLoc.BUILTIN, i.intValueExact());
+                return new ShnapCharNative(this.getLocation(), i.intValueExact());
             } catch (ArithmeticException ignore) {
 
             }

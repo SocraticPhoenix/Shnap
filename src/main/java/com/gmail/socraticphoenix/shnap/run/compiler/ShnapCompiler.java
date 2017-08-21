@@ -61,8 +61,8 @@ public class ShnapCompiler {
 
         Path tempA = home.resolve("temp_0A");
         int z = 1;
-        while (Files.exists(temp)) {
-            temp = home.resolve("temp_" + z++ + "A");
+        while (Files.exists(tempA)) {
+            tempA = home.resolve("temp_" + z++ + "A");
         }
         Files.createDirectories(tempA);
 

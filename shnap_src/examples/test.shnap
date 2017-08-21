@@ -1,3 +1,13 @@
-javaSystem = javaClass("java.lang.System")
-javaOut = javaSystem.static_field_out
-javaOut.method_println("success!")
+val = 0
+ref1 = ? val
+ref2 = ref1
+ref3 = val
+
+for k : range(3) {
+    val = k
+    println(val)
+    println(ref1)
+    println(ref2)
+    println(ref3)
+    println()
+}

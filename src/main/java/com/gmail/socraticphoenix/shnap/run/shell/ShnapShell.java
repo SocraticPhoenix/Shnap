@@ -22,6 +22,11 @@
 
 package com.gmail.socraticphoenix.shnap.run.shell;
 
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.parse.ShnapParseError;
+import com.gmail.socraticphoenix.shnap.parse.ShnapParser;
+import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.run.compiler.DangerousSupplier;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapScriptAbsentException;
@@ -29,15 +34,12 @@ import com.gmail.socraticphoenix.shnap.run.env.ShnapScriptCircularInitException;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapScriptInvalidSyntaxException;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapScriptLoadingFailedException;
 import com.gmail.socraticphoenix.shnap.run.executor.ShnapExecutionSettings;
-import com.gmail.socraticphoenix.shnap.parse.ShnapParseError;
-import com.gmail.socraticphoenix.shnap.parse.ShnapParser;
-import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapScript;
-import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class ShnapShell {
@@ -56,10 +58,12 @@ public class ShnapShell {
         return this.performInitialLoading(null, false);
     }
 
-    public ShnapExecution performInitialLoading(Consumer<String> theLog, boolean log) throws IOException, ShnapScriptAbsentException, ShnapScriptCircularInitException, ShnapScriptInvalidSyntaxException, ShnapScriptLoadingFailedException {
+    public void performPreLoading(List<Path> other) throws IOException {
         this.environment = this.settings.buildEnvironment();
-        this.settings.applyHomeSettings(this.environment);
+        this.settings.applyHomeSettings(this.environment, other);
+    }
 
+    public ShnapExecution performInitialLoading(Consumer<String> theLog, boolean log) throws IOException, ShnapScriptAbsentException, ShnapScriptCircularInitException, ShnapScriptInvalidSyntaxException, ShnapScriptLoadingFailedException {
         if (log) {
             theLog.accept("Loading natives..." + System.lineSeparator());
         }

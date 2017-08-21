@@ -23,6 +23,9 @@ package com.gmail.socraticphoenix.shnap.run.app;
 
 import com.gmail.socraticphoenix.collect.coupling.Switch;
 import com.gmail.socraticphoenix.parse.Strings;
+import com.gmail.socraticphoenix.shnap.parse.ShnapParseError;
+import com.gmail.socraticphoenix.shnap.plugin.ShnapPluginLoader;
+import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.run.compiler.ShnapCompiler;
 import com.gmail.socraticphoenix.shnap.run.compiler.ShnapCompilerSettings;
 import com.gmail.socraticphoenix.shnap.run.compiler.ShnapDefaultHandlers;
@@ -33,11 +36,9 @@ import com.gmail.socraticphoenix.shnap.run.env.ShnapScriptInvalidSyntaxException
 import com.gmail.socraticphoenix.shnap.run.env.ShnapScriptLoadingFailedException;
 import com.gmail.socraticphoenix.shnap.run.executor.ShnapExecutionSettings;
 import com.gmail.socraticphoenix.shnap.run.executor.ShnapExecutor;
-import com.gmail.socraticphoenix.shnap.parse.ShnapParseError;
-import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
+import com.gmail.socraticphoenix.shnap.run.shell.ShnapShell;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapDefaultNatives;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
-import com.gmail.socraticphoenix.shnap.run.shell.ShnapShell;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -120,6 +121,7 @@ public class ShnapMain {
                 .flag("prelib", "A semi-colon separated list of files to use as prelibs", validMultiPath)
                 .flag("builtin", "A semi-colon separated list of files to use as builtins", validMultiPath)
                 .flag("path", "A semi-colon separated list of files to use when searching for imports and scripts", validMultiPath)
+                .flag("plugins", "A semi-colon separated list of files to use when searching for plugins", validMultiPath)
                 .flag("compile", "The directory to compile", validPath)
                 .flag("keepScripts", "If present, scripts and .sar files will be compiled", s -> null)
                 .flag("archive", "The name of the archive", s -> null)
@@ -140,6 +142,7 @@ public class ShnapMain {
             List<Path> prelib = readPaths(args.getFlag("prelib", ""));
             List<Path> builtin = readPaths(args.getFlag("builtin", ""));
             List<Path> normal = readPaths(args.getFlag("path", ""));
+            List<Path> plugins = readPaths(args.getFlag("plugins", ""));
 
             ShnapEnvironmentSettings environmentSettings = new ShnapEnvironmentSettings().setHomeToDefault();
 
@@ -158,6 +161,11 @@ public class ShnapMain {
                     ShnapShell shell = new ShnapShell(settings);
                     Scanner scanner = new Scanner(System.in);
                     try {
+                        shell.performPreLoading(plugins);
+                        if(!loadPlugins(environmentSettings, plugins)) {
+                            return;
+                        }
+
                         ShnapExecution ex = shell.performInitialLoading(System.out::print);
                         if(ex.isAbnormal()) {
                             System.err.println("Failed to load libraries...");
@@ -183,7 +191,7 @@ public class ShnapMain {
                                     if (execution.getState() == ShnapExecution.State.RETURNING) {
                                         return;
                                     } else if (execution.getState().isAbnormal()) {
-                                        shell.getEnvironment().notifyAbnormalState(System.err::print, execution);
+                                        shell.getEnvironment().notifyAbnormalState(System.out::print, execution);
                                     } else {
                                         ShnapExecution val = execution.getValue().asString(shell.getEnvironment());
                                         String res;
@@ -195,16 +203,20 @@ public class ShnapMain {
                                         System.out.println("Execution value: " + res);
                                     }
                                 } catch (ShnapParseError e) {
-                                    System.err.println(e.formatSafely());
+                                    System.out.println(e.formatSafely());
                                 }
                             }
                         }
                     }  catch (IOException | ShnapScriptLoadingFailedException | ShnapScriptAbsentException | ShnapScriptCircularInitException e) {
                         System.err.println("Failed to load library scripts");
                         e.printStackTrace();
+                        System.exit(1);
+                        return;
                     } catch (ShnapScriptInvalidSyntaxException e) {
                         System.err.println("Failed to load library scripts");
                         System.err.println(e.getCause().formatSafely());
+                        System.exit(1);
+                        return;
                     }
                 } else {
                     if(!args.hasFlag("arg")) {
@@ -228,6 +240,11 @@ public class ShnapMain {
 
                         ShnapExecutor executor = new ShnapExecutor(settings);
                         try {
+                            executor.performPreLoading(plugins);
+                            if(!loadPlugins(environmentSettings, plugins)) {
+                                return;
+                            }
+
                             ShnapExecution ex = executor.performInitialLoading();
                             if(ex.isAbnormal()) {
                                 System.err.println("Failed to load libraries...");
@@ -242,8 +259,12 @@ public class ShnapMain {
                         } catch (IOException | ShnapScriptLoadingFailedException | ShnapScriptAbsentException | ShnapScriptCircularInitException e) {
                             System.err.println("Failed to load scripts");
                             e.printStackTrace(System.err);
+                            System.exit(1);
+                            return;
                         } catch (ShnapScriptInvalidSyntaxException e) {
                             System.err.println(e.getCause().formatSafely());
+                            System.exit(1);
+                            return;
                         }
                     }
                 }
@@ -261,8 +282,12 @@ public class ShnapMain {
                     compiler.compile();
                 } catch (IOException e) {
                     e.printStackTrace();
+                    System.exit(1);
+                    return;
                 } catch (ShnapScriptInvalidSyntaxException e) {
                     System.err.println(e.getCause().formatSafely());
+                    System.exit(1);
+                    return;
                 }
 
             }
@@ -274,6 +299,32 @@ public class ShnapMain {
             System.err.println(parser.help());
             System.exit(1);
         }
+    }
+
+    private static boolean loadPlugins(ShnapEnvironmentSettings settings, List<Path> plugins) {
+        ShnapPluginLoader loader = new ShnapPluginLoader(ShnapMain.class.getClassLoader());
+        loader.addDefaultPath(settings);
+        loader.getPaths().addAll(plugins);
+
+        try {
+            loader.index();
+        } catch (IOException e) {
+            System.err.println("Failed to index plugins!");
+            e.printStackTrace();
+            System.exit(1);
+            return false;
+        }
+
+        try {
+            loader.load();
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+            System.err.println("Failed to load plugins!");
+            e.printStackTrace();
+            System.exit(1);
+            return false;
+        }
+
+        return true;
     }
 
     private static List<Path> readPaths(String pth) {

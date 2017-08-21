@@ -34,6 +34,7 @@ import java.util.Arrays;
 
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.forBlock;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.func;
+import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.funcExactly;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.ifTrue;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.inst;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.instSimple;
@@ -45,7 +46,6 @@ import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.returning;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.sequence;
 
 public class ShnapArrayNative extends ShnapObject {
-    //TODO implement toJAva
     private ShnapObject[] value;
 
     public ShnapArrayNative(ShnapLoc loc, ShnapObject... value) {
@@ -99,7 +99,7 @@ public class ShnapArrayNative extends ShnapObject {
 
         this.set("insert", func(Items.buildList(param("index"), param("val")), inst((ctx, trc) -> {
             int order = -1;
-            ShnapExecution num = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+            ShnapExecution num = ctx.get("index", trc).mapIfNormal(e -> e.getValue().asNum(trc));
             if (num.isAbnormal()) {
                 return num;
             } else {
@@ -142,7 +142,7 @@ public class ShnapArrayNative extends ShnapObject {
 
         this.set("set", func(Items.buildList(param("index"), param("val")), inst((ctx, trc) -> {
             int order = -1;
-            ShnapExecution num = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+            ShnapExecution num = ctx.get("index", trc).mapIfNormal(e -> e.getValue().asNum(trc));
             if (num.isAbnormal()) {
                 return num;
             } else {
@@ -174,7 +174,7 @@ public class ShnapArrayNative extends ShnapObject {
         this.set("len", noArg(instSimple(() -> ShnapNumberNative.valueOf(this.value.length))));
 
         this.set("iterator", noArg(inst((ctx, trc) -> {
-            ShnapObject iterator = new ShnapObject(ShnapLoc.BUILTIN);
+            ShnapObject iterator = new ShnapObject(this.getLocation());
             iterator.init(ctx);
             iterator.set("index", ShnapNumberNative.valueOf(0));
             iterator.set("hasNext", noArg(inst((con, tra) -> {
@@ -184,25 +184,53 @@ public class ShnapArrayNative extends ShnapObject {
                 }
 
                 int index = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
-                return ShnapExecution.normal(ShnapBooleanNative.of(index < this.value.length), tra, ShnapLoc.BUILTIN);
+                return ShnapExecution.normal(ShnapBooleanNative.of(index < this.value.length), tra, this.getLocation());
             })));
             iterator.set("next", noArg(inst((con, tra) -> {
-                ShnapExecution num = ctx.get("index", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+                ShnapExecution num = iterator.get("index", trc).mapIfNormal(e -> e.getValue().asNum(trc));
                 if (num.isAbnormal()) {
                     return num;
                 }
 
                 int index = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
                 if (index < 0 || index >= this.value.length) {
-                    return ShnapExecution.normal(ShnapObject.getVoid(), tra, ShnapLoc.BUILTIN);
+                    return ShnapExecution.normal(ShnapObject.getVoid(), tra, this.getLocation());
                 }
                 iterator.set("index", ShnapNumberNative.valueOf(index + 1));
-                return ShnapExecution.normal(this.value[index], tra, ShnapLoc.BUILTIN);
+                return ShnapExecution.normal(this.value[index], tra, this.getLocation());
             })));
             return ShnapExecution.normal(iterator, trc, this.getLocation());
         })));
 
-        this.set("contains", oneArg(sequence(
+        this.set("resize", oneArg(inst((ctx, trc) -> {
+            int order = -1;
+            ShnapExecution num = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+            if (num.isAbnormal()) {
+                return num;
+            } else {
+                order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
+            }
+
+            if (order < 0) {
+                return ShnapExecution.normal(ShnapObject.getVoid(), trc, this.getLocation());
+            }
+
+            ShnapObject[] newArray = new ShnapObject[order];
+            if (order > this.value.length) {
+                System.arraycopy(this.value, 0, newArray, 0, this.value.length);
+                for (int i = this.value.length; i < newArray.length; i++) {
+                    newArray[i] = ShnapObject.getNull();
+                }
+            } else if (order > 0) {
+                System.arraycopy(this.value, 0, newArray, 0, newArray.length);
+            }
+
+            this.value = newArray;
+
+            return ShnapExecution.normal(this, trc, this.getLocation());
+        })));
+
+        this.set("contains", funcExactly(Items.buildList(), sequence(
                 forBlock("it", ShnapFactory.get("this"), ifTrue(
                         ShnapFactory.operate(ShnapFactory.get("it"), ShnapOperators.EQUAL, ShnapFactory.get("arg")),
                         returning(literal(true))

@@ -25,6 +25,10 @@ package com.gmail.socraticphoenix.shnap.type.java;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.type.java.provider.ShnapJavaClassProvider;
 import com.gmail.socraticphoenix.shnap.type.java.provider.ShnapReflectiveJavaClassProvider;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapCharNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 
 import java.lang.reflect.Constructor;
@@ -47,6 +51,23 @@ public class ShnapJavaInterface {
 
     public static void registerProvider(Class cls, ShnapJavaClassProvider provider) {
         providers.put(cls, provider);
+    }
+
+    public static ShnapObject revert(Object object) {
+        ShnapLoc loc = ShnapLoc.BUILTIN;
+        if (object instanceof Number) {
+            return ShnapNumberNative.valueOf((Number) object);
+        } else if (object instanceof Character) {
+            return new ShnapCharNative(loc, (int) (char) object);
+        } else if (object instanceof CharSequence) {
+            return new ShnapStringNative(loc, String.valueOf(object));
+        } else if (object instanceof Boolean) {
+            return ShnapBooleanNative.of((boolean) object);
+        } else if (object == null) {
+            return ShnapObject.getNull();
+        } else {
+            return ShnapJavaInterface.createObject(object);
+        }
     }
 
     public static ShnapObject createClass(Class java) {

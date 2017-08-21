@@ -51,8 +51,12 @@ public class ShnapContext {
     public void del(String name) {
         if (name.startsWith("^")) {
             this.getParentSafely().del(Strings.cutFirst(name));
+        } else if (name.startsWith(":")) {
+            name = Strings.cutFirst(name);
+            this.variables.remove(name);
+            this.flags.remove(name);
         } else {
-            if(this.contains(name)) {
+            if (this.contains(name)) {
                 this.variables.remove(name);
                 this.flags.remove(name);
             } else if (this.parent != null) {
@@ -105,6 +109,9 @@ public class ShnapContext {
         if (name.startsWith("^")) {
             this.getParentSafely().set(Strings.cutFirst(name), object);
             return;
+        } else if (name.startsWith(":")) {
+            this.variables.put(Strings.cutFirst(name), object);
+            return;
         }
 
         if (this.parent != null && this.parent.contains(name)) {
@@ -118,13 +125,19 @@ public class ShnapContext {
         if (name.startsWith("^")) {
             this.getParentSafely().setFlag(Strings.cutFirst(name), flag);
             return;
+        } else if (name.startsWith(":")) {
+            name = Strings.cutFirst(name);
+            if (this.variables.containsKey(name)) {
+                this.flags.computeIfAbsent(name, k -> new ArrayList<>()).add(flag);
+            }
+            return;
         }
 
-        if (this.variables.containsKey(name)) {
+        if (this.parent != null && this.parent.contains(name)) {
+            this.parent.setFlag(name, flag);
+        } else if (this.variables.containsKey(name)) {
             this.flags.computeIfAbsent(name, k -> new ArrayList<>()).add(flag);
 
-        } else if (this.parent != null) {
-            this.parent.setFlag(name, flag);
         }
     }
 
@@ -135,6 +148,10 @@ public class ShnapContext {
             } else {
                 return this.parent.get(Strings.cutFirst(name), environment);
             }
+        } else if (name.startsWith(":")) {
+            name = Strings.cutFirst(":");
+            ShnapObject obj = this.variables.get(name);
+            return obj == null ? ShnapExecution.normal(ShnapObject.getVoid(), environment, ShnapLoc.BUILTIN) : ShnapExecution.normal(obj, environment, ShnapLoc.BUILTIN);
         }
 
         ShnapObject obj = this.variables.get(name);
@@ -150,13 +167,15 @@ public class ShnapContext {
         }
     }
 
-    public List<Flag> getFlags(String name) {
+    private List<Flag> getFlags(String name) {
         if (name.startsWith("^")) {
             if (this.parent == null) {
                 return null;
             } else {
                 return this.parent.getFlags(Strings.cutFirst(name));
             }
+        } else if (name.startsWith(":")) {
+            return this.flags.get(Strings.cutFirst(name));
         }
 
         List<Flag> flag = this.flags.get(name);

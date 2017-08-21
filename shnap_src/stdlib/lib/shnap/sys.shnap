@@ -1,1 +1,4 @@
-args = native::sys.args() //all native::'s are functions, so call the function to get the args
+args = native::sys.args()
+
+console = import("shnap.io.console")
+input = console.input

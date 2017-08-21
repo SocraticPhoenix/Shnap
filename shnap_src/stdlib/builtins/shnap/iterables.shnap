@@ -2,7 +2,7 @@ iterableStr = $ arr {
     state = "["
     iter = arr.iterator()
     for iter {
-        state += it
+        state += str(it)
         if iter.hasNext() {
             state += ", "
         }

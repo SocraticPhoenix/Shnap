@@ -50,6 +50,8 @@ import com.gmail.socraticphoenix.shnap.program.ShnapOperators;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapTraceback;
+import com.gmail.socraticphoenix.shnap.type.java.ShnapJavaInterface;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapAbsentNative;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapArrayNative;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapJavaBackedNative;
@@ -117,69 +119,79 @@ public class ShnapObject extends AbstractShnapLocatable {
      * Returns an execution which is either abnormal (in case of failure), or has a value that is an instance of ShnapJavaBackedNative
      */
     public ShnapExecution asJava(ShnapEnvironment tracer) {
-        if (this instanceof ShnapJavaBackedNative) {
-            return ShnapExecution.normal(this, tracer, this.getLocation());
-        } else {
-            return this.get(AS_JAVA, tracer).mapIfNormal(func -> {
-                if (func.getValue() instanceof ShnapFunction) {
-                    ShnapFunction function = (ShnapFunction) func.getValue();
-                    if (function.paramSizeId() == 0) {
-                        ShnapExecution e = function.invoke(tracer);
-                        if (!e.isAbnormal() && !(e.getValue() instanceof ShnapJavaBackedNative)) {
-                            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_JAVA + "() function returned a non-java object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, this.getLocation());
+        return this.resolve(tracer).mapIfNormal(exca -> {
+            ShnapObject self = exca.getValue();
+            if (self instanceof ShnapJavaBackedNative) {
+                return ShnapExecution.normal(ShnapJavaInterface.createObject(((ShnapJavaBackedNative) self).getJavaBacker()), tracer, self.getLocation());
+            } else {
+                return self.get(AS_JAVA, tracer).mapIfNormal(func -> {
+                    if (func.getValue() instanceof ShnapFunction) {
+                        ShnapFunction function = (ShnapFunction) func.getValue();
+                        if (function.paramSizeId() == 0) {
+                            ShnapExecution e = function.invoke(tracer);
+                            if (!e.isAbnormal() && !(e.getValue() instanceof ShnapJavaBackedNative)) {
+                                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_JAVA + "() function returned a non-java object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, self.getLocation());
+                            }
+                            return e;
                         }
-                        return e;
                     }
-                }
-                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.TypeError", "object cannot be converted to java", null), tracer, this.getLocation());
-            });
-        }
+                    return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.TypeError", "object cannot be converted to java", null), tracer, self.getLocation());
+                });
+            }
+        });
     }
 
     /**
      * Returns an execution which is either abnormal (in case of failure), or has a value that is an instance of ShnapNumberNative
      */
     public ShnapExecution asNum(ShnapEnvironment tracer) {
-        if (this instanceof ShnapNumberNative) {
-            return ShnapExecution.normal(this, tracer, this.getLocation());
-        } else {
-            return this.get(AS_NUMBER, tracer).mapIfNormal(func -> {
-                if (func.getValue() instanceof ShnapFunction) {
-                    ShnapFunction function = (ShnapFunction) func.getValue();
-                    if (function.paramSizeId() == 0) {
-                        ShnapExecution e = function.invoke(tracer);
-                        if (!e.isAbnormal() && !(e.getValue() instanceof ShnapNumberNative)) {
-                            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_NUMBER + "() function returned a non-number object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, this.getLocation());
+        return this.resolve(tracer).mapIfNormal(ex -> {
+            ShnapObject self = ex.getValue();
+
+            if (self instanceof ShnapNumberNative) {
+                return ShnapExecution.normal(self, tracer, self.getLocation());
+            } else {
+                return self.get(AS_NUMBER, tracer).mapIfNormal(func -> {
+                    if (func.getValue() instanceof ShnapFunction) {
+                        ShnapFunction function = (ShnapFunction) func.getValue();
+                        if (function.paramSizeId() == 0) {
+                            ShnapExecution e = function.invoke(tracer);
+                            if (!e.isAbnormal() && !(e.getValue() instanceof ShnapNumberNative)) {
+                                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_NUMBER + "() function returned a non-number object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, self.getLocation());
+                            }
+                            return e;
                         }
-                        return e;
                     }
-                }
-                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.TypeError", "object cannot be converted to a number", null), tracer, this.getLocation());
-            });
-        }
+                    return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.TypeError", "object cannot be converted to a number", null), tracer, self.getLocation());
+                });
+            }
+        });
     }
 
     /**
      * Returns an execution which is either abnormal (in case of failure), or has a value that is an instance of ShnapStringNative
      */
     public ShnapExecution asString(ShnapEnvironment tracer) {
-        if (this instanceof ShnapStringNative) {
-            return ShnapExecution.normal(this, tracer, this.getLocation());
-        } else {
-            return this.get(AS_STRING, tracer).mapIfNormal(func -> {
-                if (func.getValue() instanceof ShnapFunction) {
-                    ShnapFunction function = (ShnapFunction) func.getValue();
-                    if (function.paramSizeId() == 0) {
-                        ShnapExecution e = function.invoke(tracer);
-                        if (!e.isAbnormal() && !(e.getValue() instanceof ShnapStringNative)) {
-                            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_STRING + "() function returned a non-string object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, this.getLocation());
+        return this.resolve(tracer).mapIfNormal(ex -> {
+            ShnapObject self = ex.getValue();
+            if (self instanceof ShnapStringNative) {
+                return ShnapExecution.normal(self, tracer, self.getLocation());
+            } else {
+                return self.get(AS_STRING, tracer).mapIfNormal(func -> {
+                    if (func.getValue() instanceof ShnapFunction) {
+                        ShnapFunction function = (ShnapFunction) func.getValue();
+                        if (function.paramSizeId() == 0) {
+                            ShnapExecution e = function.invoke(tracer);
+                            if (!e.isAbnormal() && !(e.getValue() instanceof ShnapStringNative)) {
+                                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_STRING + "() function returned a non-string object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, self.getLocation());
+                            }
+                            return e;
                         }
-                        return e;
                     }
-                }
-                return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, this.defaultToString()), tracer, this.getLocation());
-            });
-        }
+                    return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, self.defaultToString()), tracer, self.getLocation());
+                });
+            }
+        });
     }
 
     public String defaultToString() {
@@ -194,46 +206,52 @@ public class ShnapObject extends AbstractShnapLocatable {
      * Returns an execution which is either abnormal (in case of failure), or has a value that is an instance of ShnapArrayNative
      */
     public ShnapExecution asArray(ShnapEnvironment tracer) {
-        if (this instanceof ShnapArrayNative) {
-            return ShnapExecution.normal(this, tracer, this.getLocation());
-        } else {
-            return this.get(AS_ARRAY, tracer).mapIfNormal(func -> {
-                if (func.getValue() instanceof ShnapFunction) {
-                    ShnapFunction function = (ShnapFunction) func.getValue();
-                    if (function.paramSizeId() == 0) {
-                        ShnapExecution e = function.invoke(tracer);
-                        if (!e.isAbnormal() && !(e.getValue() instanceof ShnapArrayNative)) {
-                            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_ARRAY + "() function returned a non-array object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, this.getLocation());
+        return this.resolve(tracer).mapIfNormal(exca -> {
+            ShnapObject self = exca.getValue();
+            if (self instanceof ShnapArrayNative) {
+                return ShnapExecution.normal(self, tracer, self.getLocation());
+            } else {
+                return self.get(AS_ARRAY, tracer).mapIfNormal(func -> {
+                    if (func.getValue() instanceof ShnapFunction) {
+                        ShnapFunction function = (ShnapFunction) func.getValue();
+                        if (function.paramSizeId() == 0) {
+                            ShnapExecution e = function.invoke(tracer);
+                            if (!e.isAbnormal() && !(e.getValue() instanceof ShnapArrayNative)) {
+                                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_ARRAY + "() function returned a non-array object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, self.getLocation());
+                            }
+                            return e;
                         }
-                        return e;
                     }
-                }
-                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.TypeError", "object cannot be converted to array", null), tracer, this.getLocation());
-            });
-        }
+                    return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.TypeError", "object cannot be converted to array", null), tracer, self.getLocation());
+                });
+            }
+        });
     }
 
     /**
      * Returns an execution which is either abnormal (in case of failure), or has a value that is an instance of ShnapBooleanNative
      */
     public ShnapExecution asBool(ShnapEnvironment tracer) {
-        if (this instanceof ShnapBooleanNative) {
-            return ShnapExecution.normal(this, tracer, this.getLocation());
-        } else {
-            return this.get(AS_BOOLEAN, tracer).mapIfNormal(func -> {
-                if (func.getValue() instanceof ShnapFunction) {
-                    ShnapFunction function = (ShnapFunction) func.getValue();
-                    if (function.paramSizeId() == 0) {
-                        ShnapExecution e = function.invoke(tracer);
-                        if (!e.isAbnormal() && !(e.getValue() instanceof ShnapBooleanNative)) {
-                            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_BOOLEAN + "() function returned a non-java object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, this.getLocation());
+        return this.resolve(tracer).mapIfNormal(exca -> {
+            ShnapObject self = exca.getValue();
+            if (self instanceof ShnapBooleanNative) {
+                return ShnapExecution.normal(self, tracer, self.getLocation());
+            } else {
+                return self.get(AS_BOOLEAN, tracer).mapIfNormal(func -> {
+                    if (func.getValue() instanceof ShnapFunction) {
+                        ShnapFunction function = (ShnapFunction) func.getValue();
+                        if (function.paramSizeId() == 0) {
+                            ShnapExecution e = function.invoke(tracer);
+                            if (!e.isAbnormal() && !(e.getValue() instanceof ShnapBooleanNative)) {
+                                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ReturnTypeError", AS_BOOLEAN + "() function returned a non-java object (" + e.getValue().getClass().getSimpleName() + ")", null, "shnap.TypeError"), tracer, self.getLocation());
+                            }
+                            return e;
                         }
-                        return e;
                     }
-                }
-                return this.asNum(tracer).mapIfNormal(e -> e.getValue().asBool(tracer));
-            });
-        }
+                    return self.asNum(tracer).mapIfNormal(e -> e.getValue().asBool(tracer));
+                });
+            }
+        });
     }
 
     /**
@@ -261,85 +279,91 @@ public class ShnapObject extends AbstractShnapLocatable {
     }
 
     public ShnapExecution operate(ShnapObject arg, ShnapOperators operator, ShnapEnvironment tracer) {
-        if (this == arg && (operator == ShnapOperators.EQUAL || operator == ShnapOperators.NOT_EQUAL)) {
-            return ShnapExecution.normal(ShnapBooleanNative.of(operator == ShnapOperators.EQUAL), tracer, this.getLocation());
-        }
+        return this.resolve(tracer).mapIfNormal(exec -> {
+            ShnapObject self = exec.getValue();
+            if (self == arg && (operator == ShnapOperators.EQUAL || operator == ShnapOperators.NOT_EQUAL)) {
+                return ShnapExecution.normal(ShnapBooleanNative.of(operator == ShnapOperators.EQUAL), tracer, self.getLocation());
+            }
 
-        String func = operator.getFunc();
-        int args = operator.getArity() - 1;
-        ShnapExecution res;
+            String func = operator.getFunc();
+            int args = operator.getArity() - 1;
+            ShnapExecution res;
 
-        if (args == 0) {
-            ShnapExecution f1 = this.get(func, tracer);
-            res = f1.mapIfNormal(e -> {
-                if (e.getValue() instanceof ShnapFunction && ((ShnapFunction) e.getValue()).paramSizeId() == 1) {
-                    return ((ShnapFunction) e.getValue()).invokeOperator(new ArrayList<>(), 1, tracer);
-                }
-                return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
-            });
-        } else {
-            ShnapExecution f1 = this.get(func, tracer);
-            res = f1.mapIfNormal(e -> {
-                if (e.getValue() instanceof ShnapFunction && ((ShnapFunction) e.getValue()).paramSizeId() == 1) {
-                    return ((ShnapFunction) e.getValue()).invokeOperator(Items.buildList(arg), 1, tracer);
-                }
-                return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
-            });
-
-            if (res.isAbnormal() || res.getValue() == ShnapObject.getVoid()) {
-                ShnapExecution f2 = arg.get(func, tracer);
-                ShnapExecution callRes = f2.mapIfNormal(e -> {
-                    if (e.getValue() instanceof ShnapFunction && ((ShnapFunction) e.getValue()).paramSizeId() == 1) {
-                        return ((ShnapFunction) e.getValue()).invokeOperator(Items.buildList(this), 2, tracer);
+            if (args == 0) {
+                ShnapExecution f1 = self.get(func, tracer);
+                res = f1.mapIfNormal(e -> {
+                    if (e.getValue() instanceof ShnapFunction && ((ShnapFunction) e.getValue()).paramSizeId() == 0) {
+                        tracer.pushTraceback(ShnapTraceback.frame(e.getValue().getLocation(), "Invoke operator: " + operator.getRep()));
+                        return ((ShnapFunction) e.getValue()).invokeOperator(new ArrayList<>(), 0, tracer);
                     }
-                    return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
+                    return ShnapExecution.normal(ShnapObject.getVoid(), tracer, self.getLocation());
+                });
+            } else {
+                ShnapExecution f1 = self.get(func, tracer);
+                res = f1.mapIfNormal(e -> {
+                    if (e.getValue() instanceof ShnapFunction && ((ShnapFunction) e.getValue()).paramSizeId() == 1) {
+                        tracer.pushTraceback(ShnapTraceback.frame(e.getValue().getLocation(), "Invoke operator: " + operator.getRep()));
+                        return ((ShnapFunction) e.getValue()).invokeOperator(Items.buildList(arg), 1, tracer);
+                    }
+                    return ShnapExecution.normal(ShnapObject.getVoid(), tracer, self.getLocation());
                 });
 
-                if (!callRes.isAbnormal()) {
-                    res = callRes;
+                if (res.isAbnormal() || res.getValue() == ShnapObject.getVoid()) {
+                    ShnapExecution f2 = arg.get(func, tracer);
+                    ShnapExecution callRes = f2.mapIfNormal(e -> {
+                        if (e.getValue() instanceof ShnapFunction && ((ShnapFunction) e.getValue()).paramSizeId() == 1) {
+                            tracer.pushTraceback(ShnapTraceback.frame(e.getValue().getLocation(), "Invoke operator: " + operator.getRep()));
+                            return ((ShnapFunction) e.getValue()).invokeOperator(Items.buildList(self), 2, tracer);
+                        }
+                        return ShnapExecution.normal(ShnapObject.getVoid(), tracer, self.getLocation());
+                    });
+
+                    if (!callRes.isAbnormal()) {
+                        res = callRes;
+                    }
                 }
             }
-        }
 
-        if (res.isAbnormal()) {
-            return res;
-        } else if (res.getValue() == ShnapObject.getVoid()) {
-            return res;
-        }
-
-        if (operator.isComparative()) {
-            boolean val = false;
-            ShnapObject resObj = res.getValue();
-            if (resObj instanceof ShnapNumberNative) {
-                ShnapNumberNative numVal = (ShnapNumberNative) resObj;
-                int resVal = (int) ShnapNumberNative.operate(numVal.getNumber(),
-                        n -> n.compareTo(BigInteger.ZERO),
-                        d -> d.compareTo(BigDecimal.ZERO));
-                switch (operator) {
-                    case LESS_THAN:
-                        val = resVal < 0;
-                        break;
-                    case GREATER_THAN:
-                        val = resVal > 0;
-                        break;
-                    case LESS_THAN_EQUAL_TO:
-                        val = resVal <= 0;
-                        break;
-                    case GREATER_THAN_EQUAL_TO:
-                        val = resVal >= 0;
-                        break;
-                    case EQUAL:
-                        val = resVal == 0;
-                        break;
-                    case NOT_EQUAL:
-                        val = resVal != 0;
-                        break;
-                }
+            if (res.isAbnormal()) {
+                return res;
+            } else if (res.getValue() == ShnapObject.getVoid()) {
+                return res;
             }
-            return ShnapExecution.normal(ShnapBooleanNative.of(val), tracer, this.getLocation());
-        } else {
-            return res;
-        }
+
+            if (operator.isComparative()) {
+                boolean val = false;
+                ShnapObject resObj = res.getValue();
+                if (resObj instanceof ShnapNumberNative) {
+                    ShnapNumberNative numVal = (ShnapNumberNative) resObj;
+                    int resVal = (int) ShnapNumberNative.operate(numVal.getNumber(),
+                            n -> n.compareTo(BigInteger.ZERO),
+                            d -> d.compareTo(BigDecimal.ZERO));
+                    switch (operator) {
+                        case LESS_THAN:
+                            val = resVal < 0;
+                            break;
+                        case GREATER_THAN:
+                            val = resVal > 0;
+                            break;
+                        case LESS_THAN_EQUAL_TO:
+                            val = resVal <= 0;
+                            break;
+                        case GREATER_THAN_EQUAL_TO:
+                            val = resVal >= 0;
+                            break;
+                        case EQUAL:
+                            val = resVal == 0;
+                            break;
+                        case NOT_EQUAL:
+                            val = resVal != 0;
+                            break;
+                    }
+                }
+                return ShnapExecution.normal(ShnapBooleanNative.of(val), tracer, self.getLocation());
+            } else {
+                return res;
+            }
+        });
     }
 
 }

@@ -2,9 +2,6 @@ import = native::sys.import
 importFrom = native::sys.importFrom
 importAll = native::sys.importAll
 
-javaClass = native::java.javaClass
-javaArray = native::java.javaArray
-
 sleep = native::sys.sleep
 
 paramCount = native::sys.paramCount
@@ -34,6 +31,10 @@ println = $ arg="" print(arg + "\n")
 printlnErr = $ arg="" printErr(arg + "\n")
 
 
+//Types
+javaClass = native::java.javaClass
+javaArray = native::java.javaArray
+
 num = native::type.num
 str = native::type.str
 bool = native::type.bool
@@ -41,3 +42,7 @@ array = native::type.array
 char = native::type.char
 java = native::type.java
 newArray = native::type.newArray
+
+int32 = native::type.int32
+int64 = native::type.int64
+float64 = native::type.float64 //Right now there's no float32, since it's introduction would created complex casting rules

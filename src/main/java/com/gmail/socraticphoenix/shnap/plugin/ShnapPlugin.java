@@ -20,29 +20,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.gmail.socraticphoenix.shnap.type.object;
+package com.gmail.socraticphoenix.shnap.plugin;
 
-import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
-import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+public class ShnapPlugin {
+    private Runnable instance;
+    private String name;
 
-import java.util.function.Function;
-
-public class ShnapResolver extends ShnapObject {
-    protected Function<ShnapEnvironment, ShnapExecution> resolver;
-
-    public ShnapResolver(ShnapLoc loc, Function<ShnapEnvironment, ShnapExecution> resolver) {
-        super(loc);
-        this.resolver = resolver;
+    public ShnapPlugin(Runnable instance, String name) {
+        this.instance = instance;
+        this.name = name;
     }
 
-    @Override
-    public ShnapExecution resolve(ShnapEnvironment env) {
-        return this.resolver.apply(env);
+    public Runnable getInstance() {
+        return this.instance;
     }
 
-    @Override
-    public String defaultToString() {
-        return "resolvable::" + this.identityStr();
+    public String getName() {
+        return this.name;
     }
 }

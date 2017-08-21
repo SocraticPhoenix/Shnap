@@ -27,17 +27,21 @@ import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.type.java.ShnapJavaInterface;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapCharNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapDoubleNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapIntNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapLongNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapFunction;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.util.DeepArrays;
 import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
-import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Optional;
 
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.func;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.inst;
+import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.literalObj;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.mimicJavaException;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.noArg;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.oneArg;
@@ -68,7 +72,7 @@ public class ShnapDefaultNatives {
                 })
         ));
         ShnapNativeFuncRegistry.register("java.javaArray", func(
-                Items.buildList(param("arr"), param("class")),
+                Items.buildList(param("arr"), param("class", literalObj("java.lang.Object"))),
                 inst((ctx, trc) -> {
                     ShnapExecution shanpArr = ctx.get("arr", trc).mapIfNormal(e -> e.getValue().asArray(trc));
                     if(shanpArr.isAbnormal()) {
@@ -86,20 +90,8 @@ public class ShnapDefaultNatives {
                         }
 
                         Class clazz = type.get();
-                        ShnapArrayNative arrayNative = (ShnapArrayNative) shanpArr.getValue();
-                        ShnapObject[] val = arrayNative.getValue();
-                        Object[] res = new Object[val.length];
-                        for (int i = 0; i < val.length; i++) {
-                            ShnapExecution asJava = val[i].asJava(trc);
-                            if(asJava.isAbnormal()) {
-                                return asJava;
-                            }
-
-                            res[i] = ((ShnapJavaBackedNative) asJava.getValue()).getJavaBacker();
-                        }
-
                         try {
-                            return ShnapExecution.normal(ShnapJavaInterface.createObject(Reflections.deepCast(Array.newInstance(clazz, 0).getClass(), res)), trc, ShnapLoc.BUILTIN);
+                            return DeepArrays.deeplyConvertToJava((ShnapArrayNative) shanpArr.getValue(), trc, clazz);
                         } catch (Throwable e) {
                             return ShnapExecution.throwing(ShnapFactory.mimicJavaException("shnap.JavaInterfaceError", "Could not cast array to type: " + clazz.getName(), e), trc, ShnapLoc.BUILTIN);
                         }
@@ -300,6 +292,33 @@ public class ShnapDefaultNatives {
             }
 
             return ShnapExecution.normal(new ShnapCharNative(ShnapLoc.BUILTIN, ((ShnapNumberNative) number.getValue()).getNumber().intValue()), trc, ShnapLoc.BUILTIN);
+        })));
+
+        ShnapNativeFuncRegistry.register("type.int32", oneArg(inst((ctx, trc) -> {
+            ShnapExecution number = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+            if (number.isAbnormal()) {
+                return number;
+            }
+
+            return ShnapExecution.normal(new ShnapIntNative(ShnapLoc.BUILTIN, ((ShnapNumberNative) number.getValue()).getNumber().intValue()), trc, ShnapLoc.BUILTIN);
+        })));
+
+        ShnapNativeFuncRegistry.register("type.int64", oneArg(inst((ctx, trc) -> {
+            ShnapExecution number = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+            if (number.isAbnormal()) {
+                return number;
+            }
+
+            return ShnapExecution.normal(new ShnapLongNative(ShnapLoc.BUILTIN, ((ShnapNumberNative) number.getValue()).getNumber().longValue()), trc, ShnapLoc.BUILTIN);
+        })));
+
+        ShnapNativeFuncRegistry.register("type.float64", oneArg(inst((ctx, trc) -> {
+            ShnapExecution number = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+            if (number.isAbnormal()) {
+                return number;
+            }
+
+            return ShnapExecution.normal(new ShnapDoubleNative(ShnapLoc.BUILTIN, ((ShnapNumberNative) number.getValue()).getNumber().doubleValue()), trc, ShnapLoc.BUILTIN);
         })));
 
         ShnapNativeFuncRegistry.register("type.newArray", oneArg(inst((ctx, trc) -> {

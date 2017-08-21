@@ -24,7 +24,6 @@ import com.gmail.socraticphoenix.shnap.run.compiler.ShnapCompilerUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 public class ZipCompiled {
 
@@ -32,7 +31,6 @@ public class ZipCompiled {
         File file = new File("src/main/resources/com/gmail/socraticphoenix/shnap/resources/shnap.zip");
         ShnapCompilerUtil.deleteDirectory(file.toPath());
         ShnapCompilerUtil.zipFile(new File("shnap_src/compiled"), file);
-        TimeUnit.SECONDS.sleep(1);
     }
 
 }

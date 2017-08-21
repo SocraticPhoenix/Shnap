@@ -1,0 +1,10 @@
+java_in_internal = javaClass("java.lang.System").static_field_in
+scanner_internal = javaClass("java.util.Scanner").new(java_in_internal)
+
+private java_in_internal
+private scanner_internal
+
+input = $ prompt=null {
+    if (prompt != null) print(prompt)
+    return: str(scanner_internal.method_nextLine())
+}

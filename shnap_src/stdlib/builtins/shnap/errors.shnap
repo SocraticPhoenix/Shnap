@@ -11,6 +11,10 @@ error = @(name,message,cause=null,parents=null){
     }
 
     is = $ (type) {
+        if cause != null && cause.is(type) {
+            return: true
+        }
+
         if type == name {
             return: true
         }
@@ -19,7 +23,7 @@ error = @(name,message,cause=null,parents=null){
             other = type.parents
             if isIterable(other) {
                 for otherType : other {
-                    if parents.contains(otherType) or type == other {
+                    if parents.contains(otherType) || type == other {
                         return: true
                     }
                 }
@@ -44,3 +48,8 @@ returnTypeError = errorCls("shnap.ReturnTypeError", ["shnap.TypeError"])
 accessError = errorCls("shnap.AcessError")
 interruptedError = errorCls("shnap.InterruptedError")
 importError = errorCls("shnap.ImportError")
+
+invocationError = errorCls("shnap.InvocationError")
+parameterError = errorCls("shnap.ParameterError", ["shnap.InvocationError"])
+paramSizeError = errorCls("shnap.ParameterSizeError", ["shnap.ParameterError", "shnap.InvocationError"])
+paramMismatchError = errorCls("shnap.ParameterMismatchError", ["shnap.ParameterError", "shnap.InvocationError"])
