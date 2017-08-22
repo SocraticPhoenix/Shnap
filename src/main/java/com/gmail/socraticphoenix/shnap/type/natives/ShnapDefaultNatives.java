@@ -24,8 +24,13 @@ package com.gmail.socraticphoenix.shnap.type.natives;
 import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.mirror.Reflections;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.parse.ShnapParseError;
+import com.gmail.socraticphoenix.shnap.parse.ShnapParser;
+import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.type.java.ShnapJavaInterface;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapCharNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapDoubleNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapIntNative;
@@ -33,6 +38,7 @@ import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapLongNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapFunction;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapScript;
 import com.gmail.socraticphoenix.shnap.util.DeepArrays;
 import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
@@ -63,7 +69,7 @@ public class ShnapDefaultNatives {
                     if (type.isPresent() && !type.get().isPrimitive()) {
                         return ShnapExecution.normal(ShnapJavaInterface.createClass(type.get()), trc, ShnapLoc.BUILTIN);
                     } else {
-                        if(!type.isPresent()) {
+                        if (!type.isPresent()) {
                             return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.TypeError", "No java class: " + cls, null), trc, ShnapLoc.BUILTIN);
                         } else {
                             return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.TypeError", "Cannot get primitive class: " + cls, null), trc, ShnapLoc.BUILTIN);
@@ -75,7 +81,7 @@ public class ShnapDefaultNatives {
                 Items.buildList(param("arr"), param("class", literalObj("java.lang.Object"))),
                 inst((ctx, trc) -> {
                     ShnapExecution shanpArr = ctx.get("arr", trc).mapIfNormal(e -> e.getValue().asArray(trc));
-                    if(shanpArr.isAbnormal()) {
+                    if (shanpArr.isAbnormal()) {
                         return shanpArr;
                     } else {
                         ShnapExecution modString = ctx.get("class", trc).mapIfNormal(e -> e.getValue().asString(trc));
@@ -133,6 +139,38 @@ public class ShnapDefaultNatives {
                     return trc.getModuleExecution(module);
                 })
         ));
+
+        ShnapNativeFuncRegistry.register("sys.eval", oneArg(inst((ctx, trc) -> {
+            return ctx.get("arg", trc).resolve(trc).mapIfNormal(e -> e.getValue().asString(trc)).mapIfNormal(e -> {
+                ShnapScript eval = new ShnapScript("eval", "eval");
+                trc.applyDefaults(eval);
+                String str = ((ShnapStringNative) e.getValue()).getValue();
+                ShnapParser parser = new ShnapParser(str, eval);
+                try {
+                    ShnapInstruction res = parser.parseAll();
+                    return res.exec(eval.getContext(), trc);
+                } catch (ShnapParseError k) {
+                    return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParseError", "\n" + k.formatSafely(), null), trc, ShnapLoc.BUILTIN);
+                }
+            });
+        })));
+
+        ShnapNativeFuncRegistry.register("sys.evalIn", func(
+                Items.buildList(param("arg"), param("object")),
+                inst((ctx, trc) -> {
+                    return ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asString(trc)).mapIfNormal(e -> ctx.get("object", trc).mapIfNormal(obj -> {
+                        ShnapScript eval = new ShnapScript("eval", "eval");
+                        ShnapObject target = obj.getValue();
+                        String str = ((ShnapStringNative) e.getValue()).getValue();
+                        ShnapParser parser = new ShnapParser(str, eval);
+                        try {
+                            ShnapInstruction res = parser.parseAll();
+                            return res.exec(target.getContext(), trc);
+                        } catch (ShnapParseError k) {
+                            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParseError", "\n" + k.formatSafely(), null), trc, ShnapLoc.BUILTIN);
+                        }
+                    }));
+                })));
 
         ShnapNativeFuncRegistry.register("sys.get", func(
                 Items.buildList(param("obj"), param("name")),
@@ -263,14 +301,25 @@ public class ShnapDefaultNatives {
                 })
         ));
 
-        ShnapNativeFuncRegistry.register("sys.fields", oneArg(inst((ctx, trc) -> {
+        ShnapNativeFuncRegistry.register("sys.fieldData", oneArg(inst((ctx, trc) -> {
             return ctx.get("arg", trc).mapIfNormal(e -> {
                 ShnapObject obj = e.getValue();
                 Collection<String> names = obj.getContext().names();
                 ShnapObject[] arr = new ShnapObject[names.size()];
                 int k = 0;
                 for (String s : names) {
-                    arr[k++] = new ShnapStringNative(ShnapLoc.BUILTIN, s);
+                    ShnapObject field = new ShnapObject(ShnapLoc.BUILTIN);
+                    field.set("name", new ShnapStringNative(ShnapLoc.BUILTIN, s));
+                    field.set("resolvedValue", obj.get(s, trc).resolve(trc).mapIfAbnormal(ex -> ex.setState(ShnapExecution.State.NORMAL).setValue(ShnapObject.getVoid())).getValue());
+                    field.set("exactValue", obj.getContext().getExactly(s));
+                    for (ShnapContext.Flag flag : ShnapContext.Flag.values()) {
+                        String name = flag.getRep();
+                        name = "is" + name.substring(0, 1).toUpperCase() + name.substring(1);
+                        field.set(name, ShnapBooleanNative.of(obj.getContext().hasFlag(s, flag)));
+                    }
+
+                    field.set(ShnapObject.AS_STRING, ShnapFactory.noArg(ShnapFactory.literal(new ShnapStringNative(ShnapLoc.BUILTIN, "field::" + s))));
+                    arr[k++] = field;
                 }
                 return ShnapExecution.normal(new ShnapArrayNative(ShnapLoc.BUILTIN, arr), trc, ShnapLoc.BUILTIN);
             });

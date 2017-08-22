@@ -20,29 +20,54 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.gmail.socraticphoenix.shnap.type.object;
+package com.gmail.socraticphoenix.shnap.program.stepper;
 
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 
-import java.util.function.Function;
+import java.util.List;
+import java.util.Optional;
 
-public class ShnapResolver extends ShnapObject {
-    protected Function<ShnapEnvironment, ShnapExecution> resolver;
+public class ShnapMultiStepStepper implements ShnapStepper {
+    private ShnapInstruction instruction;
+    private ShnapStepper[] steppers;
+    private int current;
 
-    public ShnapResolver(ShnapLoc loc, Function<ShnapEnvironment, ShnapExecution> resolver) {
-        super(loc);
-        this.resolver = resolver;
+    public ShnapMultiStepStepper(ShnapInstruction instruction, List<ShnapStepper> steppers) {
+        this(instruction, steppers.toArray(new ShnapStepper[steppers.size()]));
+    }
+
+    public ShnapMultiStepStepper(ShnapInstruction instruction, ShnapStepper... steppers) {
+        this.instruction = instruction;
+        this.steppers = steppers;
     }
 
     @Override
-    public ShnapExecution resolve(ShnapEnvironment env) {
-        return this.resolver.apply(env).mapIfNormal(e -> e.getValue().resolve(env));
+    public Optional<ShnapExecution> step(ShnapContext context, ShnapEnvironment tracer) {
+        ShnapStepper stepper = this.steppers[this.current];
+
+        Optional<ShnapExecution> exec = stepper.step(context, tracer);
+        if(exec.isPresent()) {
+            this.current++;
+            if (this.current == this.steppers.length) {
+                return exec;
+            }
+        }
+
+        return Optional.empty();
     }
 
     @Override
-    public String defaultToString() {
-        return "resolvable::" + this.identityStr();
+    public ShnapInstruction instruction() {
+        return this.instruction;
     }
+
+    @Override
+    public ShnapLoc getLocation() {
+        return this.instruction.getLocation();
+    }
+
 }

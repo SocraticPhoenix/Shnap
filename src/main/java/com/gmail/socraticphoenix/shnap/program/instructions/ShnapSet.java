@@ -95,7 +95,7 @@ public class ShnapSet extends AbstractShnapLocatable implements ShnapInstruction
             ShnapContext finalTargetContext = targetContext;
             return targetContext.get(this.name, tracer).mapIfNormal(e -> {
                 ShnapObject prev = e.getValue();
-                ShnapExecution op = prev.operate(execution.getValue(), this.op, tracer);
+                ShnapExecution op = prev.operate(execution.getValue(), this.op, tracer).resolve(tracer);
                 if(op.isAbnormal()) {
                     return op;
                 }

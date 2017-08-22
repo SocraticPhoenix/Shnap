@@ -23,11 +23,14 @@ package com.gmail.socraticphoenix.shnap.program.instructions;
 
 import com.gmail.socraticphoenix.shnap.program.AbstractShnapLocatable;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.program.stepper.ShnapStepper;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution.State;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+
+import java.util.Optional;
 
 public class ShnapStateChange extends AbstractShnapLocatable implements ShnapInstruction {
     private State state;
@@ -50,11 +53,11 @@ public class ShnapStateChange extends AbstractShnapLocatable implements ShnapIns
     @Override
     public ShnapExecution exec(ShnapContext context, ShnapEnvironment tracer) {
         ShnapExecution e;
-        if(this.value == null) {
+        if (this.value == null) {
             e = new ShnapExecution(ShnapObject.getVoid(), this.state, tracer, this.getLocation());
         } else {
             ShnapExecution val = this.value.exec(context, tracer);
-            if(val.isAbnormal()) {
+            if (val.isAbnormal()) {
                 return val;
             }
             e = new ShnapExecution(val.getValue(), this.state, tracer, this.getLocation());
@@ -65,6 +68,51 @@ public class ShnapStateChange extends AbstractShnapLocatable implements ShnapIns
     @Override
     public String decompile(int indent) {
         return this.value == null ? this.state.getRep() : this.state.getRep() + ": " + this.value.decompile(indent);
+    }
+
+    public static class Stepper implements ShnapStepper {
+        private Optional<ShnapExecution> working = Optional.empty();
+        private ShnapStepper value;
+        private State state;
+        private ShnapStateChange instruction;
+
+        public Stepper(ShnapStepper value, State state, ShnapStateChange instruction) {
+            this.value = value;
+            this.state = state;
+            this.instruction = instruction;
+        }
+
+        @Override
+        public Optional<ShnapExecution> step(ShnapContext context, ShnapEnvironment tracer) {
+            if (this.value == null) {
+                return Optional.of(new ShnapExecution(ShnapObject.getVoid(), this.state, tracer, this.getLocation()));
+            }
+
+            if (this.working.isPresent()) {
+                ShnapExecution val = this.working.get();
+                if (!val.isAbnormal()) {
+                    return Optional.of(new ShnapExecution(val.getValue(), this.state, tracer, this.getLocation()));
+                } else {
+                    return Optional.of(val);
+                }
+            }
+
+            Optional<ShnapExecution> value = this.value.step(context, tracer);
+            this.working = value;
+
+            return Optional.empty();
+        }
+
+        @Override
+        public ShnapInstruction instruction() {
+            return this.instruction;
+        }
+
+        @Override
+        public ShnapLoc getLocation() {
+            return this.instruction.getLocation();
+        }
+
     }
 
 }

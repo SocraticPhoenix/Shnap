@@ -46,7 +46,7 @@ public class ShnapDoubleNative extends ShnapObject implements ShnapNumberNative 
 
     @Override
     public int castingPrecedence(Number result) {
-        return 250;
+        return 30;
     }
 
     @Override

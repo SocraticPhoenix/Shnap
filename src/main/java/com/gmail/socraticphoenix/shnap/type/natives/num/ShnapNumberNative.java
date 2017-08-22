@@ -394,9 +394,9 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
     }
 
     static MathContext ctx(BigDecimal a, BigDecimal b) {
-        return new MathContext((int) Math.min(a.precision() +
+        return new MathContext(Math.max((int) Math.min(a.precision() +
                         (long) Math.ceil(10.0 * b.precision() / 3.0),
-                Integer.MAX_VALUE),
+                Integer.MAX_VALUE), 32),
                 RoundingMode.HALF_UP);
     }
 
@@ -405,7 +405,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                         (long) Math.ceil(10.0 * b.precision() / 3.0) +
                         Math.abs((long) a.scale() - b.scale()) + 2,
                 Integer.MAX_VALUE);
-        return new MathContext(maxDigits, RoundingMode.HALF_UP);
+        return new MathContext(Math.max(maxDigits, 32), RoundingMode.HALF_UP);
     }
 
     static Number operate(Number number,

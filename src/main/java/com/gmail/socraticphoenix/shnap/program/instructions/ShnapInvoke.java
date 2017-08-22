@@ -77,7 +77,7 @@ public class ShnapInvoke extends AbstractShnapLocatable implements ShnapInstruct
                 ShnapFunction function = (ShnapFunction) object;
                 List<ShnapObject> values = new ArrayList<>();
                 for(ShnapInstruction arg : this.args) {
-                    ShnapExecution argExec = arg.exec(context, tracer);
+                    ShnapExecution argExec = arg.exec(context, tracer).mapIfAbnormal(exe -> exe.getValue().resolve(tracer));
                     if(argExec.isAbnormal()) {
                         return argExec;
                     } else {
@@ -86,7 +86,7 @@ public class ShnapInvoke extends AbstractShnapLocatable implements ShnapInstruct
                 }
                 Map<String, ShnapObject> defValues = new LinkedHashMap<>();
                 for(Map.Entry<String, ShnapInstruction> defArg : this.defArgs.entrySet()) {
-                    ShnapExecution argExec = defArg.getValue().exec(context, tracer);
+                    ShnapExecution argExec = defArg.getValue().exec(context, tracer).mapIfAbnormal(exe -> exe.getValue().resolve(tracer));
                     if(argExec.isAbnormal()) {
                         return argExec;
                     } else {
@@ -94,7 +94,7 @@ public class ShnapInvoke extends AbstractShnapLocatable implements ShnapInstruct
                     }
                 }
                 function.trace(tracer);
-                tracer.pushTraceback(ShnapTraceback.detail(this.getLocation(), "target: " + this.target.decompile(0)));
+                tracer.pushTraceback(ShnapTraceback.detail(this.getLocation(), "invoke function on target"));
                 ShnapExecution res = function.invokeWithoutTrace(values, defValues, tracer);
 
                 if(res.isAbnormal()) {

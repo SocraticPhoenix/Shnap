@@ -30,6 +30,7 @@ public enum ShnapOperators {
     REMAINDER("%", "remainder", 2, true, 90),
     ADD("+", "add", 2, true, 85),
     SUBTRACT("-", "subtract", 2, true, 85),
+    COMPARE_TO("<>", "compareTo", 2, true, 50),
     LEFT_SHIFT("<<", "shiftLeft", 2, true, 80), //shifts MUST come before comparisons, as operators are checked in sequential order
     RIGHT_SHIFT(">>", "shiftRight", 2, true, 80),
     LESS_THAN_EQUAL_TO("<=", "compareTo", 2, true, true, 75), //equal to's MUST come before <, >, as operators are checked in sequential order

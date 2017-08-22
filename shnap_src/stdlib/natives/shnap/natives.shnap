@@ -1,9 +1,14 @@
-import = native::sys.import
-importFrom = native::sys.importFrom
-importAll = native::sys.importAll
-
+//Utility
 sleep = native::sys.sleep
 
+//Printing
+print = native::sys.print
+printErr = native::sys.printErr
+
+println = $ arg="" print(arg + "\n")
+printlnErr = $ arg="" printErr(arg + "\n")
+
+//Field manipulation & reflection
 paramCount = native::sys.paramCount
 reqParamCount = native::sys.reqParamCount
 defParamCount = native::sys.defParamCount
@@ -11,6 +16,7 @@ get = native::sys.get
 set = native::sys.set
 del = native::sys.del
 fields = native::sys.fields
+fieldData = native::sys.fieldData
 has = $ obj,field,params=void {
     if params == void {
         return: get(obj, field) != void
@@ -23,13 +29,23 @@ has = $ obj,field,params=void {
     }
 }
 hasFunction = $ (obj,field,params=null) return: has(obj, field, params)
+absorbFields = $ src,dst {
+    data = fieldData(src)
+    for data {
+        if !it.isNoimport && !it.isPrivate {
+            set(dst, it.name, it.exactValue)
+        }
+    }
+}
+eval = native::sys.eval
+evalIn = native::sys.evalIn
 
-print = native::sys.print
-printErr = native::sys.printErr
-
-println = $ arg="" print(arg + "\n")
-printlnErr = $ arg="" printErr(arg + "\n")
-
+//Import
+import = native::sys.import
+importFrom = $ mod,field return: get(import(mod), field)
+importTo = $ mod,trgt {absorbFields(import(mod), trgt)}
+importSys = $ return: import("shnap.sys")
+importSysTo = $ trgt {importTo("shnap.sys", trgt)}
 
 //Types
 javaClass = native::java.javaClass

@@ -1,13 +1,13 @@
-val = 0
-ref1 = ? val
-ref2 = ref1
-ref3 = val
+eval("
+val = 10
+println(val)
+")
 
-for k : range(3) {
-    val = k
-    println(val)
-    println(ref1)
-    println(ref2)
-    println(ref3)
-    println()
-}
+println(val)
+
+evalIn("
+val = 10
+println(val)
+", this)
+
+println(val)

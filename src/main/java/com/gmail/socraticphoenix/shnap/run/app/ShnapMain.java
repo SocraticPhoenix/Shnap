@@ -127,7 +127,7 @@ public class ShnapMain {
                 .flag("archive", "The name of the archive", s -> null)
                 .flag("exec", "A name of a script to execute", validScript)
                 .flag("reloadHome", "If present, update the standard libraries", s -> null)
-                .flag("debug", "If present, tracebacks will be considerably more detailed", s -> null)
+                .flag("noSource", "If present, tracebacks will not display source code (only line & column numbers)", s -> null)
                 .flag("shell", "If present, arg, exec and compile flags will be ignored and the Shnap shell will start", s -> null);
 
         Switch<Arguments, String> as = parser.parse(a);
@@ -149,7 +149,7 @@ public class ShnapMain {
             ShnapExecutionSettings settings = new ShnapExecutionSettings()
                     .setEnvironmentSettings(environmentSettings)
                     .addDefaultPaths()
-                    .setDebug(args.hasFlag("debug"))
+                    .setDebug(!args.hasFlag("noSource"))
                     .setReloadHome(args.hasFlag("reloadHome"));
             settings.getNatives().addAll(natives);
             settings.getPrelib().addAll(prelib);

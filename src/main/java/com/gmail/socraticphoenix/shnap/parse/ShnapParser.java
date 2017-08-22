@@ -374,6 +374,26 @@ public class ShnapParser {
         }
 
         if (primary != null) {
+            while (true) {
+                int index = stream.index();
+                whitespace();
+                ShnapLoc loc = this.loc();
+                if(stream.isNext('.')) {
+                    stream.next();
+                    whitespace();
+                    if(this.isAppendedGetNext()) {
+                        String name = this.nextVarRef();
+                        primary = new ShnapGet(loc, primary, name);
+                    } else {
+                        stream.jumpTo(index);
+                        break;
+                    }
+                } else {
+                    stream.jumpTo(index);
+                    break;
+                }
+            }
+
             for (int i = prefixOps.size() - 1; i >= 0; i--) {
                 primary = new ShnapOperate(primary.getLocation(), primary, prefixOps.get(i), null);
             }
@@ -1296,7 +1316,7 @@ public class ShnapParser {
         if (stream.isNext('.')) {
             stream.next();
             if (stream.isNext(digits)) {
-                number.append(stream.next().get());
+                number.append(".");
                 parseDigits(number);
                 decimal = true;
             } else {

@@ -80,7 +80,7 @@ public class ShnapForBlock extends AbstractShnapLocatable implements ShnapInstru
         ShnapExecution iteratorE = iterator.get("iterator", tracer);
         if (!iteratorE.isAbnormal() && iteratorE.getValue() instanceof ShnapFunction) {
             ShnapFunction iterfunc = (ShnapFunction) iteratorE.getValue();
-            if(iterfunc.paramSizeId() == 1) {
+            if(iterfunc.paramSizeId() == 0) {
                 ShnapExecution exe = iterfunc.invoke(tracer);
                 if(exe.isAbnormal()) {
                     return exe;

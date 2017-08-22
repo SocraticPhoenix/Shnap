@@ -20,38 +20,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.gmail.socraticphoenix.shnap.type.natives.num;
+package com.gmail.socraticphoenix.shnap.program.stepper;
 
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
+import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 
-public class ShnapIntNative extends ShnapObject implements ShnapNumberNative {
-    private Integer integer;
+import java.util.Optional;
 
-    public ShnapIntNative(ShnapLoc loc, Integer integer) {
-        super(loc);
-        this.integer = integer;
-        ShnapNumberNative.implementFunctions(this, this);
+public class ShnapOneStepStepper implements ShnapStepper {
+    private ShnapInstruction instruction;
+
+    @Override
+    public Optional<ShnapExecution> step(ShnapContext context, ShnapEnvironment tracer) {
+        return Optional.of(this.instruction.exec(context, tracer));
     }
 
     @Override
-    public Number getNumber() {
-        return this.integer;
+    public ShnapInstruction instruction() {
+        return this.instruction;
     }
 
     @Override
-    public ShnapObject copyWith(Number n) {
-        return new ShnapIntNative(this.loc, n.intValue());
-    }
-
-    @Override
-    public int castingPrecedence(Number result) {
-        return 10;
-    }
-
-    @Override
-    public Object getJavaBacker() {
-        return this.integer;
+    public ShnapLoc getLocation() {
+        return this.instruction.getLocation();
     }
 
 }
