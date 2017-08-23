@@ -1,13 +1,41 @@
-eval("
-val = 10
-println(val)
-")
+/(
+These are the script docs.
+How are you today?
+)/
 
-println(val)
+/<
+These are value docs
+@return: void
+>/
+val = $ {
 
-evalIn("
-val = 10
-println(val)
-", this)
+}
 
-println(val)
+/<
+doc1
+@type name: value
+>/
+val2 = #{
+
+    /<doc3>/
+    hash = 3
+
+    /<doc4>/
+    k = #{
+
+
+        /<doc3.1>/
+        stuff=0
+    }
+
+}
+
+valk = # {
+    /<doc53214>/
+    stuff = 0
+}
+
+#{
+    /<doc4>/
+    val3 = 3
+}

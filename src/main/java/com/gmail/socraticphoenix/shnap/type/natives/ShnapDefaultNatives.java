@@ -145,6 +145,7 @@ public class ShnapDefaultNatives {
                 ShnapScript eval = new ShnapScript("eval", "eval");
                 trc.applyDefaults(eval);
                 String str = ((ShnapStringNative) e.getValue()).getValue();
+                eval.setContent(() -> str);
                 ShnapParser parser = new ShnapParser(str, eval);
                 try {
                     ShnapInstruction res = parser.parseAll();
@@ -162,6 +163,7 @@ public class ShnapDefaultNatives {
                         ShnapScript eval = new ShnapScript("eval", "eval");
                         ShnapObject target = obj.getValue();
                         String str = ((ShnapStringNative) e.getValue()).getValue();
+                        eval.setContent(() -> str);
                         ShnapParser parser = new ShnapParser(str, eval);
                         try {
                             ShnapInstruction res = parser.parseAll();

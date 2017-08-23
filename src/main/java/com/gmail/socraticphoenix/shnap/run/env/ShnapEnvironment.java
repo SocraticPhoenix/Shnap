@@ -315,7 +315,7 @@ public class ShnapEnvironment {
             log.accept("Traceback:" + System.lineSeparator());
             log.accept(this.formatTraceback());
         }
-        log.accept("State value:" + System.lineSeparator());
+        log.accept(System.lineSeparator() + "State value:" + System.lineSeparator());
         ShnapExecution stringAttempt = ex.getValue().asString(this);
         if (stringAttempt.isAbnormal()) {
             log.accept("void" + System.lineSeparator());

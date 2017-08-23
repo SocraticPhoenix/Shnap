@@ -26,6 +26,8 @@ import com.gmail.socraticphoenix.collect.coupling.Switch;
 import com.gmail.socraticphoenix.parse.CharacterStream;
 import com.gmail.socraticphoenix.parse.ParserData;
 import com.gmail.socraticphoenix.parse.Strings;
+import com.gmail.socraticphoenix.shnap.doc.DocNode;
+import com.gmail.socraticphoenix.shnap.doc.DocTreeBuilder;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapMakeResolver;
 import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
@@ -96,6 +98,8 @@ public class ShnapParser {
     private int[][] pts;
     private ShnapScript building;
     private String original;
+
+    private DocTreeBuilder docBuilder;
 
     public ShnapParser(String content, ShnapScript building) {
         this.original = content;
@@ -177,6 +181,7 @@ public class ShnapParser {
             }
         }
 
+        this.docBuilder = new DocTreeBuilder();
         this.pts = finlPts;
         this.content = result.toString();
         this.stream = new CharacterStream(this.content);
@@ -185,6 +190,13 @@ public class ShnapParser {
     public ShnapInstructionSequence parseAll() {
         ShnapLoc loc = this.loc();
         List<ShnapInstruction> instructions = new ArrayList<>();
+        whitespace();
+        String docs = null;
+        if(this.isScriptDocsNext()) {
+            docs = this.parseScriptDocs();
+        }
+        whitespace();
+        this.docBuilder.pushInitialFrame(docs);
         while (stream.hasNext()) {
             whitespace();
             ShnapInstruction next = this.nextInst();
@@ -358,8 +370,28 @@ public class ShnapParser {
             primary = parseNextObj();
         } else if (isClsNext()) {
             primary = parseNextCls();
-        } else if (isSimpleSetNext()) {
-            primary = parseSimpleSet();
+        } else if (isSimpleSetNext() || isDocsNext()) {
+            String docs = null;
+            ShnapLoc loc = this.loc();
+            if (isDocsNext()) {
+                docs = this.parseDocs();
+                whitespace();
+                if(!isSimpleSetNext()) {
+                    throw this.err("Expected variable assignment");
+                }
+            }
+            this.docBuilder.pushDocs(docs);
+            ShnapSet shnapSet = parseSimpleSet();
+            if(docs != null && shnapSet.getName().startsWith("^")) {
+                throw this.err(loc, "Docs cannot be applied to pushed variables");
+            }
+
+            try {
+                this.docBuilder.popDocs(shnapSet.getName());
+            } catch (IllegalArgumentException e) {
+                throw this.err(loc, e.getMessage());
+            }
+            primary = shnapSet;
         } else if (isSimpleGetNext()) {
             primary = parseSimpleGet();
         } else if (stream.isNext('(')) {
@@ -404,6 +436,14 @@ public class ShnapParser {
         return primary;
     }
 
+    public DocTreeBuilder getDocBuilder() {
+        return this.docBuilder;
+    }
+
+    public DocNode getDocs() {
+        return this.docBuilder.build().toDocNode();
+    }
+
     public ShnapInstruction safeNextInst() {
         ShnapInstruction inst = this.nextInst();
         if (inst == null) {
@@ -427,9 +467,11 @@ public class ShnapParser {
         int index = stream.index();
         boolean flag = false;
         whitespace();
-        for (ShnapOperators op : ShnapOperators.values()) {
-            if (stream.isNext(op.getRep())) {
-                flag = true;
+        if (!stream.isNext("/<")) {
+            for (ShnapOperators op : ShnapOperators.values()) {
+                if (stream.isNext(op.getRep())) {
+                    flag = true;
+                }
             }
         }
 
@@ -582,7 +624,6 @@ public class ShnapParser {
             stream.consume('}');
         }
         ShnapInstruction body = new ShnapInstructionSequence(loc2, instructions);
-
         return ShnapFactory.makeClass(loc, params, body, clsProperties);
     }
 
@@ -623,6 +664,7 @@ public class ShnapParser {
     }
 
     public ShnapMakeFunc parseNextFunc() {
+        this.docBuilder.pushIgnore();
         whitespace();
         ShnapLoc loc = this.loc();
         stream.next();
@@ -661,6 +703,7 @@ public class ShnapParser {
         }
         ShnapInstruction body = new ShnapInstructionSequence(loc2, instructions);
 
+        this.docBuilder.popIgnore();
         return new ShnapMakeFunc(loc, params, clsProperties, body);
     }
 
@@ -843,6 +886,7 @@ public class ShnapParser {
 
     public ShnapIfBlock parseNextIfBlock() {
         ShnapLoc loc = this.loc();
+        this.docBuilder.pushIgnore();
         stream.next(2);
         whitespace();
         List<ShnapIfBlock> blocks = new ArrayList<>();
@@ -901,16 +945,20 @@ public class ShnapParser {
         for (int i = blocks.size() - 1; i > 0; i--) {
             blocks.get(i - 1).setElif(blocks.get(i));
         }
+        this.docBuilder.popIgnore();
         return blocks.get(0);
     }
 
     public ShnapScopeBlock parseNextScopeBlock() {
+        this.docBuilder.pushIgnore();
         ShnapLoc loc = this.loc();
         Pair<ShnapLiteral, ShnapInstruction> blck = safeParseNextNamedSequence();
+        this.docBuilder.popIgnore();
         return new ShnapScopeBlock(loc, blck.getA(), blck.getB());
     }
 
     public ShnapTryCatchBlock parseNextTryBlock() {
+        this.docBuilder.pushIgnore();
         ShnapLoc loc = this.loc();
         stream.next(3);
         whitespace();
@@ -930,6 +978,7 @@ public class ShnapParser {
             catchBlock = new ShnapNoOp(this.loc());
         }
 
+        this.docBuilder.popIgnore();
         return new ShnapTryCatchBlock(loc, tryBlock, catchBlock, varName);
     }
 
@@ -938,6 +987,7 @@ public class ShnapParser {
     }
 
     public ShnapDoWhileBlock parseNextDoWhileBlock() {
+        this.docBuilder.pushIgnore();
         ShnapLoc loc = this.loc();
         stream.next(7);
         whitespace();
@@ -954,6 +1004,7 @@ public class ShnapParser {
             stream.consume(')');
         }
         Pair<ShnapLiteral, ShnapInstruction> seq = safeParseNextNamedSequence();
+        this.docBuilder.popIgnore();
         return new ShnapDoWhileBlock(loc, seq.getA(), inst, seq.getB());
     }
 
@@ -962,6 +1013,7 @@ public class ShnapParser {
     }
 
     public ShnapWhileBlock parseNextWhileBlock() {
+        this.docBuilder.pushIgnore();
         ShnapLoc loc = this.loc();
         stream.next(5);
         whitespace();
@@ -978,6 +1030,7 @@ public class ShnapParser {
             stream.consume(')');
         }
         Pair<ShnapLiteral, ShnapInstruction> seq = safeParseNextNamedSequence();
+        this.docBuilder.popIgnore();
         return new ShnapWhileBlock(loc, seq.getA(), inst, seq.getB());
     }
 
@@ -986,6 +1039,7 @@ public class ShnapParser {
     }
 
     public ShnapForBlock parseNextForBlock() {
+        this.docBuilder.pushIgnore();
         ShnapLoc loc = this.loc();
         stream.next(3);
         whitespace();
@@ -1018,6 +1072,7 @@ public class ShnapParser {
         }
         whitespace();
         Pair<ShnapLiteral, ShnapInstruction> seq = safeParseNextNamedSequence();
+        this.docBuilder.popIgnore();
         return new ShnapForBlock(loc, seq.getA(), var, inst, seq.getB());
     }
 
@@ -1377,6 +1432,28 @@ public class ShnapParser {
         while (stream.isNext(digits)) {
             num.append(stream.next().get());
         }
+    }
+
+    public String parseScriptDocs() {
+        this.stream.next(2);
+        String docs = this.stream.nextUntil(")/");
+        this.stream.next(2);
+        return docs;
+    }
+
+    public String parseDocs() {
+        this.stream.next(2);
+        String docs = this.stream.nextUntil(">/");
+        this.stream.next(2);
+        return docs;
+    }
+
+    public boolean isScriptDocsNext() {
+        return this.stream.isNext("/(");
+    }
+
+    public boolean isDocsNext() {
+        return stream.isNext("/<");
     }
 
     private void whitespace() {

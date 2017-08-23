@@ -270,7 +270,7 @@ public interface ShnapFactory {
     }
 
     static ShnapFunction func(List<ShnapParameter> params, ShnapInstruction instruction) {
-        return new ShnapFunction(ShnapLoc.BUILTIN, params, new ShnapInstructionSequence(ShnapLoc.BUILTIN, Items.buildList(new ShnapStateChange(ShnapLoc.BUILTIN, State.RETURNING, instruction))));
+        return new ShnapFunction(ShnapLoc.BUILTIN, params, new ShnapStateChange(ShnapLoc.BUILTIN, State.RETURNING, instruction));
     }
 
     static ShnapFunction funcExactly(List<ShnapParameter> params, ShnapInstruction instruction) {

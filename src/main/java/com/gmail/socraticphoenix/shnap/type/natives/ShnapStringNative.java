@@ -22,6 +22,7 @@
 package com.gmail.socraticphoenix.shnap.type.natives;
 
 import com.gmail.socraticphoenix.collect.Items;
+import com.gmail.socraticphoenix.mirror.Reflections;
 import com.gmail.socraticphoenix.parse.Strings;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
@@ -85,24 +86,24 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
         this.set("compareTo", func(
                 Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
                 inst((ctx, trc) -> {
-            int order = 1;
-            ShnapExecution num = ctx.get("order", trc).mapIfNormal(e -> e.getValue().asNum(trc));
-            if (num.isAbnormal()) {
-                return num;
-            } else {
-                order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
-            }
+                    int order = 1;
+                    ShnapExecution num = ctx.get("order", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+                    if (num.isAbnormal()) {
+                        return num;
+                    } else {
+                        order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
+                    }
                     int finalOrder = order;
                     return ctx.get("arg", trc).mapIfNormal(e -> {
-                ShnapObject other = e.getValue();
-                ShnapExecution otherAsString = other.asString(trc);
-                if (otherAsString.isAbnormal()) {
-                    return otherAsString;
-                }
-                String comp = ((ShnapStringNative) otherAsString.getValue()).getValue();
-                return ShnapExecution.normal(ShnapNumberNative.valueOf(finalOrder == 1 ? this.getValue().compareTo(comp) : comp.compareTo(this.getValue())), trc, this.getLocation());
-            });
-        })));
+                        ShnapObject other = e.getValue();
+                        ShnapExecution otherAsString = other.asString(trc);
+                        if (otherAsString.isAbnormal()) {
+                            return otherAsString;
+                        }
+                        String comp = ((ShnapStringNative) otherAsString.getValue()).getValue();
+                        return ShnapExecution.normal(ShnapNumberNative.valueOf(finalOrder == 1 ? this.getValue().compareTo(comp) : comp.compareTo(this.getValue())), trc, this.getLocation());
+                    });
+                })));
         this.set("add", func(
                 Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
                 inst((ctx, trc) -> {
@@ -129,6 +130,83 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
                         } else {
                             return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), comp + this.value), trc, this.getLocation());
                         }
+                    });
+                })));
+        this.set("subtract", func(
+                Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
+                inst((ctx, trc) -> {
+                    int order = 1;
+                    ShnapExecution num = ctx.get("order", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+                    if (num.isAbnormal()) {
+                        return num;
+                    } else {
+                        order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
+                    }
+
+
+                    int finalOrder = order;
+                    return ctx.get("arg", trc).mapIfNormal(e -> {
+                        ShnapObject other = e.getValue();
+                        ShnapExecution otherAsString = other.asString(trc);
+                        if (otherAsString.isAbnormal()) {
+                            return otherAsString;
+                        }
+                        String comp = ((ShnapStringNative) otherAsString.getValue()).getValue();
+
+                        if (finalOrder == 1) {
+                            return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), this.value.replace(comp, "")), trc, this.getLocation());
+                        } else {
+                            return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), comp.replace(this.value, "")), trc, this.getLocation());
+                        }
+                    });
+                })));
+        this.set("remainder", func(
+                Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
+                inst((ctx, trc) -> {
+                    int order = 1;
+                    ShnapExecution num = ctx.get("order", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+                    if (num.isAbnormal()) {
+                        return num;
+                    } else {
+                        order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
+                    }
+
+
+                    int finalOrder = order;
+                    return ctx.get("arg", trc).mapIfNormal(e -> {
+                        ShnapObject other = e.getValue();
+                        ShnapExecution otherAsString = other.asString(trc);
+                        if (otherAsString.isAbnormal()) {
+                            return otherAsString;
+                        }
+                        String comp = ((ShnapStringNative) otherAsString.getValue()).getValue();
+
+                        if (finalOrder == 1) {
+                            return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), remainder(this.value, comp)), trc, this.getLocation());
+                        } else {
+                            return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), remainder(comp, this.value)), trc, this.getLocation());
+                        }
+                    });
+                })));
+        this.set("multiply", func(
+                Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
+                inst((ctx, trc) -> {
+                    return ctx.get("arg", trc).mapIfNormal(e -> {
+                        ShnapObject other = e.getValue();
+                        ShnapExecution otherAsNum = other.asNum(trc);
+                        if (otherAsNum.isAbnormal()) {
+                            return otherAsNum;
+                        }
+                        Number otherNum = ((ShnapNumberNative) otherAsNum.getValue()).getNumber();
+                        BigInteger iterations = Reflections.deepCast(BigInteger.class, otherNum);
+
+                        StringBuilder result = new StringBuilder();
+
+                        for (; iterations.compareTo(BigInteger.ZERO) > 0; iterations = iterations.subtract(BigInteger.ONE)) {
+                            result.append(this.value);
+                        }
+
+                        return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), result.toString()), trc, this.getLocation());
                     });
                 })));
         this.set("len", noArg(instSimple(() -> ShnapNumberNative.valueOf(this.pts.length))));
@@ -183,6 +261,13 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
             })));
             return ShnapExecution.normal(iterator, trc, this.getLocation());
         })));
+    }
+
+    private static String remainder(String a, String b) {
+        for (char c : b.toCharArray()) {
+            a = a.replace(String.valueOf(c), "");
+        }
+        return a;
     }
 
     public String getValue() {

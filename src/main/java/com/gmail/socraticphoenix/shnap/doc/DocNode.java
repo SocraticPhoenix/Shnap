@@ -19,39 +19,31 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.gmail.socraticphoenix.shnap.type.natives;
 
-import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+package com.gmail.socraticphoenix.shnap.doc;
 
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.instSimple;
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.noArg;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-public class ShnapAbsentNative extends ShnapObject implements ShnapJavaBackedNative {
-    public static final ShnapObject NULL = new ShnapAbsentNative(ShnapLoc.BUILTIN, "null");
-    public static final ShnapObject VOID = new ShnapAbsentNative(ShnapLoc.BUILTIN, "void");
+public class DocNode {
+    private Doc doc;
+    private Map<String, DocNode> children;
 
-    private String name;
-
-    private ShnapAbsentNative(ShnapLoc loc, String name) {
-        super(loc);
-        this.name = name;
-        this.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(false))));
+    public DocNode(Doc doc, Map<String, DocNode> children) {
+        this.doc = doc;
+        this.children = children;
     }
 
-    @Override
-    public String defaultToString() {
-        return this.name;
+    public DocNode(Doc doc) {
+        this(doc, new LinkedHashMap<>());
     }
 
-    public String getName() {
-        return this.name;
+    public Doc getDoc() {
+        return this.doc;
     }
 
-    @Override
-    public Object getJavaBacker() {
-        return null;
+    public Map<String, DocNode> getChildren() {
+        return this.children;
     }
 
 }

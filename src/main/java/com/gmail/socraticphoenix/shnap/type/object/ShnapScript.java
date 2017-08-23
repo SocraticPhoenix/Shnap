@@ -45,6 +45,7 @@ package com.gmail.socraticphoenix.shnap.type.object;
 
 import com.gmail.socraticphoenix.pio.ByteStream;
 import com.gmail.socraticphoenix.pio.Bytes;
+import com.gmail.socraticphoenix.shnap.doc.DocNode;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.run.compiler.DangerousSupplier;
@@ -120,6 +121,7 @@ public class ShnapScript extends ShnapObject {
             script.setContent(content);
             ShnapParser parser = new ShnapParser(content.get(), script);
             script.setVal(parser.parseAll());
+            DocNode docs = parser.getDocs();
         } else if (format.equalsIgnoreCase("cshnap")) {
             DangerousSupplier<String> content = () -> {
                 ByteStream stream = null;

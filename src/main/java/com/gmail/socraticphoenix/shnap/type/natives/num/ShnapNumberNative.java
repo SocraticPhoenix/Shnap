@@ -175,7 +175,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                         }
 
                         int finalOrder = order;
-                        return c.get("arg", t).mapIfNormal(e -> {
+                        return c.get("arg", t).mapIfNormal(ep -> ep.mapIfNormal(es -> es.getValue().asNum(t).mapIfNormal(e -> {
                             ShnapObject obj = e.getValue();
                             if (obj instanceof ShnapNumberNative) {
                                 ShnapNumberNative argNative = (ShnapNumberNative) obj;
@@ -209,7 +209,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                                 return ShnapExecution.normal(result, t, target.getLocation());
                             }
                             return ShnapExecution.normal(ShnapObject.getVoid(), t, target.getLocation());
-                        });
+                        })));
                     } catch (ArithmeticException e) {
                         return ShnapExecution.normal(ShnapObject.getVoid(), t, target.getLocation());
                     }
@@ -219,7 +219,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
     int castingPrecedence(Number result);
 
     static ShnapFunction func(ShnapNumberNative target, BinaryOperator<Number> op) {
-        return func2(target, (n1, n2) -> target.copyWith(op.apply(n1, n2)));
+        return func2(target, (n1, n2) -> ShnapNumberNative.valueOf(op.apply(n1, n2)));
     }
 
     static Number negate(Number number) {

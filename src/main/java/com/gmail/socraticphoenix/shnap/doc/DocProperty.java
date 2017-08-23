@@ -19,39 +19,30 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.gmail.socraticphoenix.shnap.type.natives;
 
-import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+package com.gmail.socraticphoenix.shnap.doc;
 
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.instSimple;
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.noArg;
-
-public class ShnapAbsentNative extends ShnapObject implements ShnapJavaBackedNative {
-    public static final ShnapObject NULL = new ShnapAbsentNative(ShnapLoc.BUILTIN, "null");
-    public static final ShnapObject VOID = new ShnapAbsentNative(ShnapLoc.BUILTIN, "void");
-
+public class DocProperty {
+    private String type;
     private String name;
+    private String value;
 
-    private ShnapAbsentNative(ShnapLoc loc, String name) {
-        super(loc);
+    public DocProperty(String type, String name, String value) {
+        this.type = type;
         this.name = name;
-        this.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(false))));
+        this.value = value;
     }
 
-    @Override
-    public String defaultToString() {
-        return this.name;
+    public String getType() {
+        return this.type;
     }
 
     public String getName() {
         return this.name;
     }
 
-    @Override
-    public Object getJavaBacker() {
-        return null;
+    public String getValue() {
+        return this.value;
     }
 
 }

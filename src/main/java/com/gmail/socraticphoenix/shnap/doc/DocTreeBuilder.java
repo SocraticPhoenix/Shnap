@@ -41,60 +41,56 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.gmail.socraticphoenix.shnap.type.natives.num;
 
-import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
-import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
-import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
+package com.gmail.socraticphoenix.shnap.doc;
 
-import java.math.BigInteger;
+import java.util.Map;
+import java.util.Stack;
 
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.instSimple;
+public class DocTreeBuilder {
+    private int ignoreStack = 0;
+    private Stack<StringNode> frames = new Stack<>();
 
-public class ShnapCharNative extends ShnapObject implements ShnapNumberNative {
-    private Integer value;
-
-    public ShnapCharNative(ShnapLoc loc, Integer value) {
-        super(loc);
-        this.value = value;
-        ShnapNumberNative.implementFunctions(this, this);
-        this.set(ShnapObject.AS_STRING, ShnapFactory.noArg(instSimple(() -> new ShnapStringNative(this.getLocation(), new String(new int[]{this.value}, 0, 1)))));
+    public DocTreeBuilder pushInitialFrame(String content) {
+        this.frames.push(new StringNode(content));
+        return this;
     }
 
-    @Override
-    public Integer getNumber() {
-        return this.value;
+    public DocTreeBuilder pushDocs(String content) {
+        if (this.ignoreStack != 0) {
+            return this;
+        }
+        this.frames.push(new StringNode(content));
+        return this;
     }
 
-    @Override
-    public ShnapObject copyWith(Number n) {
-        return new ShnapCharNative(this.getLocation(), n.intValue());
-    }
+    public DocTreeBuilder popDocs(String name) {
+        if (this.ignoreStack != 0) {
+            return this;
+        }
+        StringNode docs = this.frames.pop();
 
-    @Override
-    public int castingPrecedence(Number result) {
-        if(result instanceof BigInteger) {
-            BigInteger i = (BigInteger) result;
-            try {
-                i.intValueExact();
-                return 100;
-            } catch (ArithmeticException ignore) {
-
-            }
+        Map<String, StringNode> children = this.frames.peek().getChildren();
+        if (docs.getValue() != null && children.containsKey(name)) {
+            throw new IllegalArgumentException("Cannot apply docs to variable more than once");
         }
 
-        if (result instanceof Integer) {
-            return 100;
-        }
-
-
-        return 0;
+        children.put(name, docs);
+        return this;
     }
 
-    @Override
-    public Object getJavaBacker() {
-        return this.value;
+    public DocTreeBuilder pushIgnore() {
+        this.ignoreStack++;
+        return this;
+    }
+
+    public DocTreeBuilder popIgnore() {
+        this.ignoreStack--;
+        return this;
+    }
+
+    public StringNode build() {
+        return this.frames.peek();
     }
 
 }

@@ -19,39 +19,39 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.gmail.socraticphoenix.shnap.type.natives;
 
-import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+package com.gmail.socraticphoenix.shnap.doc;
 
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.instSimple;
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.noArg;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-public class ShnapAbsentNative extends ShnapObject implements ShnapJavaBackedNative {
-    public static final ShnapObject NULL = new ShnapAbsentNative(ShnapLoc.BUILTIN, "null");
-    public static final ShnapObject VOID = new ShnapAbsentNative(ShnapLoc.BUILTIN, "void");
+public class StringNode {
+    private String value;
+    private Map<String, StringNode> children;
 
-    private String name;
-
-    private ShnapAbsentNative(ShnapLoc loc, String name) {
-        super(loc);
-        this.name = name;
-        this.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(false))));
+    public StringNode(String value, Map<String, StringNode> children) {
+        this.value = value;
+        this.children = children;
     }
 
-    @Override
-    public String defaultToString() {
-        return this.name;
+    public StringNode(String value) {
+        this(value, new LinkedHashMap<>());
     }
 
-    public String getName() {
-        return this.name;
+    public String getValue() {
+        return this.value;
     }
 
-    @Override
-    public Object getJavaBacker() {
-        return null;
+    public Map<String, StringNode> getChildren() {
+        return this.children;
+    }
+
+    public DocNode toDocNode() {
+        DocNode node = new DocNode(this.value == null ? null : DocParser.parse(this.value));
+        for(Map.Entry<String, StringNode> child : this.children.entrySet()) {
+            node.getChildren().put(child.getKey(), child.getValue().toDocNode());
+        }
+        return node;
     }
 
 }

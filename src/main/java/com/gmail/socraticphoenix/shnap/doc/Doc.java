@@ -19,39 +19,26 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.gmail.socraticphoenix.shnap.type.natives;
 
-import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+package com.gmail.socraticphoenix.shnap.doc;
 
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.instSimple;
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.noArg;
+import java.util.List;
 
-public class ShnapAbsentNative extends ShnapObject implements ShnapJavaBackedNative {
-    public static final ShnapObject NULL = new ShnapAbsentNative(ShnapLoc.BUILTIN, "null");
-    public static final ShnapObject VOID = new ShnapAbsentNative(ShnapLoc.BUILTIN, "void");
+public class Doc {
+    private String content;
+    private List<DocProperty> properties;
 
-    private String name;
-
-    private ShnapAbsentNative(ShnapLoc loc, String name) {
-        super(loc);
-        this.name = name;
-        this.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(false))));
+    public Doc(String content, List<DocProperty> properties) {
+        this.content = content;
+        this.properties = properties;
     }
 
-    @Override
-    public String defaultToString() {
-        return this.name;
+    public String getContent() {
+        return this.content;
     }
 
-    public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public Object getJavaBacker() {
-        return null;
+    public List<DocProperty> getProperties() {
+        return this.properties;
     }
 
 }

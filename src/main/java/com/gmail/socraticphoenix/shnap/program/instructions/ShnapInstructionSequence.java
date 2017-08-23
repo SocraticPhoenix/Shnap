@@ -48,13 +48,9 @@ public class ShnapInstructionSequence extends AbstractShnapLocatable implements 
         int size = this.sequence.size();
         for (int i = 0; i < size; i++) {
             ShnapInstruction instruction = this.sequence.get(i);
-            if (i < size - 1) {
-                ShnapExecution execution = instruction.exec(context, tracer);
-                if (execution.isAbnormal()) {
-                    return execution;
-                }
-            } else {
-                return instruction.exec(context, tracer);
+            ShnapExecution execution = instruction.exec(context, tracer);
+            if (execution.isAbnormal() || i == size - 1) {
+                return execution;
             }
         }
 
