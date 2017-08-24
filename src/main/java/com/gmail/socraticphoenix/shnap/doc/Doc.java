@@ -22,6 +22,11 @@
 
 package com.gmail.socraticphoenix.shnap.doc;
 
+import com.gmail.socraticphoenix.pio.ByteStream;
+import com.gmail.socraticphoenix.pio.Bytes;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Doc {
@@ -39,6 +44,24 @@ public class Doc {
 
     public List<DocProperty> getProperties() {
         return this.properties;
+    }
+
+    public void write(ByteStream stream) throws IOException {
+        Bytes.writeString(stream, this.content);
+        stream.putInt(this.properties.size());
+        for(DocProperty property : this.properties) {
+            property.write(stream);
+        }
+    }
+
+    public static Doc read(ByteStream stream) throws IOException {
+        String content = Bytes.readString(stream);
+        int propertySize = stream.getInt();
+        List<DocProperty> properties = new ArrayList<>();
+        for (int i = 0; i < propertySize; i++) {
+            properties.add(DocProperty.read(stream));
+        }
+        return new Doc(content, properties);
     }
 
 }

@@ -22,6 +22,10 @@
 
 package com.gmail.socraticphoenix.shnap.doc;
 
+import com.gmail.socraticphoenix.pio.ByteStream;
+import com.gmail.socraticphoenix.pio.Bytes;
+
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -44,6 +48,27 @@ public class DocNode {
 
     public Map<String, DocNode> getChildren() {
         return this.children;
+    }
+
+    public void write(ByteStream stream) throws IOException {
+        this.doc.write(stream);
+        stream.putInt(this.children.size());
+        for (Map.Entry<String, DocNode> child : this.children.entrySet()) {
+            Bytes.writeString(stream, child.getKey());
+            child.getValue().write(stream);
+        }
+    }
+
+    public static DocNode read(ByteStream stream) throws IOException {
+        Doc doc = Doc.read(stream);
+        int childSize = stream.getInt();
+        Map<String, DocNode> children = new LinkedHashMap<>();
+        for (int i = 0; i < childSize; i++) {
+            String key = Bytes.readString(stream);
+            DocNode node = DocNode.read(stream);
+            children.put(key, node);
+        }
+        return new DocNode(doc, children);
     }
 
 }

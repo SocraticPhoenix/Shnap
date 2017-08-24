@@ -45,16 +45,13 @@ package com.gmail.socraticphoenix.shnap.util;
 
 import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapFunction;
-import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.ShnapOperators;
 import com.gmail.socraticphoenix.shnap.program.ShnapParameter;
-import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution.State;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapGet;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstructionSequence;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInvoke;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapLiteral;
@@ -67,10 +64,13 @@ import com.gmail.socraticphoenix.shnap.program.instructions.ShnapStateChange;
 import com.gmail.socraticphoenix.shnap.program.instructions.block.ShnapForBlock;
 import com.gmail.socraticphoenix.shnap.program.instructions.block.ShnapIfBlock;
 import com.gmail.socraticphoenix.shnap.program.instructions.block.ShnapScopeBlock;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapArrayNative;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
-import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapFunction;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -87,11 +87,8 @@ import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.BITWISE_OR;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.DIVIDE;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.EQUAL;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.LEFT_SHIFT;
-import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.LOGICAL_AND;
-import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.LOGICAL_OR;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.MULTIPLY;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.NEGATIVE;
-import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.NOT;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.RAISE;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.REMAINDER;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.RIGHT_SHIFT;
@@ -312,7 +309,6 @@ public interface ShnapFactory {
     static void implementOperators(ShnapObject target,
                                    ShnapFunction negate,
                                    ShnapFunction bitwiseNot,
-                                   ShnapFunction not,
                                    ShnapFunction raise,
                                    ShnapFunction multiply,
                                    ShnapFunction divide,
@@ -324,13 +320,10 @@ public interface ShnapFactory {
                                    ShnapFunction compareTo,
                                    ShnapFunction bitwiseAnd,
                                    ShnapFunction bitwiseXor,
-                                   ShnapFunction bitwiseOr,
-                                   ShnapFunction and,
-                                   ShnapFunction or
+                                   ShnapFunction bitwiseOr
     ) {
         implementOperator(target, NEGATIVE, negate);
         implementOperator(target, BITWISE_NOT, bitwiseNot);
-        implementOperator(target, NOT, not);
         implementOperator(target, RAISE, raise);
         implementOperator(target, MULTIPLY, multiply);
         implementOperator(target, DIVIDE, divide);
@@ -343,8 +336,6 @@ public interface ShnapFactory {
         implementOperator(target, BITWISE_OR, bitwiseOr);
         implementOperator(target, BITWISE_AND, bitwiseAnd);
         implementOperator(target, BITIWSE_XOR, bitwiseXor);
-        implementOperator(target, LOGICAL_AND, and);
-        implementOperator(target, LOGICAL_OR, or);
     }
 
     static void implementOperator(ShnapObject target, ShnapOperators operator, ShnapFunction function) {

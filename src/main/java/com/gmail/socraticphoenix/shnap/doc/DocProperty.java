@@ -22,6 +22,11 @@
 
 package com.gmail.socraticphoenix.shnap.doc;
 
+import com.gmail.socraticphoenix.pio.ByteStream;
+import com.gmail.socraticphoenix.pio.Bytes;
+
+import java.io.IOException;
+
 public class DocProperty {
     private String type;
     private String name;
@@ -43,6 +48,16 @@ public class DocProperty {
 
     public String getValue() {
         return this.value;
+    }
+
+    public void write(ByteStream stream) throws IOException {
+        Bytes.writeString(stream, this.type);
+        Bytes.writeString(stream, this.name);
+        Bytes.writeString(stream, this.value);
+    }
+
+    public static DocProperty read(ByteStream stream) throws IOException {
+        return new DocProperty(Bytes.readString(stream), Bytes.readString(stream), Bytes.readString(stream));
     }
 
 }

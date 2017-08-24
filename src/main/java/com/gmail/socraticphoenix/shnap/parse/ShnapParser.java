@@ -1351,7 +1351,10 @@ public class ShnapParser {
             stream.next(3);
             val = str.toString();
         } else {
-            val = Strings.cutFirst(Strings.cutLast(stream.nextUntil(stringData.reset())));
+            val = Strings.cutFirst(stream.nextUntil(stringData.reset()));
+            if(val.endsWith("\"")) {
+                val = Strings.cutLast(val);
+            }
         }
 
         return new ShnapLiteral(loc, new ShnapStringNative(loc, val));

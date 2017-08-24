@@ -127,7 +127,6 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
         ShnapFactory.implementOperators(target,
                 noArg(instSimple(() -> alsoTarget.copyWith(negate(alsoTarget.getNumber())))),
                 noArg(instSimple(() -> alsoTarget.copyWith(bitwiseNot(alsoTarget.getNumber())))),
-                noArg(instSimple(() -> not(alsoTarget.getNumber()))),
                 func(alsoTarget, ShnapNumberNative::pow),
                 func(alsoTarget, ShnapNumberNative::multiply),
                 func(alsoTarget, ShnapNumberNative::divide),
@@ -139,9 +138,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                 func(alsoTarget, ShnapNumberNative::compareTo),
                 func(alsoTarget, ShnapNumberNative::bitwiseAnd),
                 func(alsoTarget, ShnapNumberNative::bitwiseXor),
-                func(alsoTarget, ShnapNumberNative::bitwiseOr),
-                func2(alsoTarget, ShnapNumberNative::and),
-                func2(alsoTarget, ShnapNumberNative::or)
+                func(alsoTarget, ShnapNumberNative::bitwiseOr)
         );
 
         target.set("round", oneArg(inst((ctx, trc) -> {
@@ -175,7 +172,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                         }
 
                         int finalOrder = order;
-                        return c.get("arg", t).mapIfNormal(ep -> ep.mapIfNormal(es -> es.getValue().asNum(t).mapIfNormal(e -> {
+                        return c.get("arg", t).mapIfNormal(e -> {
                             ShnapObject obj = e.getValue();
                             if (obj instanceof ShnapNumberNative) {
                                 ShnapNumberNative argNative = (ShnapNumberNative) obj;
@@ -209,7 +206,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                                 return ShnapExecution.normal(result, t, target.getLocation());
                             }
                             return ShnapExecution.normal(ShnapObject.getVoid(), t, target.getLocation());
-                        })));
+                        });
                     } catch (ArithmeticException e) {
                         return ShnapExecution.normal(ShnapObject.getVoid(), t, target.getLocation());
                     }
@@ -228,14 +225,6 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
 
     static Number bitwiseNot(Number number) {
         return operate(number, BigInteger::not, d -> new BigDecimal(d.unscaledValue().not(), d.scale()));
-    }
-
-    static ShnapObject not(Number number) {
-        if (number.doubleValue() == 0) {
-            return ShnapBooleanNative.TRUE;
-        } else {
-            return ShnapBooleanNative.FALSE;
-        }
     }
 
     static Number multiply(Number a, Number b) {
@@ -375,22 +364,6 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                     int scale = Math.max(d.scale(), d2.scale());
                     return new BigDecimal(d.setScale(scale, RoundingMode.HALF_UP).unscaledValue().xor(d2.setScale(scale, RoundingMode.HALF_UP).unscaledValue()), scale);
                 }));
-    }
-
-    static ShnapObject and(Number a, Number b) {
-        if (a.doubleValue() != 0 && b.doubleValue() != 0) {
-            return ShnapBooleanNative.TRUE;
-        }
-
-        return ShnapBooleanNative.FALSE;
-    }
-
-    static ShnapObject or(Number a, Number b) {
-        if (a.doubleValue() != 0 || b.doubleValue() != 0) {
-            return ShnapBooleanNative.TRUE;
-        }
-
-        return ShnapBooleanNative.FALSE;
     }
 
     static MathContext ctx(BigDecimal a, BigDecimal b) {

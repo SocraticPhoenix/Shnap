@@ -176,7 +176,7 @@ public class ShnapFunction extends ShnapObject {
             return ShnapExecution.normal(e.getValue(), tracer, this.getLocation());
         } else {
             tracer.popTraceback();
-            return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
+            return ShnapExecution.normal(e.getValue(), tracer, this.getLocation());
         }
     }
 
