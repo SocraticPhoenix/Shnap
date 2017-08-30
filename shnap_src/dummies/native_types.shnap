@@ -1,0 +1,175 @@
+/(
+* Documentation for the native types
+)/
+
+/<
+* The native string type. It exists as an array of characters. It should be noted that strings are immutable
+>/
+string = # {
+
+    /<
+    * Converts this string to a boolean.
+    *
+    * @return: True if this equals, ignoring case, "true"
+    >/
+    asBoolean = null
+
+    /<
+    * Converts this string to an array.
+    *
+    * @return: An array of characters that represents this string
+    >/
+    asArray = null
+
+    /<
+    * Converts this string to a number.
+    *
+    * @return: A number if this string can be read as a number, void otherwise
+    >/
+    asNumber = null
+
+    /<
+    * Compares this string lexicographically to another string.
+    *
+    * @param arg: The string to compare to
+    * @param order: The order with which to compare the strings
+    * @default order: 1
+    * @return: A negative number if `left` < `right`, 0 if `left` == `right`, or a postivie number if `left` > `right`
+    >/
+    compareTo = null
+
+    /<
+    * Adds a given value to this string, by converting the value to a string and appending it
+    *
+    * @param arg: The value to add
+    * @param order: The order with which to add the value
+    * @default order: 1
+    * @return: `right` appended to `left`
+    >/
+    add = null
+
+    /<
+    * @return: The length of this string
+    >/
+    len = null
+
+    /<
+    * @param arg: The index of the character to get
+    * @return: The character at the given index
+    >/
+    get = null
+
+    /<
+    * @param arg: The value to check for
+    * @return: True if a sub-sequence of this string equals the string representation of the given value
+    >/
+    contains = null
+
+    /<
+    * @return: An iterator for the characters in this string
+    >/
+    iterator = # {
+
+        /<
+        * The current index of the iterator
+        >/
+        index = null
+
+        /<
+        * @return: True if there are more characters to iterate over, false otherwise
+        >/
+        hasNext = null
+
+        /<
+        * @return: The next character in the string
+        >/
+        next = null
+    }
+}
+
+/<
+* The native array type. This type should not be used often, and lists or other collections should be preferred.
+* Although convenient, list-like functions are provided, every function which changes the array copies and re-populates it,
+* meaning it is inefficient. The array should, however, be used in the implementation of collections or when it does not
+* need to change size
+>/
+array = # {
+
+    /<
+    * @return: True if this array is non-empty
+    >/
+    asBool = null
+
+    /<
+    * Removes the value at the given index, shrinking the array in the process
+    *
+    * @param arg: The index to remove
+    * @return: The value previously located at the given index
+    * @throw shnap.IndexError: If the give index is out of bounds
+    >/
+    remove = null
+
+    /<
+    * Inserts the given value at the given index, growing the array in the process
+    *
+    * @param index: The index to insert at
+    * @param val: The value to insert
+    * @return: The value previously located at the given index, or void if no value existed at the previous index.
+    * @throw shnap.IndexError: If the give index is out of bounds
+    >/
+    insert = null
+
+    /<
+    * Adds the given value to the tail of the array, growing the array in the process
+    *
+    * @param arg: The value to add
+    * @return: This array
+    >/
+    append = null
+
+    /<
+    * Gets the value at the given index
+    *
+    * @param index: The index to get the value with
+    * @return: The value at the given index
+    * @throw shnap.IndexError: If the give index is out of bounds
+    >/
+    get = null
+
+    /<
+    * Sets the value at the given index to the given value
+    *
+    * @param index: The index to set
+    * @param val: The value to set
+    * @return: The value previously located at the given index
+    * @throw shnap.IndexError: If the give index is out of bounds
+    >/
+    set = null
+
+    /<
+    * @return: The length of this array
+    >/
+    len = null
+
+    /<
+    * @return: An iterator for the elements in this array
+    >/
+    iterator = # {
+
+        /<
+        * The current index of the iterator
+        >/
+        index = null
+
+        /<
+        * @return: True if there are more elements to iterate over, false otherwise
+        >/
+        hasNext = null
+
+        /<
+        * @return: The next element in the array
+        >/
+        next = null
+    }
+
+}

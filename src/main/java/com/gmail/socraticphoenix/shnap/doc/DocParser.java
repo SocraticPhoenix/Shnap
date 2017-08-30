@@ -22,6 +22,8 @@
 
 package com.gmail.socraticphoenix.shnap.doc;
 
+import com.gmail.socraticphoenix.collect.coupling.Switch;
+import com.gmail.socraticphoenix.parse.CharacterStream;
 import com.gmail.socraticphoenix.parse.Strings;
 
 import java.util.ArrayList;
@@ -67,12 +69,46 @@ public class DocParser {
                     String value = pieces[1].trim();
                     properties.add(new DocProperty(type, name, value));
                 }
+            } else if (line.isEmpty()) {
+                content.append("<lb />");
             } else {
-                content.append(line).append("<br />");
+                content.append(line).append(line.endsWith(" ") ? "" : " ");
             }
         }
 
-        return new Doc(content.toString(), properties);
+        List<Switch<String, DocProperty>> docContent = new ArrayList<>();
+        CharacterStream stream = new CharacterStream(content.toString());
+        while (stream.hasNext()) {
+            String next = stream.nextUntil("{@");
+            if (stream.isNext("{@")) {
+                stream.next(2);
+                int index = stream.index();
+                String prop = stream.nextUntil("}").trim();
+                if (stream.isNext("}") && prop.startsWith("@") && prop.contains(":")) {
+                    stream.next();
+                    String[] pieces = prop.split(" ", 2);
+                    if (pieces.length == 1 || !pieces[1].contains(":")) {
+                        pieces = prop.split(":", 2);
+                        String type = pieces[0].trim();
+                        String value = pieces[1].trim();
+                        docContent.add(Switch.ofB(new DocProperty(type, null, value)));
+                    } else {
+                        String type = pieces[0].trim();
+                        pieces = pieces[1].split(":", 2);
+                        String name = pieces[0].trim();
+                        String value = pieces[1].trim();
+                        docContent.add(Switch.ofB(new DocProperty(type, name, value)));
+                    }
+                } else {
+                    stream.jumpTo(index);
+                    docContent.add(Switch.ofA(next + "{@"));
+                }
+            } else {
+                docContent.add(Switch.ofA(next));
+            }
+        }
+
+        return new Doc(docContent, properties);
     }
 
 

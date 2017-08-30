@@ -1,4 +1,4 @@
-inffib = @ seedOne=0,seedTwo=1 {
+fib_infinite_internal = @ seedOne=0,seedTwo=1 {
     currentVal = seedOne
     nextVal = seedTwo
 
@@ -13,7 +13,7 @@ inffib = @ seedOne=0,seedTwo=1 {
 
 }
 
-fib = @ count,seedOne=0,seedTwo=1 {
+fib_internal = @ count,seedOne=0,seedTwo=1 {
     currentVal = seedOne
     nextVal = seedTwo
     counter = 0
@@ -30,6 +30,17 @@ fib = @ count,seedOne=0,seedTwo=1 {
         return: ret
     }
 
+}
+
+private fib_infinite_internal
+private fib_internal
+
+fib = $ count=void,seedOne=0,seedTwo=1 {
+    if count == void {
+        return: fib_infinite_internal(seedOne, seedTwo)
+    } else {
+        return: fib_internal(count, seedOne, seedTwo)
+    }
 }
 
 abs = $ obj {return: if(obj < 0) -obj else obj}

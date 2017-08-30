@@ -22,7 +22,6 @@
 package com.gmail.socraticphoenix.shnap.type.natives;
 
 import com.gmail.socraticphoenix.collect.Items;
-import com.gmail.socraticphoenix.mirror.Reflections;
 import com.gmail.socraticphoenix.parse.Strings;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
@@ -32,6 +31,7 @@ import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapCharNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -132,83 +132,6 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
                         }
                     });
                 })));
-        this.set("subtract", func(
-                Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
-                inst((ctx, trc) -> {
-                    int order = 1;
-                    ShnapExecution num = ctx.get("order", trc).mapIfNormal(e -> e.getValue().asNum(trc));
-                    if (num.isAbnormal()) {
-                        return num;
-                    } else {
-                        order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
-                    }
-
-
-                    int finalOrder = order;
-                    return ctx.get("arg", trc).mapIfNormal(e -> {
-                        ShnapObject other = e.getValue();
-                        ShnapExecution otherAsString = other.asString(trc);
-                        if (otherAsString.isAbnormal()) {
-                            return otherAsString;
-                        }
-                        String comp = ((ShnapStringNative) otherAsString.getValue()).getValue();
-
-                        if (finalOrder == 1) {
-                            return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), this.value.replace(comp, "")), trc, this.getLocation());
-                        } else {
-                            return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), comp.replace(this.value, "")), trc, this.getLocation());
-                        }
-                    });
-                })));
-        this.set("remainder", func(
-                Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
-                inst((ctx, trc) -> {
-                    int order = 1;
-                    ShnapExecution num = ctx.get("order", trc).mapIfNormal(e -> e.getValue().asNum(trc));
-                    if (num.isAbnormal()) {
-                        return num;
-                    } else {
-                        order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
-                    }
-
-
-                    int finalOrder = order;
-                    return ctx.get("arg", trc).mapIfNormal(e -> {
-                        ShnapObject other = e.getValue();
-                        ShnapExecution otherAsString = other.asString(trc);
-                        if (otherAsString.isAbnormal()) {
-                            return otherAsString;
-                        }
-                        String comp = ((ShnapStringNative) otherAsString.getValue()).getValue();
-
-                        if (finalOrder == 1) {
-                            return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), remainder(this.value, comp)), trc, this.getLocation());
-                        } else {
-                            return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), remainder(comp, this.value)), trc, this.getLocation());
-                        }
-                    });
-                })));
-        this.set("multiply", func(
-                Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
-                inst((ctx, trc) -> {
-                    return ctx.get("arg", trc).mapIfNormal(e -> {
-                        ShnapObject other = e.getValue();
-                        ShnapExecution otherAsNum = other.asNum(trc);
-                        if (otherAsNum.isAbnormal()) {
-                            return otherAsNum;
-                        }
-                        Number otherNum = ((ShnapNumberNative) otherAsNum.getValue()).getNumber();
-                        BigInteger iterations = Reflections.deepCast(BigInteger.class, otherNum);
-
-                        StringBuilder result = new StringBuilder();
-
-                        for (; iterations.compareTo(BigInteger.ZERO) > 0; iterations = iterations.subtract(BigInteger.ONE)) {
-                            result.append(this.value);
-                        }
-
-                        return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), result.toString()), trc, this.getLocation());
-                    });
-                })));
         this.set("len", noArg(instSimple(() -> ShnapNumberNative.valueOf(this.pts.length))));
         this.set("get", oneArg(inst((ctx, trc) -> {
             int order = 1;
@@ -220,7 +143,7 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
             }
 
             if (order < 0 || order >= this.pts.length) {
-                return ShnapExecution.normal(ShnapObject.getVoid(), trc, this.getLocation());
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", "Index out of bounds: " + order, null), trc, this.getLocation());
             } else {
                 return ShnapExecution.normal(new ShnapCharNative(this.getLocation(), this.pts[order]), trc, this.getLocation());
             }

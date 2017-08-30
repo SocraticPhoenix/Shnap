@@ -71,7 +71,7 @@ public class DocTreeBuilder {
         StringNode docs = this.frames.pop();
 
         Map<String, StringNode> children = this.frames.peek().getChildren();
-        if (docs.getValue() != null && children.containsKey(name)) {
+        if ((docs.getValue() != null || !docs.getChildren().isEmpty()) && children.containsKey(name)) {
             throw new IllegalArgumentException("Cannot apply docs to variable more than once");
         }
 

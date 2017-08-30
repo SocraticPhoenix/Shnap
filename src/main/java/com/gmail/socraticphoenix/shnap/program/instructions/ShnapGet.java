@@ -54,6 +54,8 @@ public class ShnapGet extends AbstractShnapLocatable implements ShnapInstruction
 
         if (!context.isChildOf(targetContext) && targetContext.hasFlag(this.name, ShnapContext.Flag.PRIVATE)) {
             return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.AccessError", "field " + name + " is flagged with PRIVATE", null), tracer, this.getLocation());
+        } else if (!targetContext.containsScopeWise(this.name)) {
+            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.AbsentFieldError", "absent field: " + this.name, null), tracer, this.getLocation());
         }
 
         return ShnapExecution.normal(targetContext.getExactly(this.name), tracer, this.getLocation());

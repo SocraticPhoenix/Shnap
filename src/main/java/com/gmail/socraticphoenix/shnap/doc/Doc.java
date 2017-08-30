@@ -22,6 +22,7 @@
 
 package com.gmail.socraticphoenix.shnap.doc;
 
+import com.gmail.socraticphoenix.collect.coupling.Switch;
 import com.gmail.socraticphoenix.pio.ByteStream;
 import com.gmail.socraticphoenix.pio.Bytes;
 
@@ -30,15 +31,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Doc {
-    private String content;
+    private List<Switch<String, DocProperty>> content;
     private List<DocProperty> properties;
 
-    public Doc(String content, List<DocProperty> properties) {
+    public Doc(List<Switch<String, DocProperty>> content, List<DocProperty> properties) {
         this.content = content;
         this.properties = properties;
     }
 
-    public String getContent() {
+    public List<Switch<String, DocProperty>> getContent() {
         return this.content;
     }
 
@@ -47,7 +48,17 @@ public class Doc {
     }
 
     public void write(ByteStream stream) throws IOException {
-        Bytes.writeString(stream, this.content);
+        stream.putInt(this.content.size());
+        for(Switch<String, DocProperty> part : this.content) {
+            if(part.containsA()) {
+                stream.put((byte) 0);
+                Bytes.writeString(stream, part.getA().get());
+            } else {
+                stream.put((byte) 1);
+                part.getB().get().write(stream);
+            }
+        }
+
         stream.putInt(this.properties.size());
         for(DocProperty property : this.properties) {
             property.write(stream);
@@ -55,7 +66,17 @@ public class Doc {
     }
 
     public static Doc read(ByteStream stream) throws IOException {
-        String content = Bytes.readString(stream);
+        List<Switch<String, DocProperty>> content = new ArrayList<>();
+        int len = stream.getInt();
+        for (int i = 0; i < len; i++) {
+            byte id = stream.get();
+            if (id == 0) {
+                content.add(Switch.ofA(Bytes.readString(stream)));
+            } else {
+                content.add(Switch.ofB(DocProperty.read(stream)));
+            }
+        }
+
         int propertySize = stream.getInt();
         List<DocProperty> properties = new ArrayList<>();
         for (int i = 0; i < propertySize; i++) {

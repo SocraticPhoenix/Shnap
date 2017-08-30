@@ -71,8 +71,8 @@ public class ShnapArrayNative extends ShnapObject {
     }
 
     private void applyFunctions() {
+        //TODO throw errors instead of returning void
         //Conversion functions; AS_STRING is implemented with defaultToString
-        this.set(ShnapObject.AS_NUMBER, noArg(instSimple(() -> ShnapNumberNative.valueOf(this.value.length))));
         this.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(this.value.length != 0))));
 
         //Other functions
@@ -86,7 +86,7 @@ public class ShnapArrayNative extends ShnapObject {
             }
 
             if (order < 0 || order >= this.value.length) {
-                return ShnapExecution.normal(ShnapObject.getVoid(), trc, this.getLocation());
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", "Index out of bounds: " + order, null), trc, this.getLocation());
             } else {
                 ShnapExecution toGive = ShnapExecution.normal(this.value[order], trc, this.getLocation());
                 ShnapObject[] value = this.value;
@@ -107,7 +107,7 @@ public class ShnapArrayNative extends ShnapObject {
             }
 
             if (order < 0 || order > this.value.length) {
-                return ShnapExecution.normal(ShnapObject.getVoid(), trc, this.getLocation());
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", "Index out of bounds: " + order, null), trc, this.getLocation());
             } else {
                 int finalOrder = order;
                 return ctx.get("val", trc).mapIfNormal(e -> {
@@ -134,7 +134,7 @@ public class ShnapArrayNative extends ShnapObject {
             }
 
             if (order < 0 || order >= this.value.length) {
-                return ShnapExecution.normal(ShnapObject.getVoid(), trc, this.getLocation());
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", "Index out of bounds: " + order, null), trc, this.getLocation());
             } else {
                 return ShnapExecution.normal(this.value[order], trc, this.getLocation());
             }
@@ -150,7 +150,7 @@ public class ShnapArrayNative extends ShnapObject {
             }
 
             if (order < 0 || order >= this.value.length) {
-                return ShnapExecution.normal(ShnapObject.getVoid(), trc, this.getLocation());
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", "Index out of bounds: " + order, null), trc, this.getLocation());
             } else {
                 ShnapExecution toGive = ShnapExecution.normal(this.value[order], trc, this.getLocation());
                 int finalOrder = order;
@@ -212,7 +212,7 @@ public class ShnapArrayNative extends ShnapObject {
             }
 
             if (order < 0) {
-                return ShnapExecution.normal(ShnapObject.getVoid(), trc, this.getLocation());
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", "Index out of bounds: " + order, null), trc, this.getLocation());
             }
 
             ShnapObject[] newArray = new ShnapObject[order];
@@ -229,7 +229,11 @@ public class ShnapArrayNative extends ShnapObject {
 
             return ShnapExecution.normal(this, trc, this.getLocation());
         })));
-
+        this.set("copy", noArg(instSimple(() -> {
+            ShnapObject[] dst = new ShnapObject[this.value.length];
+            System.arraycopy(this.value, 0, dst, 0, this.value.length);
+            return new ShnapArrayNative(this.getLocation(), dst);
+        })));
         this.set("contains", funcExactly(Items.buildList(), sequence(
                 forBlock("it", ShnapFactory.get("this"), ifTrue(
                         ShnapFactory.operate(ShnapFactory.get("it"), ShnapOperators.EQUAL, ShnapFactory.get("arg")),

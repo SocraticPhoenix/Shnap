@@ -205,6 +205,13 @@ public class ShnapDefaultNatives {
                 })
         ));
 
+        ShnapNativeFuncRegistry.register("sys.identity", oneArg(inst((ctx, trc) -> {
+            return ctx.get("arg", trc).resolve(trc).mapIfNormal(e -> {
+               int hash = System.identityHashCode(e.getValue());
+               return ShnapExecution.normal(new ShnapIntNative(ShnapLoc.BUILTIN, hash), trc, ShnapLoc.BUILTIN);
+            });
+        })));
+
         ShnapNativeFuncRegistry.register("sys.reqParamCount", func(
                 Items.buildList(param("obj")),
                 inst((ctx, trc) -> {

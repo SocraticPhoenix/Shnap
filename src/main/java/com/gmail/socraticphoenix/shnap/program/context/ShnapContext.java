@@ -83,6 +83,28 @@ public class ShnapContext {
         this.variables.put(name, object);
     }
 
+    public boolean containsScopeWise(String name) {
+        if (name.startsWith("^")) {
+            if (this.parent == null) {
+                return false;
+            } else {
+                return this.parent.containsScopeWise(name);
+            }
+        } else if (name.startsWith(":")) {
+            return this.variables.containsKey(Strings.cutFirst(name));
+        }
+
+        boolean flag = this.variables.containsKey(name);
+        if (!flag) {
+            if (this.parent != null) {
+                return this.parent.containsScopeWise(name);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     public ShnapObject getExactly(String name) {
         if (name.startsWith("^")) {
             if (this.parent == null) {
@@ -90,6 +112,9 @@ public class ShnapContext {
             } else {
                 return this.parent.getExactly(Strings.cutFirst(name));
             }
+        } else if (name.startsWith(":")) {
+            ShnapObject theObj = this.variables.get(Strings.cutFirst(name));
+            return theObj == null ? ShnapObject.getVoid() : theObj;
         }
 
         ShnapObject obj = this.variables.get(name);

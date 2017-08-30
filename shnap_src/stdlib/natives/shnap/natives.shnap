@@ -39,6 +39,7 @@ absorbFields = $ src,dst {
 }
 eval = native::sys.eval
 evalIn = native::sys.evalIn
+identity = native::sys.identity
 
 //Import
 import = native::sys.import
@@ -57,6 +58,7 @@ bool = native::type.bool
 array = native::type.array
 char = native::type.char
 java = native::type.java
+ord = $ ch return: int32(num(ch))
 newArray = native::type.newArray
 
 int32 = native::type.int32

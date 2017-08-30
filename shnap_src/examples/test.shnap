@@ -1,3 +1,4 @@
-f = $c{n='A's=""for k:range(n,c+1){for range(n,k)s+=" "for range(n,k+1)s+=k+" "s+="\n"}return:s}
-
-println(f(import("shnap.sys").input("Enter a char> ").get(0)))
+math = import("shnap.math")
+for i : math.fib(10) {
+    println(i)
+}
