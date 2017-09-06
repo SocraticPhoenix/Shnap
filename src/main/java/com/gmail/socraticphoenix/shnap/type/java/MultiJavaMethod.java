@@ -22,11 +22,12 @@
 
 package com.gmail.socraticphoenix.shnap.type.java;
 
-import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapFunction;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapJavaBackedNative;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,10 +42,6 @@ public class MultiJavaMethod {
 
     public void add(TypedJavaMethod method) {
         this.methods.add(method);
-    }
-
-    public ShnapFunction asShnap(ShnapJavaBackedNative owner) {
-        return null;
     }
 
     public ShnapExecution execute(ShnapJavaBackedNative owner, List<ShnapObject> params, ShnapEnvironment environment) {
@@ -70,6 +67,15 @@ public class MultiJavaMethod {
             } else if (method.conflictsWith(selected)) {
                 selected = selected.resolveConflict(method, types);
             }
+        }
+
+        if (selected == null) {
+            StringBuilder message = new StringBuilder().append("Failed to invoke java method:").append(System.lineSeparator());
+
+            for (TypedJavaMethod method : this.methods) {
+                message.append(" - ").append(method.format()).append(System.lineSeparator());
+            }
+            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.JavaInterfaceError", message.toString(), null), environment, ShnapLoc.BUILTIN);
         }
 
         return selected.execute(owner, resolved, environment);

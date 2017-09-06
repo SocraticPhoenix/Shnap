@@ -170,7 +170,7 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
                 return ShnapExecution.normal(ShnapBooleanNative.of(index < this.pts.length), tra, this.getLocation());
             })));
             iterator.set("next", noArg(inst((con, tra) -> {
-                ShnapExecution num = ctx.get("index", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+                ShnapExecution num = iterator.get("index", trc).mapIfNormal(e -> e.getValue().asNum(trc));
                 if (num.isAbnormal()) {
                     return num;
                 }

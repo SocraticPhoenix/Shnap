@@ -81,9 +81,6 @@ public class ShnapFunction extends ShnapObject {
                 this.def.add(parameter);
             }
         }
-
-        context.setLocally("thisFunc", this);
-        context.setFlag("thisFunc", ShnapContext.Flag.DONT_IMPORT);
     }
 
     @Override
@@ -134,6 +131,7 @@ public class ShnapFunction extends ShnapObject {
         List<String> paramsCopy = new ArrayList<>(defValues.keySet());
 
         ShnapContext functionContext = this.getContext().copy();
+        functionContext.setLocally("thisFunc", this);
         if (values.size() + defValues.size() > this.paramsSize()) {
             return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterSizeError", "Expected at most " + this.paramsSize() + " params, but got " + (values.size() + defValues.size()), null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
         }
@@ -176,7 +174,7 @@ public class ShnapFunction extends ShnapObject {
             return ShnapExecution.normal(e.getValue(), tracer, this.getLocation());
         } else {
             tracer.popTraceback();
-            return ShnapExecution.normal(e.getValue(), tracer, this.getLocation());
+            return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
         }
     }
 

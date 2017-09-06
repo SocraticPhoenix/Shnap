@@ -51,6 +51,7 @@ importSysTo = $ trgt {importTo("shnap.sys", trgt)}
 //Types
 javaClass = native::java.javaClass
 javaArray = native::java.javaArray
+javaCast = native::java.javaCast
 
 num = native::type.num
 str = native::type.str

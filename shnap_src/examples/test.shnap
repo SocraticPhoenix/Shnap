@@ -1,4 +1,4 @@
-math = import("shnap.math")
-for i : math.fib(10) {
-    println(i)
-}
+f =
+$n{k=0return:while n!=9{if n%2==0n=n/2+1 else{s=0for str(n**2)s+=num(str(it))n=s}k+=1}}
+
+println(f(5))

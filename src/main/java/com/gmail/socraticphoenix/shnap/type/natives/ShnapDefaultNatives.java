@@ -56,6 +56,22 @@ import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.param;
 public class ShnapDefaultNatives {
 
     public static void registerDefaults() {
+        ShnapNativeFuncRegistry.register("java.javaCast", func(
+                Items.buildList(param("val"), param("class")),
+                inst((ctx, trc) -> {
+                    return ctx.get("val", trc).mapIfNormal(val -> ctx.get("class", trc).mapIfNormal(cls -> cls.getValue().asString(trc).mapIfNormal(clsStr -> {
+                        Optional<Class> type = Reflections.resolveClass(((ShnapStringNative) clsStr.getValue()).getValue());
+                        if (type.isPresent()) {
+                            return val.getValue().asJava(trc).mapIfNormal(exe -> {
+                               ShnapJavaBackedNative backed = (ShnapJavaBackedNative) exe.getValue();
+                               return ShnapExecution.returning(ShnapJavaInterface.createObject(Reflections.deepCast(type.get(), backed.getJavaBacker())), trc, ShnapLoc.BUILTIN);
+                            });
+                        } else {
+                            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.TypeError", "Cannot get primitive class: " + cls, null), trc, ShnapLoc.BUILTIN);
+                        }
+                    })));
+                })
+        ));
         ShnapNativeFuncRegistry.register("java.javaClass", func(
                 Items.buildList(param("class")),
                 inst((ctx, trc) -> {

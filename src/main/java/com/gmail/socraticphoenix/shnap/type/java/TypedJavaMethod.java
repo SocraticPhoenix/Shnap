@@ -65,7 +65,7 @@ public class TypedJavaMethod {
         }
     }
 
-    private String format() {
+    public String format() {
         StringBuilder k = new StringBuilder(this.owner.getName() + "#" + this.method.getName() + "(");
         for (int i = 0; i < this.params.size(); i++) {
             k.append(this.params.get(i).getName());
@@ -73,7 +73,7 @@ public class TypedJavaMethod {
                 k.append(", ");
             }
         }
-        return k + ")";
+        return k.append(")").toString();
     }
 
     public TypedJavaMethod resolveConflict(TypedJavaMethod other, List<Class> params) {

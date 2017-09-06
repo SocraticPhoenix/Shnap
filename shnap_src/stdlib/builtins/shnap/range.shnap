@@ -1,4 +1,4 @@
-range_internal_exclusive = @(min,max,step=1) {
+range_internal_exclusive_up = @(min,max,step=1) {
     state = min
 
     hasNext = ${
@@ -13,7 +13,7 @@ range_internal_exclusive = @(min,max,step=1) {
 
 }
 
-range_internal_inclusive = @(min,max,step=1){
+range_internal_inclusive_up = @(min,max,step=1){
     state = min
 
     hasNext = $ {
@@ -28,8 +28,43 @@ range_internal_inclusive = @(min,max,step=1){
 
 }
 
-private range_internal_exclusive
-private range_internal_inclusive
+private range_internal_exclusive_up
+private range_internal_inclusive_up
+
+range_internal_exclusive_down = @(max,min,step=1) {
+    step = -step
+    state = max
+
+    hasNext = $ {
+        return: state > min
+    }
+
+    next = $ {
+        ret = state
+        state += step
+        return: ret
+    }
+
+}
+
+range_internal_inclusive_down = @(max,min,step=1) {
+    step = -step
+    state = max
+
+    hasNext = $ {
+        return: state >= min
+    }
+
+    next = $ {
+        ret = state
+        state += step
+        return: ret
+    }
+
+}
+
+private range_internal_exclusive_down
+private range_internal_inclusive_down
 
 infrange = @(start,step=1) {
 
@@ -47,16 +82,22 @@ infrange = @(start,step=1) {
 
 range = $(x,y=null,step=1,inclusive=false) {
     if y == null {
-        ^min = 0
-        ^max = x
+        ^a = 0
+        ^b = x
     } else {
-        ^min = x
-        ^max = y
+        ^a = x
+        ^b = y
     }
 
     if (inclusive) {
-        return: range_internal_inclusive(min,max,step)
+        if a < b
+            return: range_internal_inclusive_up(a,b,step)
+         else
+            return: range_internal_inclusive_down(a,b,step)
     } else {
-        return: range_internal_exclusive(min,max,step)
+        if a < b
+            return: range_internal_exclusive_up(a,b,step)
+        else
+            return: range_internal_exclusive_down(a,b,step)
     }
 }

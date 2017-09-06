@@ -44,6 +44,7 @@ dependencies {
     library "com.github.PlutoPowered:Collect:master-SNAPSHOT"
     library "com.github.PlutoPowered:Conventional:master-SNAPSHOT"
     library "com.github.PlutoPowered:Mirror:master-SNAPSHOT"
+    library "com.github.ShnapLang:Shnap-Docs:master-SNAPSHOT"
 }
 //End Repositories and Dependencies
 
