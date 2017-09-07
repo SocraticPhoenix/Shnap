@@ -171,6 +171,8 @@ public class ShnapReflectiveJavaClassProvider implements ShnapJavaClassProvider 
     public ShnapJavaClass createClassObject() {
         ShnapLoc loc = ShnapJavaInterface.createJavaLoc(this.cls);
         ShnapJavaClass javaClass = new ShnapJavaClass(loc, this.cls);
+        javaClass.set("class", ShnapFactory.noArg(ShnapFactory.instSimple(() -> ShnapJavaInterface.createObject(this.cls))));
+
         if(!this.constructor.isEmpty()) {
             javaClass.set("new", new ShnapJavaConstructor(loc, this.constructor));
         }

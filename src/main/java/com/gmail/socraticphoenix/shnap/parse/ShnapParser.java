@@ -1115,7 +1115,7 @@ public class ShnapParser {
     public boolean isBlockNameNext() {
         int index = stream.index();
         boolean flag = false;
-        if (this.isIdentifierNext()) {
+        if (this.isVarRefNext()) {
             this.parseNextIdentifier();
             whitespace();
             if (stream.isNext(':')) {

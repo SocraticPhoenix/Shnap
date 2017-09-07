@@ -171,6 +171,48 @@ public class ShnapArrayNative extends ShnapObject {
             });
         })));
 
+        this.set("resize", oneArg(inst((ctx, trc) -> {
+            int order = -1;
+            ShnapExecution num = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+            if (num.isAbnormal()) {
+                return num;
+            } else {
+                order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
+            }
+
+            if (order < 0) {
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", "Index out of bounds: " + order, null), trc, this.getLocation());
+            }
+
+            ShnapObject[] newArray = new ShnapObject[order];
+            if (order > this.value.length) {
+                System.arraycopy(this.value, 0, newArray, 0, this.value.length);
+                for (int i = this.value.length; i < newArray.length; i++) {
+                    newArray[i] = ShnapObject.getNull();
+                }
+            } else if (order > 0) {
+                System.arraycopy(this.value, 0, newArray, 0, newArray.length);
+            }
+
+            this.value = newArray;
+
+            return ShnapExecution.normal(this, trc, this.getLocation());
+        })));
+
+        this.set("copy", noArg(instSimple(() -> {
+            ShnapObject[] dst = new ShnapObject[this.value.length];
+            System.arraycopy(this.value, 0, dst, 0, this.value.length);
+            return new ShnapArrayNative(this.getLocation(), dst);
+        })));
+
+        this.set("contains", funcExactly(Items.buildList(), sequence(
+                forBlock("it", ShnapFactory.get("this"), ifTrue(
+                        ShnapFactory.operate(ShnapFactory.get("it"), ShnapOperators.EQUAL, ShnapFactory.get("arg")),
+                        returning(literal(true))
+                )),
+                returning(literal(false))
+        )));
+
         this.set("len", noArg(instSimple(() -> ShnapNumberNative.valueOf(this.value.length))));
 
         this.set("iterator", noArg(inst((ctx, trc) -> {
@@ -201,46 +243,6 @@ public class ShnapArrayNative extends ShnapObject {
             })));
             return ShnapExecution.normal(iterator, trc, this.getLocation());
         })));
-
-        this.set("resize", oneArg(inst((ctx, trc) -> {
-            int order = -1;
-            ShnapExecution num = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc));
-            if (num.isAbnormal()) {
-                return num;
-            } else {
-                order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
-            }
-
-            if (order < 0) {
-                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", "Index out of bounds: " + order, null), trc, this.getLocation());
-            }
-
-            ShnapObject[] newArray = new ShnapObject[order];
-            if (order > this.value.length) {
-                System.arraycopy(this.value, 0, newArray, 0, this.value.length);
-                for (int i = this.value.length; i < newArray.length; i++) {
-                    newArray[i] = ShnapObject.getNull();
-                }
-            } else if (order > 0) {
-                System.arraycopy(this.value, 0, newArray, 0, newArray.length);
-            }
-
-            this.value = newArray;
-
-            return ShnapExecution.normal(this, trc, this.getLocation());
-        })));
-        this.set("copy", noArg(instSimple(() -> {
-            ShnapObject[] dst = new ShnapObject[this.value.length];
-            System.arraycopy(this.value, 0, dst, 0, this.value.length);
-            return new ShnapArrayNative(this.getLocation(), dst);
-        })));
-        this.set("contains", funcExactly(Items.buildList(), sequence(
-                forBlock("it", ShnapFactory.get("this"), ifTrue(
-                        ShnapFactory.operate(ShnapFactory.get("it"), ShnapOperators.EQUAL, ShnapFactory.get("arg")),
-                        returning(literal(true))
-                )),
-                returning(literal(false))
-        )));
     }
 
 }

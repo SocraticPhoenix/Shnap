@@ -80,8 +80,8 @@ infrange = @(start,step=1) {
 
 }
 
-range = $(x,y=null,step=1,inclusive=false) {
-    if y == null {
+range = $(x,y=void,step=1,inclusive=false) {
+    if y == void {
         ^a = 0
         ^b = x
     } else {
@@ -90,14 +90,16 @@ range = $(x,y=null,step=1,inclusive=false) {
     }
 
     if (inclusive) {
-        if a < b
+        if a < b {
             return: range_internal_inclusive_up(a,b,step)
-         else
+         } else {
             return: range_internal_inclusive_down(a,b,step)
+         }
     } else {
-        if a < b
+        if a < b {
             return: range_internal_exclusive_up(a,b,step)
-        else
+         } else {
             return: range_internal_exclusive_down(a,b,step)
+        }
     }
 }
