@@ -43,7 +43,7 @@ public enum ShnapOperators {
     LOGICAL_AND("&&", "and", 2, true, false, true, 50), //logical MUST come before bitwise, as operators are checked in sequential order
     LOGICAL_OR("||", "or", 2, true, false, true, 45),
     BITWISE_AND("&", "band", 2, true, 65),
-    BITIWSE_XOR("`", "bxor", 2, true, 60),
+    BITIWSE_XOR("^", "bxor", 2, true, 60),
     BITWISE_OR("|", "bor", 2, true, 55),
     SENTINEL("\0", "sentinel", 0, true, Integer.MIN_VALUE);
 
