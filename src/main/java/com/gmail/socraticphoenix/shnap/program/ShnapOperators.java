@@ -37,13 +37,13 @@ public enum ShnapOperators {
     GREATER_THAN_EQUAL_TO(">=", "compareTo", 2, true, true, 75),
     LESS_THAN("<", "compareTo", 2, true, true, 75),
     GREATER_THAN(">", "compareTo", 2, true, true, 75),
-    EQUAL("==", "compareTo", 2, true, true, 70),
-    NOT_EQUAL("!=", "compareTo", 2, true, true, 70),
+    EQUAL("==", "equals", 2, true, false, 70),
+    NOT_EQUAL("!=", "equals", 2, true, false, 70),
     NOT("!", "not", 1, true, false, true, 100), //not MUST come after !=, as operators are checked in sequential order
     LOGICAL_AND("&&", "and", 2, true, false, true, 50), //logical MUST come before bitwise, as operators are checked in sequential order
     LOGICAL_OR("||", "or", 2, true, false, true, 45),
     BITWISE_AND("&", "band", 2, true, 65),
-    BITIWSE_XOR("^", "bxor", 2, true, 60),
+    BITIWSE_XOR("`", "bxor", 2, true, 60),
     BITWISE_OR("|", "bor", 2, true, 55),
     SENTINEL("\0", "sentinel", 0, true, Integer.MIN_VALUE);
 

@@ -25,15 +25,14 @@ package com.gmail.socraticphoenix.shnap.type.java;
 import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.collect.coupling.Triple;
 import com.gmail.socraticphoenix.mirror.Reflections;
-import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
-import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TypedJavaConstructor {
     private Class owner;
@@ -43,7 +42,7 @@ public class TypedJavaConstructor {
     public TypedJavaConstructor(Class owner, Constructor method) {
         this.method = method;
         this.owner = owner;
-        this.params = Items.buildList(method.getParameterTypes()).stream().map(Reflections::boxingType).collect(Collectors.toList());
+        this.params = Items.buildList(method.getParameterTypes());
     }
 
     public ShnapExecution execute(List<Object> resolved, ShnapEnvironment environment) {
@@ -76,11 +75,13 @@ public class TypedJavaConstructor {
             List<Triple<Class, Class, Class>> conflicts = new ArrayList<>();
             for (int i = 0; i < myParams.size(); i++) {
                 if (params.get(i) != null) {
-                    Class myParam = myParams.get(i);
-                    Class otherParam = otherParams.get(i);
+                    Class myParam = Reflections.boxingType(myParams.get(i));
+                    Class otherParam = Reflections.boxingType(otherParams.get(i));
                     if (!myParam.equals(otherParam) && (myParam.isAssignableFrom(otherParam) || otherParam.isAssignableFrom(myParam))) {
                         conflicts.add(Triple.of(params.get(i), myParam, otherParam));
                     }
+                } else if (myParams.get(i).isPrimitive()) {
+                    return other; //Can't put null in a primitive, ever
                 }
             }
 
@@ -98,21 +99,7 @@ public class TypedJavaConstructor {
     }
 
     public boolean conflictsWith(TypedJavaConstructor other) {
-        List<Class> myParams = this.params;
-        List<Class> otherParams = other.params;
-        if (myParams.size() != otherParams.size()) {
-            return false;
-        } else {
-            for (int i = 0; i < myParams.size(); i++) {
-                Class myParam = myParams.get(i);
-                Class otherParam = otherParams.get(i);
-                if (!myParam.equals(otherParam) && (myParam.isAssignableFrom(otherParam) || otherParam.isAssignableFrom(myParam))) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return this.matches(other.params);
     }
 
     public boolean matches(List<Class> input) {
@@ -122,7 +109,7 @@ public class TypedJavaConstructor {
 
         for (int i = 0; i < this.params.size(); i++) {
             Class param = input.get(i);
-            if (param != null && !this.params.get(i).isAssignableFrom(param)) {
+            if ((param != null && !Reflections.boxingType(this.params.get(i)).isAssignableFrom(Reflections.boxingType(param))) || (param == null && this.params.get(i).isPrimitive())) {
                 return false;
             }
         }

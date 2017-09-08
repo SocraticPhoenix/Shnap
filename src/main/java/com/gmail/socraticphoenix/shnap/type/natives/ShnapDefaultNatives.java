@@ -30,6 +30,8 @@ import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.type.java.ShnapJavaInterface;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBigDecimalNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBigIntegerNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapCharNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapDoubleNative;
@@ -64,7 +66,7 @@ public class ShnapDefaultNatives {
                         if (type.isPresent()) {
                             return val.getValue().asJava(trc).mapIfNormal(exe -> {
                                ShnapJavaBackedNative backed = (ShnapJavaBackedNative) exe.getValue();
-                               return ShnapExecution.returning(ShnapJavaInterface.createObject(Reflections.deepCast(type.get(), backed.getJavaBacker())), trc, ShnapLoc.BUILTIN);
+                               return ShnapExecution.returning(ShnapJavaInterface.createObject(nullSafetyCast(type.get(), backed.getJavaBacker())), trc, ShnapLoc.BUILTIN);
                             });
                         } else {
                             return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.TypeError", "Cannot get primitive class: " + cls, null), trc, ShnapLoc.BUILTIN);
@@ -358,7 +360,22 @@ public class ShnapDefaultNatives {
         ShnapNativeFuncRegistry.register("type.bool", oneArg(inst((ctx, trc) -> ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asBool(trc)))));
         ShnapNativeFuncRegistry.register("type.array", oneArg(inst((ctx, trc) -> ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asArray(trc)))));
         ShnapNativeFuncRegistry.register("type.java", oneArg(inst((ctx, trc) -> ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asJava(trc)))));
+        ShnapNativeFuncRegistry.register("type.int", oneArg(inst((ctx, trc) -> {
+            ShnapExecution number = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+            if (number.isAbnormal()) {
+                return number;
+            }
 
+            return ShnapExecution.normal(new ShnapBigIntegerNative(ShnapLoc.BUILTIN, ShnapNumberNative.asInt(((ShnapNumberNative) number.getValue()).getNumber())), trc, ShnapLoc.BUILTIN);
+        })));
+        ShnapNativeFuncRegistry.register("type.dec", oneArg(inst((ctx, trc) -> {
+            ShnapExecution number = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+            if (number.isAbnormal()) {
+                return number;
+            }
+
+            return ShnapExecution.normal(new ShnapBigDecimalNative(ShnapLoc.BUILTIN, ShnapNumberNative.asDec(((ShnapNumberNative) number.getValue()).getNumber())), trc, ShnapLoc.BUILTIN);
+        })));
         ShnapNativeFuncRegistry.register("type.char", oneArg(inst((ctx, trc) -> {
             ShnapExecution number = ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc));
             if (number.isAbnormal()) {
@@ -410,6 +427,14 @@ public class ShnapDefaultNatives {
                 return ShnapExecution.normal(new ShnapArrayNative(ShnapLoc.BUILTIN, order), trc, ShnapLoc.BUILTIN);
             }
         })));
+    }
+
+    public static Object nullSafetyCast(Class type, Object val) {
+        if(val == null && type.isPrimitive()) {
+            throw new ClassCastException("Cannot cast null to " + type.getName());
+        } else {
+            return Reflections.deepCast(type, val);
+        }
     }
 
 }

@@ -86,6 +86,7 @@ import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.BITWISE_NOT
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.BITWISE_OR;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.DIVIDE;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.EQUAL;
+import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.GREATER_THAN;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.LEFT_SHIFT;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.MULTIPLY;
 import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.NEGATIVE;
@@ -318,6 +319,7 @@ public interface ShnapFactory {
                                    ShnapFunction leftShift,
                                    ShnapFunction rightShift,
                                    ShnapFunction compareTo,
+                                   ShnapFunction equals,
                                    ShnapFunction bitwiseAnd,
                                    ShnapFunction bitwiseXor,
                                    ShnapFunction bitwiseOr
@@ -332,7 +334,8 @@ public interface ShnapFactory {
         implementOperator(target, SUBTRACT, subtract);
         implementOperator(target, LEFT_SHIFT, leftShift);
         implementOperator(target, RIGHT_SHIFT, rightShift);
-        implementOperator(target, EQUAL, compareTo);
+        implementOperator(target, GREATER_THAN, compareTo);
+        implementOperator(target, EQUAL, equals);
         implementOperator(target, BITWISE_OR, bitwiseOr);
         implementOperator(target, BITWISE_AND, bitwiseAnd);
         implementOperator(target, BITIWSE_XOR, bitwiseXor);

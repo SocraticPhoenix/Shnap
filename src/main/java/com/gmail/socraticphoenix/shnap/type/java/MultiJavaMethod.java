@@ -62,10 +62,12 @@ public class MultiJavaMethod {
         TypedJavaMethod selected = null;
 
         for (TypedJavaMethod method : this.methods.stream().filter(m -> m.matches(types)).collect(Collectors.toList())) {
-            if (selected == null) {
-                selected = method;
-            } else if (method.conflictsWith(selected)) {
-                selected = selected.resolveConflict(method, types);
+            if(method.matches(types)) {
+                if (selected == null) {
+                    selected = method;
+                } else if (method.conflictsWith(selected)) {
+                    selected = selected.resolveConflict(method, types);
+                }
             }
         }
 

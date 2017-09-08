@@ -104,6 +104,27 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
                         return ShnapExecution.normal(ShnapNumberNative.valueOf(finalOrder == 1 ? this.getValue().compareTo(comp) : comp.compareTo(this.getValue())), trc, this.getLocation());
                     });
                 })));
+        this.set("equals", func(
+                Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
+                inst((ctx, trc) -> {
+                    int order = 1;
+                    ShnapExecution num = ctx.get("order", trc).mapIfNormal(e -> e.getValue().asNum(trc));
+                    if (num.isAbnormal()) {
+                        return num;
+                    } else {
+                        order = ((ShnapNumberNative) num.getValue()).getNumber().intValue();
+                    }
+                    int finalOrder = order;
+                    return ctx.get("arg", trc).mapIfNormal(e -> {
+                        ShnapObject other = e.getValue();
+                        ShnapExecution otherAsString = other.asString(trc);
+                        if (otherAsString.isAbnormal()) {
+                            return otherAsString;
+                        }
+                        String comp = ((ShnapStringNative) otherAsString.getValue()).getValue();
+                        return ShnapExecution.normal(ShnapBooleanNative.of(this.equals(comp)), trc, this.getLocation());
+                    });
+                })));
         this.set("add", func(
                 Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
                 inst((ctx, trc) -> {

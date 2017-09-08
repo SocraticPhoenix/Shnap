@@ -73,6 +73,25 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
     ShnapObject ONE = ShnapNumberNative.valueOf(1);
     ShnapObject ZERO = ShnapNumberNative.valueOf(-1);
 
+    static BigInteger asInt(Number num) {
+        if (num instanceof BigInteger) {
+            return (BigInteger) num;
+        } else if (num instanceof BigDecimal) {
+            return ((BigDecimal) num).toBigInteger();
+        } else {
+            return BigInteger.valueOf(num.longValue());
+        }
+    }
+
+    static BigDecimal asDec(Number num) {
+        if (num instanceof BigDecimal) {
+            return (BigDecimal) num;
+        } else if (num instanceof BigInteger) {
+            return new BigDecimal((BigInteger) num);
+        } else {
+            return new BigDecimal(num.doubleValue());
+        }
+    }
 
     static ShnapObject valueOf(ShnapLoc loc, Number number) {
         if (number instanceof BigInteger) {
@@ -119,7 +138,13 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
     }
 
     static void implementFunctions(ShnapObject target, ShnapNumberNative alsoTarget) {
-        target.set(ShnapObject.AS_STRING, noArg(instSimple(() -> new ShnapStringNative(target.getLocation(), String.valueOf(alsoTarget.getNumber())))));
+        target.set(ShnapObject.AS_STRING, noArg(instSimple(() -> {
+            Number num = alsoTarget.getNumber();
+            if (num instanceof BigDecimal) {
+                num = ((BigDecimal) num).stripTrailingZeros();
+            }
+            return new ShnapStringNative(target.getLocation(), String.valueOf(num));
+        })));
         target.set(ShnapObject.AS_ARRAY, noArg(instSimple(() -> new ShnapArrayNative(target.getLocation(), target))));
         target.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(alsoTarget.getNumber().doubleValue() != 0))));
 
@@ -136,6 +161,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                 func(alsoTarget, ShnapNumberNative::leftShift),
                 func(alsoTarget, ShnapNumberNative::rightShift),
                 func(alsoTarget, ShnapNumberNative::compareTo),
+                func2(alsoTarget, (n1, n2) -> ShnapBooleanNative.of(equals(n1, n2))),
                 func(alsoTarget, ShnapNumberNative::bitwiseAnd),
                 func(alsoTarget, ShnapNumberNative::bitwiseXor),
                 func(alsoTarget, ShnapNumberNative::bitwiseOr)
@@ -256,7 +282,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
 
     static Number add(Number a, Number b) {
         return operate(a, n -> operate(b, n::add, d -> new BigDecimal(n).add(d)),
-                d -> operate(b, n -> d.add(new BigDecimal(n)), d::divide));
+                d -> operate(b, n -> d.add(new BigDecimal(n)), n -> d.add(n)));
     }
 
     static Number subtract(Number a, Number b) {
@@ -286,7 +312,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
 
         BigDecimal res = BigDecimal.ONE;
         for (BigInteger i = BigInteger.ZERO; i.compareTo(b) < 0; i = i.add(BigInteger.ONE)) {
-            res = res.multiply(res);
+            res = res.multiply(a);
         }
         return negate ? res.negate() : res;
     }
@@ -340,6 +366,11 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
     static Number compareTo(Number a, Number b) {
         return BigInteger.valueOf(operate(a, n -> operate(b, n::compareTo, d -> new BigDecimal(n).compareTo(d)),
                 d -> operate(b, n -> d.compareTo(new BigDecimal(n)), d::compareTo)).longValue());
+    }
+
+    static boolean equals(Number a, Number b) {
+        return BigInteger.valueOf(operate(a, n -> operate(b, n::compareTo, d -> new BigDecimal(n).compareTo(d)),
+                d -> operate(b, n -> d.compareTo(new BigDecimal(n)), d::compareTo)).longValue()).compareTo(BigInteger.ZERO) == 0;
     }
 
     static Number bitwiseAnd(Number a, Number b) {

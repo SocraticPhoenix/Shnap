@@ -338,15 +338,11 @@ public class ShnapObject extends AbstractShnapLocatable {
                         case GREATER_THAN_EQUAL_TO:
                             val = resVal >= 0;
                             break;
-                        case EQUAL:
-                            val = resVal == 0;
-                            break;
-                        case NOT_EQUAL:
-                            val = resVal != 0;
-                            break;
                     }
                 }
                 return ShnapExecution.normal(ShnapBooleanNative.of(val), tracer, self.getLocation());
+            } else if (operator == ShnapOperators.NOT_EQUAL) {
+                return res.getValue().operate(ShnapOperators.NOT, tracer);
             } else {
                 return res;
             }

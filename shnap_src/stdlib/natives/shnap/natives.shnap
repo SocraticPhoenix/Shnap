@@ -54,6 +54,8 @@ javaArray = native::java.javaArray
 javaCast = native::java.javaCast
 
 num = native::type.num
+dec = native::type.dec
+int = native::type.int
 str = native::type.str
 bool = native::type.bool
 array = native::type.array

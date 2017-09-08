@@ -1,9 +1,84 @@
-a = 0
-b = 1
+complex = @ (real=0.0,imaginary=0.0) {
+    real = dec(real)
+    imaginary = dec(imaginary)
 
-k = $ {
-    if a < b
-        return: "Hello World"
+    add = $ clx,order=1 {
+        return: complex(real + clx.real, imaginary + clx.imaginary)
+    }
+
+    subtract = $ clx,order=1 {
+        if order == 1
+            return: complex(real - clx.real, imaginary - clx.imaginary)
+        else
+            return: complex(clx.real - real, imaginary - clx.imaginary)
+    }
+
+    multiply = $ clx,order=1 {
+        return: complex(real * clx.real - imaginary * clx.imaginary, clx.real * imaginary + clx.imaginary * real)
+    }
+
+    divide = $ clx,order=1 {
+        if order == 1 {
+            denom = clx.real**2 + clx.imaginary**2
+            if denom == 0
+                return: void
+            return: complex((real * clx.real + imaginary * clx.imaginary) / denom, (clx.real * imaginary - real * clx.imaginary) / denom)
+        } else {
+            denom = real**2 + imaginary**2
+            if denom == 0
+                return: void
+            return: complex((real * clx.real + imaginary * clx.imaginary) / denom, (real * clx.imaginary - clx.real * imaginary) / denom)
+        }
+    }
+
+    asString = $ {
+        return: str(real) + " + " + str(imaginary) + "i"
+    }
+
+    round = $ n {
+        return: complex(real.round(n), imaginary.round(n))
+    }
+
+}
+println((complex(1,2) / complex(2,3)).round(5))
+
+
+rectangle = @ (width=10,height=void) {
+    private width
+    private height
+
+    if height == void
+        height = width
+
+    equals = $ rect {
+        return: rect.width == width && rect.height == height
+    }
+
+    compareTo = $ rect {
+        return: this.area() - rect.area()
+    }
+
+    asString = $ return: "{width: " + str(width) + ", height: " + str(height) + "}"
+
+    hashCode = $ return: int32(height) * 31 + int32(width)
+
+    getWidth = $ return: width
+
+    getHeight = $ return: height
+
+    setWidth = $ (width) this.width = width
+
+    setHeight = $ (height) this.height = height
+
+    area = $ return: height * width
+
+    perimeter = $ return: 2 * (height * width)
+
 }
 
-println(k())
+r1 = rectangle()
+r2 = rectangle(3, 4)
+r3 = rectangle(5)
+
+for [r1, r2, r3] println(it)
+
