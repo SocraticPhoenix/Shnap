@@ -140,7 +140,7 @@ public class ShnapArrayNative extends ShnapObject {
             }
         })));
 
-        this.set("set", func(Items.buildList(param("index"), param("val")), inst((ctx, trc) -> {
+        this.set("set", func(Items.buildList(param("val"), param("index")), inst((ctx, trc) -> {
             int order = -1;
             ShnapExecution num = ctx.get("index", trc).mapIfNormal(e -> e.getValue().asNum(trc));
             if (num.isAbnormal()) {

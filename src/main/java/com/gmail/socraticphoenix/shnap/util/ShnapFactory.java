@@ -75,6 +75,7 @@ import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -99,6 +100,24 @@ public interface ShnapFactory {
 
     static ShnapInstruction makeClass(ShnapLoc loc, List<ShnapParameter> params, ShnapInstruction body, List<ShnapInstruction> clsInsts) {
         return new ShnapMakeFunc(loc, params, clsInsts, new ShnapInstructionSequence(loc, Items.buildList(new ShnapStateChange(loc, State.RETURNING, new ShnapMakeObj(body.getLocation(), body)))));
+    }
+
+    static ShnapInstruction makeGet(ShnapLoc loc, ShnapInstruction target, List<ShnapInstruction> params, Map<String, ShnapInstruction> defParams) {
+        return new ShnapInvoke(loc,  new ShnapGet(loc, target, "get"), params, defParams);
+    }
+
+    static ShnapInstruction makeSet(ShnapLoc loc, ShnapInstruction target, List<ShnapInstruction> params, Map<String, ShnapInstruction> defParams, ShnapInstruction val) {
+        params.add(0, val);
+        return new ShnapInvoke(loc,  new ShnapGet(loc, target, "set"), params, defParams);
+    }
+
+    static ShnapInstruction makeSliceGet(ShnapLoc loc, ShnapInstruction target, List<ShnapInstruction> params, Map<String, ShnapInstruction> defParams) {
+        return new ShnapInvoke(loc,  new ShnapGet(loc, target, "getSlice"), params, defParams);
+    }
+
+    static ShnapInstruction makeSliceSet(ShnapLoc loc, ShnapInstruction target, List<ShnapInstruction> params, Map<String, ShnapInstruction> defParams, ShnapInstruction val) {
+        params.add(0, val);
+        return new ShnapInvoke(loc,  new ShnapGet(loc, target, "setSlice"), params, defParams);
     }
 
     static ShnapObject mimicJavaException(String name, String message, Throwable throwable) {

@@ -12,19 +12,19 @@ printlnErr = $ arg="" printErr(arg + "\n")
 paramCount = native::sys.paramCount
 reqParamCount = native::sys.reqParamCount
 defParamCount = native::sys.defParamCount
-get = native::sys.get
-set = native::sys.set
-del = native::sys.del
+getField = native::sys.get
+setField = native::sys.set
+delField = native::sys.del
 fields = native::sys.fields
 fieldData = native::sys.fieldData
 has = $ obj,field,params=void {
     if params == void {
-        return: get(obj, field) != void
+        return: getField(obj, field) != void
     } else if params == null {
-        val = get(obj, field)
+        val = getField(obj, field)
         return: val != void && paramCount(val) != void
     } else {
-        val = get(obj, field)
+        val = getField(obj, field)
         return: val != void && reqParamCount(val) == params
     }
 }

@@ -192,7 +192,7 @@ public class ShnapParser {
         List<ShnapInstruction> instructions = new ArrayList<>();
         whitespace();
         String docs = null;
-        if(this.isScriptDocsNext()) {
+        if (this.isScriptDocsNext()) {
             docs = this.parseScriptDocs();
         }
         whitespace();
@@ -252,6 +252,9 @@ public class ShnapParser {
             } else if (this.isAppendedInvokeNext()) {
                 Pair<List<ShnapInstruction>, Map<String, ShnapInstruction>> params = parseFilledParenthesizedParams();
                 primary = new ShnapInvoke(loc, primary, params.getA(), params.getB());
+                sequence.set(sequence.size() - 1, Switch.ofA(primary));
+            } else if (this.isAppendedSetGetSliceNext()) {
+                primary = this.parseNextGetSetSlice(primary);
                 sequence.set(sequence.size() - 1, Switch.ofA(primary));
             } else {
                 whitespace();
@@ -376,13 +379,13 @@ public class ShnapParser {
             if (isDocsNext()) {
                 docs = this.parseDocs();
                 whitespace();
-                if(!isSimpleSetNext()) {
+                if (!isSimpleSetNext()) {
                     throw this.err("Expected variable assignment");
                 }
             }
             this.docBuilder.pushDocs(docs);
             ShnapSet shnapSet = parseSimpleSet();
-            if(docs != null && shnapSet.getName().startsWith("^")) {
+            if (docs != null && shnapSet.getName().startsWith("^")) {
                 throw this.err(loc, "Docs cannot be applied to pushed variables");
             }
 
@@ -461,6 +464,10 @@ public class ShnapParser {
 
     private boolean isAppendedInvokeNext() {
         return stream.isNext("(");
+    }
+
+    private boolean isAppendedSetGetSliceNext() {
+        return stream.isNext("[");
     }
 
     public boolean isSimpleGetNext() {
@@ -746,6 +753,87 @@ public class ShnapParser {
         }
 
         return null;
+    }
+
+    public ShnapInstruction parseNextGetSetSlice(ShnapInstruction target) {
+        whitespace();
+        ShnapLoc loc1 = this.loc();
+        stream.next();
+        List<ShnapInstruction> params = new ArrayList<>();
+        Map<String, ShnapInstruction> namedParams = new LinkedHashMap<>();
+        boolean started = false;
+        boolean sliceMode = false;
+        boolean defaulting = false;
+        boolean flag = true;
+        whitespace();
+        if (stream.isNext(']')) {
+            flag = false;
+            stream.next();
+        }
+        while (flag) {
+            whitespace();
+            int index = stream.index();
+            boolean named = false;
+            ShnapLoc loc = this.loc();
+            if (isVarRefNext()) {
+                String nxt = nextVarRef();
+                whitespace();
+                if (stream.isNext('=') && !stream.isNext("==")) {
+                    defaulting = true;
+                    named = true;
+                    stream.consume('=');
+                    whitespace();
+                    namedParams.put(nxt, safeNextInst());
+                } else if (defaulting) {
+                    throw err(loc, "non-default parameter after default parameter");
+                } else {
+                    stream.jumpTo(index);
+                }
+            } else if (defaulting) {
+                throw err(loc, "non-default parameter after default parameter");
+            }
+
+            if (!named) {
+                params.add(safeNextInst());
+            }
+
+            whitespace();
+            if (stream.isNext(',')) {
+                if (sliceMode && started) {
+                    throw this.err("Expected :");
+                }
+                started = true;
+                sliceMode = false;
+                stream.next();
+            } else if (stream.isNext(':')) {
+                if (!sliceMode && started) {
+                    throw this.err("Expected ,");
+                }
+                started = true;
+                sliceMode = true;
+                stream.next();
+                whitespace();
+                if (stream.isNext(']')) {
+                    stream.next();
+                    break;
+                }
+            } else {
+                if (!stream.isNext(']')) {
+                    throw err("Expected ], :, or ,");
+                }
+                stream.next();
+                break;
+            }
+        }
+
+        whitespace();
+        if (stream.isNext('=') && !stream.isNext("==")) {
+            stream.next();
+            ShnapInstruction theValue = this.safeNextInst();
+            return sliceMode ? ShnapFactory.makeSliceSet(loc1, target, params, namedParams, theValue) : ShnapFactory.makeSet(loc1, target, params, namedParams, theValue);
+        } else {
+            return sliceMode ? ShnapFactory.makeSliceGet(loc1, target, params, namedParams) : ShnapFactory.makeGet(loc1, target, params, namedParams);
+        }
     }
 
     public Pair<List<ShnapInstruction>, Map<String, ShnapInstruction>> parseFilledParenthesizedParams() {
@@ -1160,7 +1248,7 @@ public class ShnapParser {
         while (stream.isNext('^')) {
             ref.append(stream.next().get());
         }
-        if(stream.isNext(':')) {
+        if (stream.isNext(':')) {
             ref.append(stream.next().get());
         }
         ref.append(parseNextIdentifier());
@@ -1332,7 +1420,7 @@ public class ShnapParser {
             val = str.toString();
         } else {
             val = Strings.cutFirst(stream.nextUntil(stringData.reset()));
-            if(val.endsWith("\"")) {
+            if (val.endsWith("\"")) {
                 val = Strings.cutLast(val);
             }
         }
