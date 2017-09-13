@@ -130,6 +130,7 @@ public class ShnapForBlock extends AbstractShnapLocatable implements ShnapInstru
                 ShnapObject iterElem = nextExe.getValue();
                 ShnapContext sub = ShnapContext.childOf(context);
                 sub.setLocally(this.varName, iterElem);
+                sub.setLocally("_" + this.varName, iterator);
                 ShnapExecution block = this.instruction.exec(sub, tracer);
                 ret = block;
 
@@ -164,7 +165,8 @@ public class ShnapForBlock extends AbstractShnapLocatable implements ShnapInstru
             return ret;
         } else {
             ShnapContext sub = ShnapContext.childOf(context);
-            sub.set(this.varName, iterator);
+            sub.setLocally(this.varName, iterator);
+            sub.setLocally("_" + this.varName, ShnapObject.getVoid());
             return this.instruction.exec(sub, tracer);
         }
     }

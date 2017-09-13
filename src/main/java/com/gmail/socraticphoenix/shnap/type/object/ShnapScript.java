@@ -184,8 +184,6 @@ public class ShnapScript extends ShnapObject {
     }
 
     public void importBuiltinsTo(ShnapContext context) {
-        context.set(this.name, this);
-        context.setFlag(this.name, ShnapContext.Flag.DONT_IMPORT);
         for (String name : this.context.names()) {
             if (!this.context.hasFlag(name, ShnapContext.Flag.DONT_IMPORT) && !this.context.hasFlag(name, ShnapContext.Flag.PRIVATE)) {
                 if(!context.hasFlag(name, ShnapContext.Flag.FINALIZED)) {

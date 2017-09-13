@@ -1,0 +1,19 @@
+internal_lazy_constant = #{}
+
+private internal_lazy_constant
+
+same = $ left,right {
+    identity = native::sys.identity
+    return: identity(left) == identity(right)
+}
+
+lazy = $ func {
+    val = internal_lazy_constant
+
+    get = $ {
+        if same(val, internal_lazy_constant)
+            val = func()
+        return: val
+    }
+
+}

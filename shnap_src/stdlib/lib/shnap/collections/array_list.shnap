@@ -1,0 +1,112 @@
+defaultCapacity = 20
+
+arrayList = @(capacity=defaultCapacity,elements=void) {
+    backing = newArray(capacity)
+    size = 0
+
+    private backing
+    private size
+
+    append = $ val {
+        ensureCapacity(size + 1)
+        backing[size] = val
+        size += 1
+    }
+
+    if elements != void {
+        for elements
+            append(it)
+    }
+
+    ensureCapacity = $ n {
+        if n >= backing.len()
+            backing.resize(n+1+defaultCapacity)
+    }
+
+    appendAll = $ elements {
+        for elements
+            append(it)
+    }
+
+    getSlice = $ begin,end {
+        return: slice(this,begin,end)
+    }
+
+    setSlice = $ val,begin,end {
+        begin = int(begin)
+        end = int(end)
+
+        if begin >= end {
+            throw: rangeError(str(begin) + ".." + str(end))
+        }
+
+        n = 0
+        for val {
+            set(it,n+begin)
+
+            n += 1
+            if n >= end - begin {
+                break
+            }
+        }
+    }
+
+    get = $ n {
+        checkIndex(n)
+        return: backing[n]
+    }
+
+    set = $ val,n {
+        checkIndex(n)
+        backing[n] = val
+    }
+
+    remove = $ n {
+        checkIndex(n)
+        backing.remove(n)
+        size -= 1
+    }
+
+    insert = $ n,val {
+        if n != end {
+            checkIndex(n)
+            ensureCapacity(size + 1)
+            backing.insert(n, val)
+            size += 1
+        } else {
+            append(val)
+        }
+    }
+
+    contains = $ val {
+        for this
+            if it == val
+                return: true
+        return: false
+    }
+
+    len = $ return: size
+
+    iterator = @ {
+        index = 0
+
+        hasNext = $ return: index < len()
+
+        next = $ {
+            val = get(index)
+            index += 1
+            return: val
+        }
+
+    }
+
+    containsIndex = $ n {
+        return n >= 0 && n < size
+    }
+
+    checkIndex = $ n {
+        if !containsIndex(n)
+            throw: indexError(n)
+    }
+
+}

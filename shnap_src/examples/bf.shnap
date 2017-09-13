@@ -1,0 +1,54 @@
+sys = import("shnap.sys")
+programIn = sys.input("program> ")
+input = sys.input("input> ")
+
+rightTape = [0, 0]
+leftTape = [0, 0]
+
+pointer = 0
+inputPointer = 0
+
+getChar = $ {
+    if inputPointer >= input.len() {
+        return: '\0'
+    } else {
+        val = input[inputPointer]
+        inputPointer += 1
+        return: val
+    }
+}
+
+getCell = $ {
+    if pointer < 0
+        return: leftTape[-pointer - 1]
+    else
+        return: rightTape[pointer]
+}
+
+setCell = $ val {
+    if pointer < 0
+        leftTape[-pointer - 1] = val
+    else
+        rightTape[pointer] = val
+}
+
+abs = import("shnap.math").abs
+
+incrementPointer = $ {
+    pointer += 1
+    ap = abs(pointer)
+    if ap >= rightTape.len() || ap >= leftTape.len() {
+        rightTape.append(0)
+        leftTape.append(0)
+    }
+}
+
+decrementPointer = $ {
+    pointer -= 1
+    ap = abs(pointer)
+    if ap >= rightTape.len() || ap >= leftTape.len() {
+        rightTape.append(0)
+        leftTape.append(0)
+    }
+}
+

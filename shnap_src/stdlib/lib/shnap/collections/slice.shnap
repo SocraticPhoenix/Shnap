@@ -1,0 +1,93 @@
+slice = @ (arr,begin,end) {
+    private begin
+    private end
+
+    begin = int(begin)
+    end = int(end)
+
+    if begin >= end {
+        throw: rangeError(str(begin) + ".." + str(end))
+    }
+
+    getSlice = $ begin,end {
+        return: slice(this,begin,end)
+    }
+
+    setSlice = $ val,begin,end {
+        begin = int(begin)
+        end = int(end)
+
+        if begin >= end {
+            throw: rangeError(str(begin) + ".." + str(end))
+        }
+
+        n = 0
+        for val {
+            set(it,n+begin)
+
+            n += 1
+            if n >= end - begin {
+                break
+            }
+        }
+    }
+
+    get = $ n {
+        checkIndex(n)
+        return: arr[n + begin]
+    }
+
+    set = $ val,n {
+        checkIndex(n)
+        return: arr[n + begin] = val
+    }
+
+    remove = $ n {
+        checkIndex(n)
+        end -= 1
+        return: arr.remove(begin + n)
+    }
+
+    insert = $ n,val {
+        if n != end
+            checkIndex(n)
+        end += 1
+        arr.insert(n, val)
+    }
+
+    append = $ n,val {
+        insert(end, val)
+    }
+
+    contains = $ val {
+        for this
+            if it == val
+                return: true
+        return: false
+    }
+
+    len = $ return: end - begin
+
+    iterator = @ {
+        index = 0
+
+        hasNext = $ return: index < len()
+
+        next = $ {
+            val = get(index)
+            index += 1
+            return: val
+        }
+
+    }
+
+    containsIndex = $ n {
+        return: n >= 0 && (n + begin) < end
+    }
+
+    checkIndex = $ n {
+        if !containsIndex(n)
+            throw: indexError(n)
+    }
+
+}

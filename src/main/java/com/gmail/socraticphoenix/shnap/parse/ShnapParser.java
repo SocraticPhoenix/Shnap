@@ -101,9 +101,9 @@ public class ShnapParser {
 
     private DocTreeBuilder docBuilder;
 
-    public ShnapParser(String content, ShnapScript building) {
+    public ShnapParser(String content, ShnapLoc initial) {
         this.original = content;
-        this.building = building;
+        this.building = initial.getScript();
 
         StringBuilder clean = new StringBuilder();
         BufferedReader reader = new BufferedReader(new StringReader(content));
@@ -116,10 +116,10 @@ public class ShnapParser {
         } catch (IOException e) {
             throw new IllegalStateException("StringReader threw IOException", e);
         }
-        content = Strings.cutLast(clean.toString());
+        content = clean.toString();
         int[][] pts = new int[content.length() + 1][];
-        int row = 0;
-        int col = 0;
+        int row = initial.getLine();
+        int col = initial.getCol();
         int k = 0;
 
         for (char c : content.toCharArray()) {
@@ -127,7 +127,7 @@ public class ShnapParser {
             col++;
             if (c == '\n') {
                 row++;
-                col = 0;
+                col = initial.getCol();
             }
         }
         pts[k] = new int[]{row, col}; //EOF location
@@ -185,6 +185,14 @@ public class ShnapParser {
         this.pts = finlPts;
         this.content = result.toString();
         this.stream = new CharacterStream(this.content);
+    }
+
+    public ShnapParser(String content, ShnapScript script) {
+        this(content, new ShnapLoc(0, 0, script));
+    }
+
+    public int[][] getPts() {
+        return this.pts;
     }
 
     public ShnapInstructionSequence parseAll() {
@@ -579,6 +587,7 @@ public class ShnapParser {
         stream.next();
         List<ShnapParameter> params = this.parseParenthesizedParams();
         whitespace();
+        this.consumeArrow();
         boolean sequence = this.isSequenceNext();
         ShnapLoc loc2 = this.loc();
         List<ShnapInstruction> instructions = new ArrayList<>();
@@ -629,6 +638,7 @@ public class ShnapParser {
         ShnapLoc loc = this.loc();
         stream.next();
         whitespace();
+        this.consumeArrow();
         ShnapInstruction body = parseNextSequence();
         return new ShnapMakeObj(loc, body);
     }
@@ -646,6 +656,11 @@ public class ShnapParser {
         return new ShnapMakeResolver(loc, safeNextInst());
     }
 
+    private void consumeArrow() {
+        stream.next("=>");
+        whitespace();
+    }
+
     public boolean isFunctionNext() {
         return stream.isNext("$");
     }
@@ -657,6 +672,8 @@ public class ShnapParser {
         stream.next();
         List<ShnapParameter> params = this.parseParenthesizedParams();
         whitespace();
+        boolean autoReturn = stream.isNext("=>");
+        this.consumeArrow();
         boolean sequence = this.isSequenceNext();
         ShnapLoc loc2 = this.loc();
         List<ShnapInstruction> instructions = new ArrayList<>();
@@ -689,6 +706,10 @@ public class ShnapParser {
             stream.consume('}');
         }
         ShnapInstruction body = new ShnapInstructionSequence(loc2, instructions);
+
+        if (autoReturn) {
+            body = new ShnapStateChange(body.getLocation(), State.RETURNING, body);
+        }
 
         this.docBuilder.popIgnore();
         return new ShnapMakeFunc(loc, params, clsProperties, body);
@@ -880,6 +901,11 @@ public class ShnapParser {
                 whitespace();
                 if (stream.isNext(',')) {
                     stream.next();
+                    whitespace();
+                    if (stream.isNext(')')) {
+                        stream.next();
+                        break;
+                    }
                 } else {
                     if (!stream.isNext(')')) {
                         throw err("Expected ) or ,");
@@ -920,7 +946,10 @@ public class ShnapParser {
             String name = nextVarRef();
             whitespace();
             ShnapInstruction def = null;
-            if (stream.isNext('=')) {
+            if (stream.isNext("=>")) {
+                params.add(new ShnapParameter(loc, name, def));
+                break;
+            } else if (stream.isNext('=')) {
                 defaulting = true;
                 stream.next();
                 whitespace();
@@ -933,6 +962,11 @@ public class ShnapParser {
             params.add(new ShnapParameter(loc, name, def));
             if (stream.isNext(',')) {
                 stream.next();
+                whitespace();
+                if (stream.isNext(')') && paren) {
+                    stream.next();
+                    break;
+                }
             } else {
                 if (paren) {
                     if (!stream.isNext(')')) {
@@ -1220,7 +1254,12 @@ public class ShnapParser {
             instructions.add(inst);
             this.prepareNextStatement();
             if (!seq) {
-                break;
+                whitespace();
+                if (stream.isNext("=>")) {
+                    stream.next(2);
+                } else {
+                    break;
+                }
             }
         }
         whitespace();
@@ -1369,6 +1408,11 @@ public class ShnapParser {
                 whitespace();
                 if (stream.isNext(',')) {
                     stream.next();
+                    whitespace();
+                    if (stream.isNext(']')) {
+                        stream.next();
+                        break;
+                    }
                 } else {
                     if (!stream.isNext(']')) {
                         throw err("Expected ] or ,");

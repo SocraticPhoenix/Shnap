@@ -55,4 +55,5 @@ paramSizeError = errorCls("shnap.ParameterSizeError", ["shnap.ParameterError", "
 paramMismatchError = errorCls("shnap.ParameterMismatchError", ["shnap.ParameterError", "shnap.InvocationError"])
 parseError = errorCls("shnap.ParseError")
 indexError = errorCls("shnap.IndexError")
+rangeError = errorCls("shnap.RangeError")
 absentFieldError = errorCls("shnap.AbsentFieldError")

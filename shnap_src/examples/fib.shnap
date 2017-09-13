@@ -1,0 +1,5 @@
+math = import("shnap.math")
+for math.fib() {
+    println(it)
+    sleep(500)
+}

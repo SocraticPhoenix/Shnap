@@ -98,6 +98,10 @@ import static com.gmail.socraticphoenix.shnap.program.ShnapOperators.SUBTRACT;
 
 public interface ShnapFactory {
 
+    static ShnapExecution obtainBuiltin(String name, ShnapEnvironment trc) {
+        return trc.getModuleExecution("shnap.builtins").mapIfNormal(e -> e.getValue().get(name, trc));
+    }
+
     static ShnapInstruction makeClass(ShnapLoc loc, List<ShnapParameter> params, ShnapInstruction body, List<ShnapInstruction> clsInsts) {
         return new ShnapMakeFunc(loc, params, clsInsts, new ShnapInstructionSequence(loc, Items.buildList(new ShnapStateChange(loc, State.RETURNING, new ShnapMakeObj(body.getLocation(), body)))));
     }

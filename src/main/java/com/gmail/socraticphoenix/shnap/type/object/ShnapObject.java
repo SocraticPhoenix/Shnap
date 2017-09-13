@@ -257,6 +257,11 @@ public class ShnapObject extends AbstractShnapLocatable {
     }
 
     public ShnapExecution operate(ShnapObject arg, ShnapOperators operator, ShnapEnvironment tracer) {
+        if (operator == ShnapOperators.GREATER_THAN_EQUAL_TO) {
+            return this.operate(arg, ShnapOperators.GREATER_THAN, tracer).mapIfNormal(e -> this.operate(arg, ShnapOperators.EQUAL, tracer).mapIfNormal(c -> e.getValue().operate(c.getValue(), ShnapOperators.LOGICAL_OR, tracer)));
+        } else if (operator == ShnapOperators.LESS_THAN_EQUAL_TO) {
+            return this.operate(arg, ShnapOperators.LESS_THAN, tracer).mapIfNormal(e -> this.operate(arg, ShnapOperators.EQUAL, tracer).mapIfNormal(c -> e.getValue().operate(c.getValue(), ShnapOperators.LOGICAL_OR, tracer)));
+        }
         return this.resolve(tracer).mapIfNormal(exec -> {
             ShnapObject self = exec.getValue();
             if (self == arg && (operator == ShnapOperators.EQUAL || operator == ShnapOperators.NOT_EQUAL)) {
@@ -331,12 +336,6 @@ public class ShnapObject extends AbstractShnapLocatable {
                             break;
                         case GREATER_THAN:
                             val = resVal > 0;
-                            break;
-                        case LESS_THAN_EQUAL_TO:
-                            val = resVal <= 0;
-                            break;
-                        case GREATER_THAN_EQUAL_TO:
-                            val = resVal >= 0;
                             break;
                     }
                 }

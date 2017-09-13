@@ -24,6 +24,7 @@ package com.gmail.socraticphoenix.shnap.program;
 public enum ShnapOperators {
     NEGATIVE("-", "negate", 1, true, 100),
     BITWISE_NOT("~", "bnot", 1, true, 100),
+    RANGE("..", "rangeTo", 2, false, 97),
     RAISE("**", "pow", 2, false, 95),
     MULTIPLY("*", "multiply", 2, true, 90),
     DIVIDE("/", "divide", 2, true, 90),
@@ -45,6 +46,8 @@ public enum ShnapOperators {
     BITWISE_AND("&", "band", 2, true, 65),
     BITIWSE_XOR("`", "bxor", 2, true, 60),
     BITWISE_OR("|", "bor", 2, true, 55),
+    MAP("::", "map", 2, true, 50),
+    FOR_EACH(":", "forEach", 2, true, 50),
     SENTINEL("\0", "sentinel", 0, true, Integer.MIN_VALUE);
 
     private String rep;

@@ -86,9 +86,11 @@ public class ShnapShell {
 
         return ShnapExecution.normal(ShnapObject.getVoid(), this.environment, ShnapLoc.BUILTIN);
     }
-    
+
+    private StringBuilder fullContent = new StringBuilder();
     private StringBuilder content = new StringBuilder();
     private ShnapScript script = new ShnapScript("shell", "shell"); //Dummy script to represent the shell
+    private ShnapLoc start = new ShnapLoc(0, 0, script);
 
     public void setupScript() {
         this.environment.applyDefaults(this.script);
@@ -96,17 +98,22 @@ public class ShnapShell {
 
     public ShnapShell store(String line) {
         this.content.append(line).append("\n");
+        this.fullContent.append(line).append("\n");
         return this;
     }
 
     public ShnapExecution execute(String line) throws ShnapParseError {
-        this.content.append(line);
+        this.content.append(line).append("\n");
+        this.fullContent.append(line).append("\n");
         String content = this.content.toString();
         this.content = new StringBuilder();
-        DangerousSupplier<String> contentGetter = () -> content;
+        DangerousSupplier<String> contentGetter = () -> fullContent.toString();
         this.script.setContent(contentGetter);
-        ShnapParser parser = new ShnapParser(content, this.script);
+        ShnapParser parser = new ShnapParser(content, start);
         ShnapInstruction all = parser.parseAll();
+        int[][] pts = parser.getPts();
+        int[] last = pts[pts.length - 1];
+        this.start = new ShnapLoc(last[0], last[1], this.script);
 
         ShnapExecution exec = all.exec(this.script.getContext(), this.environment);
         if(exec.isAbnormal()) {

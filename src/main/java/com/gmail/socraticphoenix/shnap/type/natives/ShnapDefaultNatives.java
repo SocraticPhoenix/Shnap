@@ -65,8 +65,8 @@ public class ShnapDefaultNatives {
                         Optional<Class> type = Reflections.resolveClass(((ShnapStringNative) clsStr.getValue()).getValue());
                         if (type.isPresent()) {
                             return val.getValue().asJava(trc).mapIfNormal(exe -> {
-                               ShnapJavaBackedNative backed = (ShnapJavaBackedNative) exe.getValue();
-                               return ShnapExecution.returning(ShnapJavaInterface.createObject(nullSafetyCast(type.get(), backed.getJavaBacker())), trc, ShnapLoc.BUILTIN);
+                                ShnapJavaBackedNative backed = (ShnapJavaBackedNative) exe.getValue();
+                                return ShnapExecution.returning(ShnapJavaInterface.createObject(nullSafetyCast(type.get(), backed.getJavaBacker())), trc, ShnapLoc.BUILTIN);
                             });
                         } else {
                             return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.TypeError", "Cannot get primitive class: " + cls, null), trc, ShnapLoc.BUILTIN);
@@ -225,8 +225,8 @@ public class ShnapDefaultNatives {
 
         ShnapNativeFuncRegistry.register("sys.identity", oneArg(inst((ctx, trc) -> {
             return ctx.get("arg", trc).resolve(trc).mapIfNormal(e -> {
-               int hash = System.identityHashCode(e.getValue());
-               return ShnapExecution.normal(new ShnapIntNative(ShnapLoc.BUILTIN, hash), trc, ShnapLoc.BUILTIN);
+                int hash = System.identityHashCode(e.getValue());
+                return ShnapExecution.normal(new ShnapIntNative(ShnapLoc.BUILTIN, hash), trc, ShnapLoc.BUILTIN);
             });
         })));
 
@@ -294,6 +294,22 @@ public class ShnapDefaultNatives {
                         return ShnapExecution.normal(val, trc, ShnapLoc.BUILTIN);
                     })));
                 })
+        ));
+
+        ShnapNativeFuncRegistry.register("sys.setFlag", func(
+                Items.buildList(param("obj"), param("name"), param("flag")),
+                inst((ctx, trc) -> ctx.get("flag", trc).mapIfNormal(flag -> flag.getValue().asString(trc).mapIfNormal(flagString -> ctx.get("obj", trc).mapIfNormal(objExec -> ctx.get("name", trc).mapIfNormal(nameExec -> {
+                    ShnapObject object = objExec.getValue();
+                    String name = ((ShnapStringNative) nameExec.getValue()).getValue();
+                    String flagName = ((ShnapStringNative) flagString.getValue()).getValue();
+                    ShnapContext.Flag flg = ShnapContext.Flag.getByRep(flagName);
+                    if (flg == null) {
+                        return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.AbsentFlagError", "No flag called: " + flagName, null), trc, ShnapLoc.BUILTIN);
+                    }
+
+                    object.getContext().setFlag(name, flg);
+                    return ShnapExecution.normal(ShnapObject.getVoid(), trc, ShnapLoc.BUILTIN);
+                })))))
         ));
 
         ShnapNativeFuncRegistry.register("sys.print", func(
@@ -430,7 +446,7 @@ public class ShnapDefaultNatives {
     }
 
     public static Object nullSafetyCast(Class type, Object val) {
-        if(val == null && type.isPrimitive()) {
+        if (val == null && type.isPrimitive()) {
             throw new ClassCastException("Cannot cast null to " + type.getName());
         } else {
             return Reflections.deepCast(type, val);

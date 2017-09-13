@@ -59,6 +59,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -66,6 +67,7 @@ import java.util.function.Function;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.inst;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.instSimple;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.noArg;
+import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.obtainBuiltin;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.oneArg;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.param;
 
@@ -140,9 +142,6 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
     static void implementFunctions(ShnapObject target, ShnapNumberNative alsoTarget) {
         target.set(ShnapObject.AS_STRING, noArg(instSimple(() -> {
             Number num = alsoTarget.getNumber();
-            if (num instanceof BigDecimal) {
-                num = ((BigDecimal) num).stripTrailingZeros();
-            }
             return new ShnapStringNative(target.getLocation(), String.valueOf(num));
         })));
         target.set(ShnapObject.AS_ARRAY, noArg(instSimple(() -> new ShnapArrayNative(target.getLocation(), target))));
@@ -180,6 +179,27 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
             BigDecimal dec = number instanceof BigInteger ? new BigDecimal((BigInteger) number) : number instanceof BigDecimal ? (BigDecimal) number : new BigDecimal(number.doubleValue());
             return ShnapExecution.normal(ShnapNumberNative.valueOf(dec.setScale(order, RoundingMode.HALF_UP)), trc, target.getLocation());
         })));
+
+        target.set("rangeTo", ShnapFactory.func(
+                Items.buildList(param("arg"), param("order", ONE)),
+                inst((ctx, trc) -> obtainBuiltin("range", trc).mapIfNormal(e -> ctx.get("arg", trc).mapIfNormal(e2 -> {
+                    ShnapObject rangeObj = e.getValue();
+                    int order = 1;
+                    if (ctx.directlyContains("order")) {
+                        ShnapExecution ord = ctx.get("order", trc).mapIfNormal(k -> k.getValue().asNum(trc));
+                        if (ord.isAbnormal()) {
+                            return ord;
+                        } else {
+                            order = ((ShnapNumberNative) ord.getValue()).getNumber().intValue();
+                        }
+                    }
+                    if (rangeObj instanceof ShnapFunction) {
+                        ShnapFunction range = (ShnapFunction) rangeObj;
+                        return order == 1 ? range.invoke(Items.buildList(target, e2.getValue()), Collections.emptyMap(), trc) : range.invoke(Items.buildList(e2.getValue(), target), Collections.emptyMap(), trc);
+                    } else {
+                        return ShnapExecution.normal(ShnapObject.getVoid(), trc, target.getLocation());
+                    }
+                })))));
     }
 
     static ShnapFunction func2(ShnapNumberNative target, BiFunction<Number, Number, ShnapObject> op) {
@@ -295,15 +315,21 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
             return a.toBigInteger();
         } else if (b.compareTo(BigDecimal.ZERO) == 0) {
             return BigInteger.ONE;
+        } else if (b.compareTo(BigDecimal.ZERO) < 0) {
+            return divide(BigDecimal.ONE, myPow(a, b.negate()));
         }
 
         if (a.compareTo(BigDecimal.ZERO) < 0) {
             throw new ArithmeticException("I don't know how to raise a negative number to a decimal power...");
         }
-        return BigDecimalMath.exp(b.multiply(BigDecimalMath.log(a)));
+        return BigDecimalMath.pow(a, b);
     }
 
     static Number intPower(BigDecimal a, BigInteger b) {
+        if (b.compareTo(BigInteger.ZERO) < 0) {
+            return divide(BigDecimal.ONE, intPower(a, b.negate()));
+        }
+
         boolean negate = false;
         if (a.compareTo(BigDecimal.ZERO) < 0) {
             a = a.negate();
@@ -319,7 +345,11 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
 
     static BigInteger TWO = new BigInteger("2");
 
-    static BigInteger intIntPower(BigInteger a, BigInteger b) {
+    static Number intIntPower(BigInteger a, BigInteger b) {
+        if (b.compareTo(BigInteger.ZERO) < 0) {
+            return divide(BigDecimal.ONE, intIntPower(a, b.negate()));
+        }
+
         boolean negate = false;
         if (a.compareTo(BigInteger.ZERO) < 0) {
             a = a.negate();

@@ -26,6 +26,7 @@ import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 import java.util.function.BiFunction;
 
@@ -39,7 +40,11 @@ public class ShnapNativeInstruction extends AbstractShnapLocatable implements Sh
 
     @Override
     public ShnapExecution exec(ShnapContext context, ShnapEnvironment tracer) {
-        return this.exec.apply(context, tracer);
+        try {
+            return this.exec.apply(context, tracer);
+        } catch (Throwable e) {
+            return ShnapExecution.throwing(ShnapFactory.mimicJavaException(e), tracer, this.getLocation());
+        }
     }
 
     @Override

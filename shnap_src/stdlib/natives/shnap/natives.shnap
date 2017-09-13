@@ -15,8 +15,8 @@ defParamCount = native::sys.defParamCount
 getField = native::sys.get
 setField = native::sys.set
 delField = native::sys.del
-fields = native::sys.fields
-fieldData = native::sys.fieldData
+setFlag = native::sys.setFlag
+fields = native::sys.fieldData
 has = $ obj,field,params=void {
     if params == void {
         return: getField(obj, field) != void

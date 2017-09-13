@@ -1,0 +1,9 @@
+/*
+This is just an empty script... but since it exists
+in the normal path, all the builtin functions will show
+up here.
+*/
+
+for f : fields(this) {
+    setFlag(this, f.name, "final")
+}

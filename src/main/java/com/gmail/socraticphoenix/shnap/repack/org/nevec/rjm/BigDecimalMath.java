@@ -815,7 +815,7 @@ public class BigDecimalMath
                         double errR = Math.abs(logx.doubleValue()*y.ulp().doubleValue()/2.)
                                 + Math.abs(y.doubleValue()*x.ulp().doubleValue()/2./x.doubleValue()) ;
                         MathContext mcR = new MathContext( err2prec(1.0,errR) ) ;
-                        return resul;
+                        return resul.round(mcR);
                 }
         } /* BigDecimalMath.pow */
 
