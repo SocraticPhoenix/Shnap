@@ -49,6 +49,8 @@ importSys = $ return: import("shnap.sys")
 importSysTo = $ trgt {importTo("shnap.sys", trgt)}
 
 //Types
+implementNative = native::sys.implementNative
+
 javaClass = native::java.javaClass
 javaArray = native::java.javaArray
 javaCast = native::java.javaCast

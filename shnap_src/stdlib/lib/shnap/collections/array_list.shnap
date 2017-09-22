@@ -13,11 +13,6 @@ arrayList = @(capacity=defaultCapacity,elements=void) {
         size += 1
     }
 
-    if elements != void {
-        for elements
-            append(it)
-    }
-
     ensureCapacity = $ n {
         if n >= backing.len()
             backing.resize(n+1+defaultCapacity)
@@ -29,7 +24,7 @@ arrayList = @(capacity=defaultCapacity,elements=void) {
     }
 
     getSlice = $ begin,end {
-        return: slice(this,begin,end)
+        return: import("shnap.collections.slice").slice(this,begin,end)
     }
 
     setSlice = $ val,begin,end {
@@ -68,7 +63,7 @@ arrayList = @(capacity=defaultCapacity,elements=void) {
     }
 
     insert = $ n,val {
-        if n != end {
+        if n != len() {
             checkIndex(n)
             ensureCapacity(size + 1)
             backing.insert(n, val)
@@ -87,6 +82,26 @@ arrayList = @(capacity=defaultCapacity,elements=void) {
 
     len = $ return: size
 
+    forEach = $ func,order=1 {
+        if order == 1 {
+            for this
+                func(it)
+            return: this
+        }
+        return: void
+    }
+
+    map = $ func,order=1 {
+        if order == 1 {
+            res = list(newArray(len()))
+            for range(len()) {
+                res[it] = func(this[it])
+            }
+            return: res
+        }
+        return: void
+    }
+
     iterator = @ {
         index = 0
 
@@ -98,15 +113,40 @@ arrayList = @(capacity=defaultCapacity,elements=void) {
             return: val
         }
 
+        forEach = $ func,order=1 {
+            if order == 1 {
+                for this
+                    func(it)
+                return: this
+            }
+            return: void
+        }
+
+        map = $ func,order=1 {
+            if order == 1
+                return: import("shnap.collections.mapping").mappingIterator(this, func)
+            else
+                return: void
+        }
+
     }
 
     containsIndex = $ n {
-        return n >= 0 && n < size
+        return: n >= 0 && n < size
     }
 
     checkIndex = $ n {
         if !containsIndex(n)
             throw: indexError(n)
+    }
+
+    asString = $ {
+        return: import("shnap.collections.util").deepToString(this)
+    }
+
+    if (elements != void) {
+        for elements
+            append(it)
     }
 
 }

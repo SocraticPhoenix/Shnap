@@ -1,0 +1,22 @@
+arrayList = import("shnap.collections.array_list").arrayList
+
+deepToString = $ (iter,seen=arrayList()) {
+    s = "["
+    if !seen.contains(iter) {
+        seen.append(iter)
+        for iter {
+            if isIterable(it) {
+                s += deepToString(it,seen)
+            } else {
+                s += str(it)
+            }
+
+            try if _it.hasNext() {
+                s += ", "
+            }
+        }
+    } else {
+        s += "..."
+    }
+    return: s + "]"
+}

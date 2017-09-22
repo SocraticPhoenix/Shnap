@@ -28,24 +28,21 @@ import com.gmail.socraticphoenix.parse.ParserData;
 import com.gmail.socraticphoenix.parse.Strings;
 import com.gmail.socraticphoenix.shnap.doc.DocNode;
 import com.gmail.socraticphoenix.shnap.doc.DocTreeBuilder;
-import com.gmail.socraticphoenix.shnap.program.instructions.ShnapMakeResolver;
-import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
-import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 import com.gmail.socraticphoenix.shnap.program.ShnapOperators;
 import com.gmail.socraticphoenix.shnap.program.ShnapParameter;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapScript;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution.State;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapArrayLiteral;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapFlag;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapGet;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapGetNative;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstructionSequence;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInvoke;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapLiteral;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapMakeFunc;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapMakeObj;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapMakeResolver;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapNoOp;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapOperate;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapSet;
@@ -60,6 +57,9 @@ import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapCharNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapScript;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -229,10 +229,11 @@ public class ShnapParser {
     }
 
     public ShnapInstruction nextInst() {
-        ShnapInstruction primary = parsePrimaryNext();
-        if (primary == null) {
+        Pair<ShnapInstruction, List<Pair<ShnapOperators, ShnapLoc>>> simple = parsePrimaryNext();
+        if(simple == null) {
             return null;
         }
+        ShnapInstruction primary = simple.getA();
 
         List<Switch<ShnapInstruction, Pair<ShnapOperators, ShnapLoc>>> sequence = new ArrayList<>();
         sequence.add(Switch.ofA(primary));
@@ -240,6 +241,13 @@ public class ShnapParser {
             int index = stream.index();
             ShnapLoc loc = this.loc();
             if (this.isOperatorNext()) {
+                List<Pair<ShnapOperators, ShnapLoc>> prefixParts = simple.getB();
+                for (int i = prefixParts.size() - 1; i >= 0; i--) {
+                    Pair<ShnapOperators, ShnapLoc> prefix = prefixParts.get(i);
+                    primary = new ShnapOperate(prefix.getB(), primary, prefix.getA(), null);
+                    sequence.set(sequence.size() - 1, Switch.ofA(primary));
+                }
+
                 whitespace();
                 ShnapOperators operator = this.nextOperator();
                 whitespace();
@@ -251,10 +259,11 @@ public class ShnapParser {
                     break;
                 }
                 sequence.add(Switch.ofB(Pair.of(operator, loc)));
-                primary = parsePrimaryNext();
-                if (primary == null) {
+                simple = parsePrimaryNext();
+                if (simple == null) {
                     throw err("Expected statement");
                 }
+                primary = simple.getA();
                 sequence.add(Switch.ofA(primary));
                 whitespace();
             } else if (this.isAppendedInvokeNext()) {
@@ -288,6 +297,13 @@ public class ShnapParser {
                     break;
                 }
             }
+        }
+
+        List<Pair<ShnapOperators, ShnapLoc>> prefixParts = simple.getB();
+        for (int i = prefixParts.size() - 1; i >= 0; i--) {
+            Pair<ShnapOperators, ShnapLoc> prefix = prefixParts.get(i);
+            primary = new ShnapOperate(prefix.getB(), primary, prefix.getA(), null);
+            sequence.set(sequence.size() - 1, Switch.ofA(primary));
         }
 
         if (sequence.size() == 1) {
@@ -333,17 +349,18 @@ public class ShnapParser {
         return null;
     }
 
-    private ShnapInstruction parsePrimaryNext() {
-        List<ShnapOperators> prefixOps = new ArrayList<>();
+    private Pair<ShnapInstruction, List<Pair<ShnapOperators, ShnapLoc>>> parsePrimaryNext() {
+        List<Pair<ShnapOperators, ShnapLoc>> prefixOps = new ArrayList<>();
         ShnapInstruction primary = null;
         int mark = stream.index();
         whitespace();
 
         while (this.isOperatorNext()) {
             int index = stream.index();
+            ShnapLoc loc = this.loc();
             ShnapOperators op = this.nextOperator();
             if (op != null && op.getArity() == 1 && (op != ShnapOperators.NEGATIVE || !isNumberNext())) {
-                prefixOps.add(op);
+                prefixOps.add(Pair.of(op, loc));
                 whitespace();
             } else {
                 stream.jumpTo(index);
@@ -417,14 +434,11 @@ public class ShnapParser {
         }
 
         if (primary != null) {
-            for (int i = prefixOps.size() - 1; i >= 0; i--) {
-                primary = new ShnapOperate(primary.getLocation(), primary, prefixOps.get(i), null);
-            }
+            return Pair.of(primary, prefixOps);
         } else {
             stream.jumpTo(mark);
+            return null;
         }
-
-        return primary;
     }
 
     public DocTreeBuilder getDocBuilder() {
@@ -760,6 +774,7 @@ public class ShnapParser {
         return isFalseTrueVoidNullNext() || isNumberNext() || isStringNext() || isCharNext() || isArrayNext();
     }
 
+
     public ShnapInstruction nextLiteral() {
         if (isFalseTrueVoidNullNext()) {
             return nextFalseTrueVoidNull();
@@ -932,6 +947,7 @@ public class ShnapParser {
             stream.next();
             return Collections.emptyList();
         }
+        boolean wasVariable = false;
         boolean defaulting = false;
         while (true) {
             whitespace();
@@ -945,21 +961,28 @@ public class ShnapParser {
             }
             String name = nextVarRef();
             whitespace();
+            boolean variable = stream.isNext("...");
+            if (variable) {
+                stream.next(3);
+            }
             ShnapInstruction def = null;
             if (stream.isNext("=>")) {
-                params.add(new ShnapParameter(loc, name, def));
+                params.add(new ShnapParameter(loc, name, def, variable));
                 break;
-            } else if (stream.isNext('=')) {
+            } else if (stream.isNext('=') && !stream.isNext("=>")) {
                 defaulting = true;
                 stream.next();
                 whitespace();
                 def = safeNextInst();
             } else if (defaulting) {
                 throw err(loc, "non-default parameter after default parameter");
+            } else if (wasVariable && variable) {
+                throw err(loc, "var-args parameter not at end of function");
             }
+            wasVariable = variable || wasVariable;
             whitespace();
 
-            params.add(new ShnapParameter(loc, name, def));
+            params.add(new ShnapParameter(loc, name, def, variable));
             if (stream.isNext(',')) {
                 stream.next();
                 whitespace();
@@ -1389,41 +1412,45 @@ public class ShnapParser {
         return this.tokenIsNext("false") || this.tokenIsNext("true") || this.tokenIsNext("null") || this.tokenIsNext("void");
     }
 
-    public ShnapArrayLiteral nextArr() {
+    public ShnapInstruction nextArr() {
+        ShnapInstruction arr;
         whitespace();
         ShnapLoc loc = this.loc();
         if (!stream.isNext('[')) {
-            return new ShnapArrayLiteral(loc, Collections.emptyList());
+            arr = new ShnapArrayLiteral(loc, Collections.emptyList());
         } else {
             stream.next();
             List<ShnapInstruction> params = new ArrayList<>();
             whitespace();
             if (stream.isNext(']')) {
                 stream.next();
-                return new ShnapArrayLiteral(loc, Collections.emptyList());
-            }
-            while (true) {
-                whitespace();
-                params.add(safeNextInst());
-                whitespace();
-                if (stream.isNext(',')) {
-                    stream.next();
+                arr = new ShnapArrayLiteral(loc, Collections.emptyList());
+            } else {
+                while (true) {
                     whitespace();
-                    if (stream.isNext(']')) {
+                    params.add(safeNextInst());
+                    whitespace();
+                    if (stream.isNext(',')) {
+                        stream.next();
+                        whitespace();
+                        if (stream.isNext(']')) {
+                            stream.next();
+                            break;
+                        }
+                    } else {
+                        if (!stream.isNext(']')) {
+                            throw err("Expected ] or ,");
+                        }
                         stream.next();
                         break;
                     }
-                } else {
-                    if (!stream.isNext(']')) {
-                        throw err("Expected ] or ,");
-                    }
-                    stream.next();
-                    break;
                 }
-            }
 
-            return new ShnapArrayLiteral(loc, params);
+                arr = new ShnapArrayLiteral(loc, params);
+            }
         }
+
+        return arr;
     }
 
     public boolean isArrayNext() {

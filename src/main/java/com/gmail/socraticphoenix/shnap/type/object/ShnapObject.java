@@ -30,10 +30,11 @@ import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapTraceback;
 import com.gmail.socraticphoenix.shnap.type.java.ShnapJavaInterface;
-import com.gmail.socraticphoenix.shnap.type.natives.ShnapAbsentNative;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapArrayNative;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapJavaBackedNative;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapNullNative;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapVoidNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
 import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
@@ -54,8 +55,8 @@ public class ShnapObject extends AbstractShnapLocatable {
     public ShnapObject(ShnapLoc loc) {
         super(loc);
         this.context = new ShnapContext();
-        context.setLocally("this", this);
-        context.setFlag("this", ShnapContext.Flag.DONT_IMPORT);
+        this.context.setLocally("this", this);
+        this.context.setFlag("this", ShnapContext.Flag.DONT_IMPORT);
     }
 
     public ShnapObject(ShnapLoc loc, ShnapContext context) {
@@ -63,22 +64,26 @@ public class ShnapObject extends AbstractShnapLocatable {
         this.context = context;
     }
 
+    public ShnapObject copyWith(ShnapContext context) {
+        return new ShnapObject(this.loc, context);
+    }
+
     public ShnapExecution resolve(ShnapEnvironment trc) {
         return ShnapExecution.normal(this, trc, this.getLocation());
     }
 
     public static ShnapObject getNull() {
-        return ShnapAbsentNative.NULL;
+        return ShnapNullNative.NULL;
     }
 
     public static ShnapObject getVoid() {
-        return ShnapAbsentNative.VOID;
+        return ShnapVoidNative.VOID;
     }
 
     public void init(ShnapContext context) {
         this.context = ShnapContext.childOf(context);
-        context.set("this", this);
-        context.setFlag("this", ShnapContext.Flag.DONT_IMPORT);
+        this.context.setLocally("this", this);
+        this.context.setFlag("this", ShnapContext.Flag.DONT_IMPORT);
     }
 
     public ShnapContext getContext() {
@@ -341,7 +346,7 @@ public class ShnapObject extends AbstractShnapLocatable {
                 }
                 return ShnapExecution.normal(ShnapBooleanNative.of(val), tracer, self.getLocation());
             } else if (operator == ShnapOperators.NOT_EQUAL) {
-                return res.getValue().operate(ShnapOperators.NOT, tracer);
+                return res.getValue().asBool(tracer).mapIfNormal(e -> e.getValue().operate(ShnapOperators.NOT, tracer));
             } else {
                 return res;
             }

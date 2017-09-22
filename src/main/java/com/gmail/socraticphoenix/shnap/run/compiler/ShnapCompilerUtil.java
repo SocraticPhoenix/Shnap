@@ -144,9 +144,9 @@ public class ShnapCompilerUtil {
         writeLoc(stream, object.getLocation());
         if (object instanceof ShnapAbsentNative) {
             stream.put((byte) 0);
-            if (object == ShnapAbsentNative.NULL) {
+            if (object == ShnapObject.getNull()) {
                 stream.put((byte) 0);
-            } else if (object == ShnapAbsentNative.VOID) {
+            } else if (object == ShnapObject.getVoid()) {
                 stream.put((byte) 1);
             } else {
                 throw new IllegalArgumentException("Unknown native: " + object);
@@ -176,7 +176,7 @@ public class ShnapCompilerUtil {
         byte id = stream.get();
         switch (id) {
             case 0:
-                return stream.get() == 0 ? ShnapAbsentNative.NULL : ShnapAbsentNative.VOID;
+                return stream.get() == 0 ? ShnapObject.getNull() : ShnapObject.getVoid();
             case 1:
                 return ShnapBooleanNative.of(stream.get() != 0);
             case 2:

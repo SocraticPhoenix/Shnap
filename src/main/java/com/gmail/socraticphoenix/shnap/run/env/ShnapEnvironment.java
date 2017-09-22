@@ -23,16 +23,17 @@ package com.gmail.socraticphoenix.shnap.run.env;
 
 import com.gmail.socraticphoenix.collect.coupling.Pair;
 import com.gmail.socraticphoenix.parse.Strings;
-import com.gmail.socraticphoenix.shnap.run.compiler.ShnapCompilerUtil;
-import com.gmail.socraticphoenix.shnap.parse.ShnapParseError;
-import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapScript;
+import com.gmail.socraticphoenix.shnap.parse.ShnapParseError;
+import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
+import com.gmail.socraticphoenix.shnap.resources.ShnapResourceManager;
+import com.gmail.socraticphoenix.shnap.run.compiler.ShnapCompilerUtil;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapArrayNative;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
-import com.gmail.socraticphoenix.shnap.resources.ShnapResourceManager;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapScript;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -199,23 +200,26 @@ public class ShnapEnvironment {
         return this.referenceFactory.getModule(this, name);
     }
 
-    public void applyDefaults(ShnapScript target) {
+    public void applyDefaults(ShnapContext target) {
         switch (this.state) {
             case BUILTINS:
                 for (ShnapScript nativeScript : this.nativeScripts) {
-                    nativeScript.importBuiltinsTo(target.getContext());
+                    nativeScript.importBuiltinsTo(target);
                 }
                 break;
             case NORMAL:
                 for (ShnapScript nativeScript : this.nativeScripts) {
-                    nativeScript.importBuiltinsTo(target.getContext());
+                    nativeScript.importBuiltinsTo(target);
                 }
                 for (ShnapScript builtin : this.builtinScripts) {
-                    builtin.importBuiltinsTo(target.getContext());
+                    builtin.importBuiltinsTo(target);
                 }
                 break;
         }
-        return;
+    }
+
+    public void applyDefaults(ShnapScript target) {
+        this.applyDefaults(target.getContext());
     }
 
     public List<Pair<Path, Boolean>> getPreNormalSearchLocs() {

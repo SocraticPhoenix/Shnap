@@ -46,8 +46,8 @@ public enum ShnapOperators {
     BITWISE_AND("&", "band", 2, true, 65),
     BITIWSE_XOR("`", "bxor", 2, true, 60),
     BITWISE_OR("|", "bor", 2, true, 55),
-    MAP("::", "map", 2, true, 50),
-    FOR_EACH(":", "forEach", 2, true, 50),
+    MAP(":::", "map", 2, true, 50),
+    FOR_EACH("::", "forEach", 2, true, 50),
     SENTINEL("\0", "sentinel", 0, true, Integer.MIN_VALUE);
 
     private String rep;

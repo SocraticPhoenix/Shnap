@@ -20,37 +20,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.gmail.socraticphoenix.shnap.type.object;
+package com.gmail.socraticphoenix.shnap.type.natives;
 
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.program.context.ShnapContext;
-import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
-import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 
-import java.util.function.Function;
+import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.*;
 
-public class ShnapResolver extends ShnapObject {
-    protected Function<ShnapEnvironment, ShnapExecution> resolver;
+public class ShnapNullNative extends ShnapAbsentNative {
+    public static final ShnapObject NULL = new ShnapNullNative(ShnapLoc.BUILTIN, "null");
 
-    public ShnapResolver(ShnapLoc loc, Function<ShnapEnvironment, ShnapExecution> resolver) {
-        super(loc);
-        this.resolver = resolver;
+    public ShnapNullNative(ShnapLoc loc, String name) {
+        super(loc, name);
+        this.set("asNumber", noArg(instSimple(() -> ShnapNumberNative.valueOf(0))));
     }
 
-    @Override
-    public ShnapObject copyWith(ShnapContext context) {
-        ShnapResolver resolver = new ShnapResolver(this.loc, this.resolver);
-        resolver.init(context);
-        return resolver;
-    }
-
-    @Override
-    public ShnapExecution resolve(ShnapEnvironment env) {
-        return this.resolver.apply(env).mapIfNormal(e -> e.getValue().resolve(env));
-    }
-
-    @Override
-    public String defaultToString() {
-        return "resolvable::" + this.identityStr();
-    }
 }

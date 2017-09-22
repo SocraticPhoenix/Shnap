@@ -68,6 +68,25 @@ slice = @ (arr,begin,end) {
 
     len = $ return: end - begin
 
+    forEach = $ func,order=1 {
+        if order == 1 {
+            for this
+                func(it)
+            return: this
+        }
+        return: void
+    }
+
+    map = $ func,order=1 {
+        if order == 1 {
+            res = list(newArray(len()))
+            for range(len())
+                res[it] = func(this[it])
+            return: res
+        }
+        return: void
+    }
+
     iterator = @ {
         index = 0
 
@@ -79,6 +98,22 @@ slice = @ (arr,begin,end) {
             return: val
         }
 
+        forEach = $ func,order=1 {
+            if order == 1 {
+                for this
+                    func(it)
+                return: this
+            }
+            return: void
+        }
+
+        map = $ func,order=1 {
+            if order == 1
+                return: import("shnap.collections.mapping").mappingIterator(this, func)
+            else
+                return: void
+        }
+
     }
 
     containsIndex = $ n {
@@ -88,6 +123,10 @@ slice = @ (arr,begin,end) {
     checkIndex = $ n {
         if !containsIndex(n)
             throw: indexError(n)
+    }
+
+    asString = $ {
+        return: import("shnap.collections.util").deepToString(this)
     }
 
 }

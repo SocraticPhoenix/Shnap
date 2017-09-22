@@ -27,15 +27,29 @@ import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 public class ShnapParameter extends AbstractShnapLocatable {
     private String name;
     private ShnapInstruction value;
+    private boolean variable;
 
-    public ShnapParameter(ShnapLoc loc, String name, ShnapInstruction value) {
+    public ShnapParameter(ShnapLoc loc, String name, ShnapInstruction value, boolean variable) {
         super(loc);
         this.name = name;
         this.value = value;
+        this.variable = variable;
+    }
+
+    public ShnapParameter(ShnapLoc loc, String name, ShnapInstruction value) {
+        this(loc, name, value, false);
+    }
+
+    public ShnapParameter(ShnapLoc loc, String name, boolean variable) {
+        this(loc, name, null, variable);
     }
 
     public ShnapParameter(ShnapLoc loc, String name) {
-        this(loc, name, null);
+        this(loc, name, null, false);
+    }
+
+    public boolean isVariable() {
+        return this.variable;
     }
 
     public String getName() {

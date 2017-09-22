@@ -21,23 +21,40 @@
  */
 package com.gmail.socraticphoenix.shnap.type.natives;
 
+import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
+import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.instSimple;
-import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.noArg;
+import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.*;
 
-public class ShnapAbsentNative extends ShnapObject implements ShnapJavaBackedNative {
-    public static final ShnapObject NULL = new ShnapAbsentNative(ShnapLoc.BUILTIN, "null");
-    public static final ShnapObject VOID = new ShnapAbsentNative(ShnapLoc.BUILTIN, "void");
-
+public class ShnapAbsentNative extends ShnapObject implements ShnapJavaBackedNative, ShnapNativeType {
     private String name;
 
-    private ShnapAbsentNative(ShnapLoc loc, String name) {
+    public ShnapAbsentNative(ShnapLoc loc, String name) {
         super(loc);
         this.name = name;
         this.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(false))));
+        this.set("equals", ShnapFactory.func(
+                Items.buildList(param("arg"), param("order", ShnapNumberNative.ONE)),
+                inst((ctx, trc) -> {
+                    return ctx.get("arg", trc).mapIfNormal(e -> {
+                       ShnapObject obj = e.getValue();
+
+                       boolean res;
+                       if (obj instanceof ShnapAbsentNative) {
+                           res = ((ShnapAbsentNative) obj).name.equals(this.name);
+                       } else {
+                           res = false;
+                       }
+
+                       return ShnapExecution.normal(ShnapBooleanNative.of(res), trc, this.getLocation());
+                    });
+                })
+        ));        this.descriptor().applyTo(this);
     }
 
     @Override
@@ -52,6 +69,11 @@ public class ShnapAbsentNative extends ShnapObject implements ShnapJavaBackedNat
     @Override
     public Object getJavaBacker() {
         return null;
+    }
+
+    @Override
+    public ShnapNativeTypeDescriptor descriptor() {
+        return ShnapNativeTypeRegistry.Descriptor.ABSENT;
     }
 
 }

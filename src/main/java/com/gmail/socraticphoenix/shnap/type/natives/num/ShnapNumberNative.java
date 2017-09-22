@@ -50,6 +50,7 @@ import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.repack.org.nevec.rjm.BigDecimalMath;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapArrayNative;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapJavaBackedNative;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapNativeType;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapFunction;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
@@ -71,7 +72,7 @@ import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.obtainBuiltin;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.oneArg;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.param;
 
-public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable {
+public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable, ShnapNativeType {
     ShnapObject ONE = ShnapNumberNative.valueOf(1);
     ShnapObject ZERO = ShnapNumberNative.valueOf(-1);
 
@@ -200,6 +201,8 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                         return ShnapExecution.normal(ShnapObject.getVoid(), trc, target.getLocation());
                     }
                 })))));
+
+        alsoTarget.descriptor().applyTo(target);
     }
 
     static ShnapFunction func2(ShnapNumberNative target, BiFunction<Number, Number, ShnapObject> op) {

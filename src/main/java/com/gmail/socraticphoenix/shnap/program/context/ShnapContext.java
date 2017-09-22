@@ -48,6 +48,10 @@ public class ShnapContext {
         this.parent = parent;
     }
 
+    public Map<String, ShnapObject> getVariables() {
+        return this.variables;
+    }
+
     public void del(String name) {
         if (name.startsWith("^")) {
             this.getParentSafely().del(Strings.cutFirst(name));

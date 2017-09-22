@@ -51,25 +51,32 @@ import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution.State;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapTraceback;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapArrayNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapNumberNative;
 import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ShnapFunction extends ShnapObject {
     protected List<ShnapParameter> params;
 
     protected List<ShnapParameter> required;
     protected List<ShnapParameter> def;
+    protected Set<String> names;
     protected ShnapInstruction body;
+
+    private boolean hasVarArgs;
 
     public ShnapFunction(ShnapLoc loc, List<ShnapParameter> parameters, ShnapInstruction body) {
         super(loc, new ShnapContext());
         this.loc = loc;
         this.params = parameters;
+        this.names = new HashSet<>();
 
         this.required = new ArrayList<>();
         this.def = new ArrayList<>();
@@ -80,6 +87,12 @@ public class ShnapFunction extends ShnapObject {
             } else {
                 this.def.add(parameter);
             }
+
+            if (parameter.isVariable()) {
+                this.hasVarArgs = true;
+            }
+
+            this.names.add(parameter.getName());
         }
     }
 
@@ -95,8 +108,8 @@ public class ShnapFunction extends ShnapObject {
 
     public void init(ShnapContext context) {
         this.context = ShnapContext.childOf(context);
-        context.setLocally("thisFunc", this);
-        context.setFlag("thisFunc", ShnapContext.Flag.DONT_IMPORT);
+        this.context.setLocally("thisFunc", this);
+        this.context.setFlag("thisFunc", ShnapContext.Flag.DONT_IMPORT);
     }
 
     public ShnapFunction copyPreInit() {
@@ -118,6 +131,12 @@ public class ShnapFunction extends ShnapObject {
         return this.invokePrivate(values, Collections.emptyMap(), tracer);
     }
 
+    public ShnapObject copyWith(ShnapContext context) {
+        ShnapFunction func = new ShnapFunction(this.loc, this.params, this.body);
+        func.init(context);
+        return func;
+    }
+
     public ShnapExecution invokeWithoutTrace(List<ShnapObject> values, Map<String, ShnapObject> defValues, ShnapEnvironment tracer) {
         return this.invokePrivate(values, defValues, tracer);
     }
@@ -128,42 +147,47 @@ public class ShnapFunction extends ShnapObject {
     }
 
     protected ShnapExecution invokePrivate(List<ShnapObject> values, Map<String, ShnapObject> defValues, ShnapEnvironment tracer) {
-        List<String> paramsCopy = new ArrayList<>(defValues.keySet());
-
         ShnapContext functionContext = this.getContext().copy();
         functionContext.setLocally("thisFunc", this);
-        if (values.size() + defValues.size() > this.paramsSize()) {
+        if (values.size() + defValues.size() > this.paramsSize() && !this.hasVarArgs) {
             return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterSizeError", "Expected at most " + this.paramsSize() + " params, but got " + (values.size() + defValues.size()), null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
         }
 
-        for (int i = 0, k = 0; i < this.paramsSize(); i++, k++) {
-            String name = this.getParam(i).getName();
-            ShnapObject val;
-            if (defValues.containsKey(name)) {
-                val = defValues.get(name);
-                paramsCopy.remove(name);
-            } else if (k < values.size()) {
-                val = values.get(k);
+        for (Map.Entry<String, ShnapObject> def : defValues.entrySet()) {
+            String name = def.getKey();
+            if (this.names.contains(name)) {
+                functionContext.setLocally(name, def.getValue());
             } else {
-                k--;
-                ShnapParameter parameter = this.getParam(i);
-                if(parameter.getValue() == null) {
-                    return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterMismatchError", "Expected parameter for " + parameter.getName(), null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
-                }
-                ShnapInstruction param = parameter.getValue();
-                ShnapExecution ex = param.exec(functionContext, tracer);
-                if (ex.isAbnormal()) {
-                    return ex;
-                }
-
-                val = ex.getValue();
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterMismatchError", "Unexpected parameter for " + name, null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
             }
-
-            functionContext.set(name, val);
         }
 
-        if(!paramsCopy.isEmpty()) {
-            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterMismatchError", "Unexpected name parameters: " + paramsCopy, null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
+        for (ShnapParameter def : this.def) {
+            if (!defValues.containsKey(def.getName())) {
+                ShnapExecution res = def.getValue().exec(context, tracer);
+                if (res.isAbnormal()) {
+                    return res;
+                }
+                functionContext.setLocally(def.getName(), res.getValue());
+            }
+        }
+
+        for (int i = 0; i < this.paramsSize() && i < values.size(); i++) {
+            ShnapParameter parameter = this.params.get(i);
+            String name = parameter.getName();
+            if (parameter.isVariable()) {
+                int len = values.size() - i;
+                ShnapObject[] arr = new ShnapObject[len];
+                for (int j = 0; j < len; j++) {
+                    arr[j] = values.get(j + i);
+                }
+                functionContext.setLocally(name, new ShnapArrayNative(parameter.getLocation(), arr));
+                break;
+            } else if (defValues.containsKey(name)) {
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterMismatchError", "Unexpected duplicate parameter for " + name, null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
+            } else {
+                functionContext.setLocally(name, values.get(i));
+            }
         }
 
         ShnapExecution e = this.body.exec(functionContext, tracer);

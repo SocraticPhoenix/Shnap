@@ -11,6 +11,22 @@ fib_infinite_internal = @ seedOne=0,seedTwo=1 {
         return: ret
     }
 
+    forEach = $ func,order=1 {
+        if order == 1 {
+            for this
+                func(it)
+            return: this
+        }
+        return: void
+    }
+
+    map = $ func,order=1 {
+        if order == 1
+            return: import("shnap.collections.mapping").mappingIterator(this, func)
+        else
+            return: void
+    }
+
 }
 
 fib_internal = @ count,seedOne=0,seedTwo=1 {
@@ -30,6 +46,22 @@ fib_internal = @ count,seedOne=0,seedTwo=1 {
         return: ret
     }
 
+        forEach = $ func,order=1 {
+            if order == 1 {
+                for this
+                    func(it)
+                return: this
+            }
+            return: void
+        }
+
+        map = $ func,order=1 {
+            if order == 1
+                return: import("shnap.collections.mapping").mappingIterator(this, func)
+            else
+                return: void
+        }
+
 }
 
 private fib_infinite_internal
@@ -42,5 +74,3 @@ fib = $ count=void,seedOne=0,seedTwo=1 {
         return: fib_internal(count, seedOne, seedTwo)
     }
 }
-
-abs = $ obj {return: if(obj < 0) -obj else obj}

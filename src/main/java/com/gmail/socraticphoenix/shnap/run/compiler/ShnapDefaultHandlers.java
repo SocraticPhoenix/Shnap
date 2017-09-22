@@ -22,7 +22,6 @@
 package com.gmail.socraticphoenix.shnap.run.compiler;
 
 import com.gmail.socraticphoenix.pio.Bytes;
-import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.ShnapOperators;
 import com.gmail.socraticphoenix.shnap.program.ShnapParameter;
@@ -32,6 +31,7 @@ import com.gmail.socraticphoenix.shnap.program.instructions.ShnapArrayLiteral;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapFlag;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapGet;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapGetNative;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstructionSequence;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInvoke;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapLiteral;

@@ -1,0 +1,23 @@
+mappingIterator = @(iterator,function) {
+
+    hasNext = $ return: iterator.hasNext()
+
+    next = $ return: function(iterator.next())
+
+    forEach = $ func,order=1 {
+        if order == 1 {
+            for this
+                func(it)
+            return: this
+        }
+        return: void
+    }
+
+    map = $ func,order=1 {
+        if order == 1
+            return: mappingIterator(this, func)
+        else
+            return: void
+    }
+
+}

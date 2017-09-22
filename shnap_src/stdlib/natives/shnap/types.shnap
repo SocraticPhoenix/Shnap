@@ -1,0 +1,65 @@
+/*This is an anonymous function that
+we invoke right away, this avoids any fields
+being included as builtins*/
+$ {
+
+impl = native::sys.implementNative
+
+impl("all", "initBuiltins", $ {
+    try {
+        ^:builtinsInitFlag
+    } catch {
+        native::intakeBuiltins(this)
+        ^:builtinsInitFlag = true
+    }
+})
+
+impl("arr", "forEach", $ func,order=1 {
+    initBuiltins()
+    if order == 1 {
+        for this
+            func(it)
+        return: this
+    }
+    return: void
+})
+
+impl("arr", "map", $ func,order=1 {
+    initBuiltins()
+    if order == 1 {
+        res = newArray(len())
+        for range(len())
+            res[it] = func(this[it])
+        return: res
+    }
+    return: void
+})
+
+impl("arr", "asString", $ {
+    return: native::sys.import("shnap.collections.util").deepToString(this)
+})
+
+impl("arr", "getSlice", $ begin,end {
+    return: native::import("shnap.collections.slice").slice(this,begin,end)
+})
+
+impl("arr", "setSlice", $ val,begin,end {
+    begin = int(begin)
+    end = int(end)
+
+    if begin >= end {
+        throw: rangeError(str(begin) + ".." + str(end))
+    }
+
+    n = 0
+    for val {
+        set(it,n+begin)
+
+        n += 1
+        if n >= end - begin {
+            break
+        }
+    }
+})
+
+}()

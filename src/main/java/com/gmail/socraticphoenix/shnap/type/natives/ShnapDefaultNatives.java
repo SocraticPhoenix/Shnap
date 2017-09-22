@@ -45,6 +45,7 @@ import com.gmail.socraticphoenix.shnap.util.DeepArrays;
 import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.func;
@@ -58,6 +59,25 @@ import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.param;
 public class ShnapDefaultNatives {
 
     public static void registerDefaults() {
+        ShnapNativeFuncRegistry.register("intakeBuiltins", oneArg(inst((ctx, trc) -> ctx.get("arg", trc).mapIfNormal(e -> {
+            ShnapObject target = e.getValue();
+            trc.applyDefaults(target.getContext());
+            return ShnapExecution.normal(ShnapObject.getVoid(), trc, ShnapLoc.BUILTIN);
+        }))));
+
+        ShnapNativeFuncRegistry.register("sys.implementNative", func(
+                Items.buildList(param("name"), param("field"), param("function")),
+                inst((ctx, trc) -> ctx.get("name", trc).mapIfNormal(nameExec -> ctx.get("field", trc).mapIfNormal(fieldExec -> ctx.get("function", trc).mapIfNormal(funcExec -> nameExec.getValue().asString(trc).mapIfNormal(nameStrExec -> fieldExec.getValue().asString(trc).mapIfNormal(fieldStrExec -> {
+                    String name = ((ShnapStringNative) nameStrExec.getValue()).getValue();
+                    String field = ((ShnapStringNative) fieldStrExec.getValue()).getValue();
+                    List<ShnapNativeTypeDescriptor> descriptor = ShnapNativeTypeRegistry.getTypes().get(name);
+                    if (descriptor != null) {
+                        descriptor.forEach(d -> d.getRegistry().put(field, funcExec.getValue()));
+                    }
+                    return ShnapExecution.normal(ShnapObject.getVoid(), trc, ShnapLoc.BUILTIN);
+                }))))))
+        ));
+
         ShnapNativeFuncRegistry.register("java.javaCast", func(
                 Items.buildList(param("val"), param("class")),
                 inst((ctx, trc) -> {

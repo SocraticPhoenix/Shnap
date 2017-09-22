@@ -44,7 +44,7 @@ import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.noArg;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.oneArg;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.param;
 
-public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNative {
+public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNative, ShnapNativeType {
     private String value;
     private int[] pts;
 
@@ -205,6 +205,8 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
             })));
             return ShnapExecution.normal(iterator, trc, this.getLocation());
         })));
+
+        this.descriptor().applyTo(this);
     }
 
     private static String remainder(String a, String b) {
@@ -221,6 +223,11 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
     @Override
     public Object getJavaBacker() {
         return this.value;
+    }
+
+    @Override
+    public ShnapNativeTypeDescriptor descriptor() {
+        return ShnapNativeTypeRegistry.Descriptor.STRING;
     }
 
 }

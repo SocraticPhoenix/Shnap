@@ -44,6 +44,8 @@
 package com.gmail.socraticphoenix.shnap.type.natives.num;
 
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapNativeTypeDescriptor;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapNativeTypeRegistry;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 
 import java.math.BigInteger;
@@ -80,4 +82,8 @@ public class ShnapBigIntegerNative extends ShnapObject implements ShnapNumberNat
         return this.value;
     }
 
+    @Override
+    public ShnapNativeTypeDescriptor descriptor() {
+        return ShnapNativeTypeRegistry.Descriptor.BIG_INTEGER;
+    }
 }

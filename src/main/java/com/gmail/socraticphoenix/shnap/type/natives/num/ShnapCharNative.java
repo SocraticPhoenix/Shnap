@@ -43,10 +43,12 @@
  */
 package com.gmail.socraticphoenix.shnap.type.natives.num;
 
-import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
-import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapNativeTypeDescriptor;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapNativeTypeRegistry;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapStringNative;
+import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 import java.math.BigInteger;
 
@@ -95,6 +97,11 @@ public class ShnapCharNative extends ShnapObject implements ShnapNumberNative {
     @Override
     public Object getJavaBacker() {
         return this.value;
+    }
+
+    @Override
+    public ShnapNativeTypeDescriptor descriptor() {
+        return ShnapNativeTypeRegistry.Descriptor.CHAR;
     }
 
 }

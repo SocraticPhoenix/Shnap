@@ -23,6 +23,8 @@
 package com.gmail.socraticphoenix.shnap.type.natives.num;
 
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapNativeTypeDescriptor;
+import com.gmail.socraticphoenix.shnap.type.natives.ShnapNativeTypeRegistry;
 import com.gmail.socraticphoenix.shnap.type.object.ShnapObject;
 
 public class ShnapLongNative extends ShnapObject implements ShnapNumberNative {
@@ -52,6 +54,11 @@ public class ShnapLongNative extends ShnapObject implements ShnapNumberNative {
     @Override
     public Object getJavaBacker() {
         return this.aLong;
+    }
+
+    @Override
+    public ShnapNativeTypeDescriptor descriptor() {
+        return ShnapNativeTypeRegistry.Descriptor.LONG;
     }
 
 }

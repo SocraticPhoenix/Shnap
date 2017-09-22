@@ -1,0 +1,8 @@
+abs = $ obj {return: if(obj < 0) -obj else obj}
+
+sum = $ val {
+    res = 0
+    for val
+        res += num(it)
+    return: res
+}

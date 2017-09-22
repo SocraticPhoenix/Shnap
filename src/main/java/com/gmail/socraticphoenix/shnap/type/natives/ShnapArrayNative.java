@@ -45,7 +45,7 @@ import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.param;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.returning;
 import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.sequence;
 
-public class ShnapArrayNative extends ShnapObject {
+public class ShnapArrayNative extends ShnapObject implements ShnapNativeType {
     private ShnapObject[] value;
 
     public ShnapArrayNative(ShnapLoc loc, ShnapObject... value) {
@@ -71,8 +71,6 @@ public class ShnapArrayNative extends ShnapObject {
     }
 
     private void applyFunctions() {
-        //TODO throw errors instead of returning void
-        //Conversion functions; AS_STRING is implemented with defaultToString
         this.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(this.value.length != 0))));
 
         //Other functions
@@ -205,6 +203,53 @@ public class ShnapArrayNative extends ShnapObject {
             return new ShnapArrayNative(this.getLocation(), dst);
         })));
 
+        this.set("copy", func(
+                Items.buildList(param("start", ShnapObject.getVoid()), param("end", ShnapObject.getVoid())),
+                inst((ctx, trc) -> {
+                    return ctx.get("start", trc).mapIfNormal(startE -> ctx.get("end", trc).mapIfNormal(endE -> {
+                        int start = 0;
+                        int end = 0;
+                        if (startE.getValue() == ShnapObject.getVoid()) {
+                            start = 0;
+                        } else {
+                            ShnapExecution sn = startE.getValue().asNum(trc);
+                            if (sn.isAbnormal()) {
+                                return sn;
+                            } else {
+                                start = ((ShnapNumberNative) sn.getValue()).getNumber().intValue();
+                            }
+                        }
+
+                        if (endE.getValue() == ShnapObject.getVoid()) {
+                            end = this.value.length;
+                        } else {
+                            ShnapExecution en = endE.getValue().asNum(trc);
+                            if (en.isAbnormal()) {
+                                return en;
+                            } else {
+                                end = ((ShnapNumberNative) en.getValue()).getNumber().intValue();
+                            }
+                        }
+
+                        if (start < 0 || start > this.value.length) {
+                            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", "Index out of bounds: " + start, null), trc, this.getLocation());
+                        } else if (end < 0 || end > this.value.length) {
+                            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", "Index out of bounds: " + end, null), trc, this.getLocation());
+                        } else if (end < start) {
+                            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.RangeError", start + ".." + end, null), trc, this.getLocation());
+                        }
+
+                        ShnapObject[] res = new ShnapObject[end - start];
+                        int n = 0;
+                        for (int i = start; i < end; i++) {
+                            res[n++] = this.value[i];
+                        }
+
+                        return ShnapExecution.normal(new ShnapArrayNative(ShnapLoc.BUILTIN, res), trc, ShnapLoc.BUILTIN);
+                    }));
+                })
+        ));
+
         this.set("contains", funcExactly(Items.buildList(), sequence(
                 forBlock("it", ShnapFactory.get("this"), ifTrue(
                         ShnapFactory.operate(ShnapFactory.get("it"), ShnapOperators.EQUAL, ShnapFactory.get("arg")),
@@ -243,6 +288,13 @@ public class ShnapArrayNative extends ShnapObject {
             })));
             return ShnapExecution.normal(iterator, trc, this.getLocation());
         })));
+
+        this.descriptor().applyTo(this);
+    }
+
+    @Override
+    public ShnapNativeTypeDescriptor descriptor() {
+        return ShnapNativeTypeRegistry.Descriptor.ARRAY;
     }
 
 }
