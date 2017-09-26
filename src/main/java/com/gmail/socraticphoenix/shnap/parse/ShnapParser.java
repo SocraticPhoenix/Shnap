@@ -542,6 +542,9 @@ public class ShnapParser {
                 if (stream.isNext(test)) {
                     stream.next(test.length());
                     op = ShnapOperators.fromRep(Strings.cutLast(test));
+                    if (op == ShnapOperators.NEGATIVE) {
+                        op = ShnapOperators.SUBTRACT;
+                    }
                     break;
                 }
             }
