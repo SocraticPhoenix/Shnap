@@ -40,14 +40,14 @@ impl("arr", "asString", $ {
 })
 
 impl("arr", "getSlice", $ begin,end {
-    return: native::import("shnap.collections.slice").slice(this,begin,end)
+    return: native::sys.import("shnap.collections.slice").slice(this,begin,end)
 })
 
 impl("arr", "setSlice", $ val,begin,end {
     begin = int(begin)
     end = int(end)
 
-    if begin >= end {
+    if begin > end {
         throw: rangeError(str(begin) + ".." + str(end))
     }
 

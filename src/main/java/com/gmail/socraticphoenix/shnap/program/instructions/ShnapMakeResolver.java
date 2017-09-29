@@ -37,6 +37,10 @@ public class ShnapMakeResolver extends AbstractShnapLocatable implements ShnapIn
         this.instruction = instruction;
     }
 
+    public ShnapInstruction getInstruction() {
+        return this.instruction;
+    }
+
     @Override
     public ShnapExecution exec(ShnapContext context, ShnapEnvironment tracer) {
         return ShnapExecution.normal(new ShnapResolver(this.getLocation(), e -> this.instruction.exec(context, e)), tracer, this.getLocation());

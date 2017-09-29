@@ -1,21 +1,25 @@
-defaultCapacity = 20
+arrayList = import("shnap.collections.array_list").arrayList
 
-arrayList = @(capacity=defaultCapacity,elements=void) {
-    backing = newArray(capacity)
-    size = 0
+lazyList = @ iter {
+    cache = arrayList()
 
-    private backing
-    private size
-
-    append = $ val {
-        ensureCapacity(size + 1)
-        backing[size] = val
-        size += 1
+    genTo = $ n {
+        while cache.len() <= n {
+            if iter.hasNext()
+                cache.append(iter.next())
+            else
+                throw: indexError(n)
+        }
     }
 
-    ensureCapacity = $ n {
-        if n >= backing.len()
-            backing.resize(n+1+defaultCapacity)
+    genAll = $ {
+        for iter
+            cache.append(it)
+    }
+
+    append = $ val {
+        genAll()
+        cache.append(val)
     }
 
     appendAll = $ elements {
@@ -24,53 +28,38 @@ arrayList = @(capacity=defaultCapacity,elements=void) {
     }
 
     getSlice = $ begin,end {
+        genTo(end)
         return: import("shnap.collections.slice").slice(this,begin,end)
     }
 
     setSlice = $ val,begin,end {
-        begin = int(begin)
-        end = int(end)
-
-        if begin > end {
-            throw: rangeError(str(begin) + ".." + str(end))
-        }
-
-        n = 0
-        for val {
-            set(it,n+begin)
-
-            n += 1
-            if n >= end - begin {
-                break
-            }
-        }
+        genTo(end)
+        cache[begin:end] = val
     }
 
     get = $ n {
-        checkIndex(n)
-        return: backing[n]
+        genTo(n)
+        return: cache[n]
     }
 
     set = $ val,n {
-        checkIndex(n)
-        backing[n] = val
+        genTo(n)
+        cache[n] = val
     }
 
     remove = $ n {
-        checkIndex(n)
-        backing.remove(n)
-        size -= 1
+        genTo(n)
+        cache.remove(n)
     }
 
     insert = $ n,val {
-        if n != len() {
-            checkIndex(n)
-            ensureCapacity(size + 1)
-            backing.insert(n, val)
-            size += 1
-        } else {
-            append(val)
-        }
+        genTo(n)
+        cache.insert(n,val)
+    }
+
+    len = $ {
+        genAll()
+        return: cache.len()
     }
 
     contains = $ val {
@@ -79,8 +68,6 @@ arrayList = @(capacity=defaultCapacity,elements=void) {
                 return: true
         return: false
     }
-
-    len = $ return: size
 
     forEach = $ func,order=1 {
         if order == 1 {
@@ -101,11 +88,11 @@ arrayList = @(capacity=defaultCapacity,elements=void) {
         }
         return: void
     }
-
+    
     iterator = @ {
         index = 0
 
-        hasNext = $ return: index < len()
+        hasNext = $ return: index < cache.len() || iter.hasNext()
 
         next = $ {
             val = get(index)
@@ -130,23 +117,9 @@ arrayList = @(capacity=defaultCapacity,elements=void) {
         }
 
     }
-
-    containsIndex = $ n {
-        return: n >= 0 && n < size
-    }
-
-    checkIndex = $ n {
-        if !containsIndex(n)
-            throw: indexError(n)
-    }
-
+    
     asString = $ {
         return: import("shnap.collections.util").deepToString(this)
-    }
-
-    if (elements != void) {
-        for elements
-            append(it)
     }
 
 }

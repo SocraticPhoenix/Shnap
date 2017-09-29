@@ -262,16 +262,18 @@ public class ShnapObject extends AbstractShnapLocatable {
     }
 
     public ShnapExecution operate(ShnapObject arg, ShnapOperators operator, ShnapEnvironment tracer) {
-        if (operator == ShnapOperators.GREATER_THAN_EQUAL_TO) {
+        if (operator == ShnapOperators.EQUAL_EXACTLY) {
+            return this.resolve(tracer).mapIfNormal(e1 -> arg.resolve(tracer).mapIfNormal(e2 -> ShnapExecution.normal(ShnapBooleanNative.of(e1.getValue() == e2.getValue()), tracer, e1.getValue().getLocation())));
+        } else if (operator == ShnapOperators.NOT_EQUAL_EXACTLY) {
+            return this.resolve(tracer).mapIfNormal(e1 -> arg.resolve(tracer).mapIfNormal(e2 -> ShnapExecution.normal(ShnapBooleanNative.of(e1.getValue() != e2.getValue()), tracer, e1.getValue().getLocation())));
+        } else if (operator == ShnapOperators.GREATER_THAN_EQUAL_TO) {
             return this.operate(arg, ShnapOperators.GREATER_THAN, tracer).mapIfNormal(e -> this.operate(arg, ShnapOperators.EQUAL, tracer).mapIfNormal(c -> e.getValue().operate(c.getValue(), ShnapOperators.LOGICAL_OR, tracer)));
         } else if (operator == ShnapOperators.LESS_THAN_EQUAL_TO) {
             return this.operate(arg, ShnapOperators.LESS_THAN, tracer).mapIfNormal(e -> this.operate(arg, ShnapOperators.EQUAL, tracer).mapIfNormal(c -> e.getValue().operate(c.getValue(), ShnapOperators.LOGICAL_OR, tracer)));
         }
         return this.resolve(tracer).mapIfNormal(exec -> {
             ShnapObject self = exec.getValue();
-            if (self == arg && (operator == ShnapOperators.EQUAL || operator == ShnapOperators.NOT_EQUAL)) {
-                return ShnapExecution.normal(ShnapBooleanNative.of(operator == ShnapOperators.EQUAL), tracer, self.getLocation());
-            } else if (operator.isBool()) {
+            if (operator.isBool()) {
                 switch (operator) {
                     case NOT:
                         return ShnapExecution.normal(ShnapBooleanNative.of(!this.isTruthy(tracer)), tracer, this.getLocation());
@@ -346,7 +348,7 @@ public class ShnapObject extends AbstractShnapLocatable {
                 }
                 return ShnapExecution.normal(ShnapBooleanNative.of(val), tracer, self.getLocation());
             } else if (operator == ShnapOperators.NOT_EQUAL) {
-                return res.getValue().asBool(tracer).mapIfNormal(e -> e.getValue().operate(ShnapOperators.NOT, tracer));
+                return res.getValue().operate(ShnapOperators.NOT, tracer);
             } else {
                 return res;
             }

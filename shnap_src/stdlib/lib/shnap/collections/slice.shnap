@@ -5,7 +5,7 @@ slice = @ (arr,begin,end) {
     begin = int(begin)
     end = int(end)
 
-    if begin >= end {
+    if begin > end {
         throw: rangeError(str(begin) + ".." + str(end))
     }
 

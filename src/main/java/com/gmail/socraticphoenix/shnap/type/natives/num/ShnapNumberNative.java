@@ -74,7 +74,7 @@ import static com.gmail.socraticphoenix.shnap.util.ShnapFactory.param;
 
 public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable, ShnapNativeType {
     ShnapObject ONE = ShnapNumberNative.valueOf(1);
-    ShnapObject ZERO = ShnapNumberNative.valueOf(-1);
+    ShnapObject ZERO = ShnapNumberNative.valueOf(0);
 
     static BigInteger asInt(Number num) {
         if (num instanceof BigInteger) {
@@ -161,7 +161,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                 func(alsoTarget, ShnapNumberNative::leftShift),
                 func(alsoTarget, ShnapNumberNative::rightShift),
                 func(alsoTarget, ShnapNumberNative::compareTo),
-                func2(alsoTarget, (n1, n2) -> ShnapBooleanNative.of(equals(n1, n2))),
+                func2(alsoTarget, (n1, n2) -> ShnapBooleanNative.of(equals(n1, n2)), false),
                 func(alsoTarget, ShnapNumberNative::bitwiseAnd),
                 func(alsoTarget, ShnapNumberNative::bitwiseXor),
                 func(alsoTarget, ShnapNumberNative::bitwiseOr)
@@ -205,7 +205,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
         alsoTarget.descriptor().applyTo(target);
     }
 
-    static ShnapFunction func2(ShnapNumberNative target, BiFunction<Number, Number, ShnapObject> op) {
+    static ShnapFunction func2(ShnapNumberNative target, BiFunction<Number, Number, ShnapObject> op, boolean doCast) {
         return ShnapFactory.func(
                 Items.buildList(param("arg"), param("order", ONE)),
                 inst((c, t) -> {
@@ -243,7 +243,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                                     result = op.apply(right, left);
                                 }
 
-                                if (result instanceof ShnapNumberNative) {
+                                if (doCast && result instanceof ShnapNumberNative) {
                                     Number resNum = ((ShnapNumberNative) result).getNumber();
                                     if (argNative.castingPrecedence(resNum) > target.castingPrecedence(resNum)) {
                                         result = argNative.copyWith(resNum);
@@ -265,7 +265,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
     int castingPrecedence(Number result);
 
     static ShnapFunction func(ShnapNumberNative target, BinaryOperator<Number> op) {
-        return func2(target, (n1, n2) -> ShnapNumberNative.valueOf(op.apply(n1, n2)));
+        return func2(target, (n1, n2) -> ShnapNumberNative.valueOf(op.apply(n1, n2)), true);
     }
 
     static Number negate(Number number) {

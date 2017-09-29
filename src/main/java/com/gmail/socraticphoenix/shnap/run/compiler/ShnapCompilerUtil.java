@@ -131,13 +131,15 @@ public class ShnapCompilerUtil {
     public static void writeParam(ByteStream stream, ShnapParameter parameter) throws IOException {
         writeLoc(stream, parameter.getLocation());
         Bytes.writeString(stream, parameter.getName());
+        stream.put((byte) (parameter.isVariable() ? 1 : 0));
         write(stream, parameter.getValue());
     }
 
     public static ShnapParameter readParam(ByteStream stream, ShnapScript building) throws IOException {
         ShnapLoc loc = readLoc(stream, building);
         String name = Bytes.readString(stream);
-        return new ShnapParameter(loc, name, read(stream, building));
+        boolean var = stream.get() == 1;
+        return new ShnapParameter(loc, name, read(stream, building), var);
     }
 
     public static void writeNativeVal(ByteStream stream, ShnapObject object) throws IOException {

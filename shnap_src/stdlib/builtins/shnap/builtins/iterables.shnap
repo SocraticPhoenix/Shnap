@@ -11,4 +11,5 @@ iterableStr = $ arr {
 isIterator = $ (obj) return: hasFunction(obj,"next",0) && hasFunction(obj,"hasNext",0)
 isIterable = $ (obj) return: hasFunction(obj,"iterator",0) || isIterator(obj)
 
-list = $ (val) return: import("shnap.collections.array_list").arrayList(elements=val)
+list = $ (val=[]) return: import("shnap.collections.array_list").arrayList(elements=val)
+lazyList = $ iter return: import("shnap.collections.lazy_list").lazyList(iter)

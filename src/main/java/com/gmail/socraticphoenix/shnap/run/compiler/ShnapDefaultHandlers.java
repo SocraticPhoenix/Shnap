@@ -37,6 +37,7 @@ import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInvoke;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapLiteral;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapMakeFunc;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapMakeObj;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapMakeResolver;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapNoOp;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapOperate;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapSet;
@@ -289,6 +290,12 @@ public class ShnapDefaultHandlers {
                     ShnapInstruction target = read(stream, building);
                     ShnapContext.Flag flag = readEnum(stream, ShnapContext.Flag.class);
                     return new ShnapFlag(loc, target, name, flag);
+                }),
+                new SimpleNodeHandler<>(ShnapMakeResolver.class, (stream, node) -> {
+                    writeLoc(stream, node.getLocation());
+                    write(stream, node.getInstruction());
+                }, (stream, building) -> {
+                    return new ShnapMakeResolver(readLoc(stream, building), read(stream, building));
                 })
         };
 

@@ -23,6 +23,7 @@ package com.gmail.socraticphoenix.shnap.type.natives;
 
 import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.mirror.Reflections;
+import com.gmail.socraticphoenix.parse.Strings;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.parse.ShnapParseError;
 import com.gmail.socraticphoenix.shnap.parse.ShnapParser;
@@ -64,6 +65,11 @@ public class ShnapDefaultNatives {
             trc.applyDefaults(target.getContext());
             return ShnapExecution.normal(ShnapObject.getVoid(), trc, ShnapLoc.BUILTIN);
         }))));
+
+        ShnapNativeFuncRegistry.register("sys.escape", oneArg(inst((ctx, trc) -> ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asString(trc).mapIfNormal(strE -> {
+            String val = ((ShnapStringNative) strE.getValue()).getValue();
+            return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, Strings.escape(val)), trc, ShnapLoc.BUILTIN);
+        })))));
 
         ShnapNativeFuncRegistry.register("sys.implementNative", func(
                 Items.buildList(param("name"), param("field"), param("function")),

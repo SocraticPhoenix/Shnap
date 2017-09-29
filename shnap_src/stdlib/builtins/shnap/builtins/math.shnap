@@ -1,8 +1,92 @@
 abs = $ obj {return: if(obj < 0) -obj else obj}
 
-sum = $ val {
-    res = 0
-    for val
-        res += num(it)
+sum = $ val,vals...=void {
+    if vals == void {
+        res = 0
+        for val
+            res += num(it)
+        return: res
+    } else {
+        res = 0
+        res += num(val)
+        for vals
+            res += num(it)
+        return: res
+    }
+}
+
+min_max_identity = #{}
+private min_max_identity
+
+max = $ val,vals...=void {
+    res = min_max_identity
+    if vals == void {
+        for val
+            if res === min_max_identity || it > res
+                res = it
+    } else {
+        res = val
+        for vals
+            if it > res
+                res = it
+    }
     return: res
+}
+
+min = $ val,vals...=void {
+    res = min_max_identity
+    if vals == void {
+        for val
+            if res === min_max_identity || it < res
+                res = it
+    } else {
+        res = val
+        for vals
+            if it < res
+                res = it
+    }
+    return: res
+}
+
+complex = @ (real=0.0,imaginary=0.0) {
+    real = dec(real)
+    imaginary = dec(imaginary)
+
+    add = $ clx,order=1 {
+        return: complex(real + clx.real, imaginary + clx.imaginary)
+    }
+
+    subtract = $ clx,order=1 {
+        if order == 1
+            return: complex(real - clx.real, imaginary - clx.imaginary)
+        else
+            return: complex(clx.real - real, imaginary - clx.imaginary)
+    }
+
+    multiply = $ clx,order=1 {
+        return: complex(real * clx.real - imaginary * clx.imaginary, clx.real * imaginary + clx.imaginary * real)
+    }
+
+    divide = $ clx,order=1 {
+        if order == 1 {
+            denom = clx.real**2 + clx.imaginary**2
+            if denom == 0
+                return: void
+            return: complex((real * clx.real + imaginary * clx.imaginary) / denom, (clx.real * imaginary - real * clx.imaginary) / denom)
+        } else {
+            denom = real**2 + imaginary**2
+            if denom == 0
+                return: void
+            return: complex((real * clx.real + imaginary * clx.imaginary) / denom, (real * clx.imaginary - clx.real * imaginary) / denom)
+        }
+    }
+
+    asString = $ {
+        return: str(real) + " + " + str(imaginary) + "i"
+    }
+
+    round = $ n {
+        return: complex(real.round(n), imaginary.round(n))
+    }
+
 }

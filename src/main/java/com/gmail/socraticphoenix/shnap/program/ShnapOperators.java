@@ -22,33 +22,35 @@
 package com.gmail.socraticphoenix.shnap.program;
 
 public enum ShnapOperators {
-    NEGATIVE("-", "negate", 1, true, 100),
-    BITWISE_NOT("~", "bnot", 1, true, 100),
-    RANGE("..", "rangeTo", 2, false, 97),
-    RAISE("**", "pow", 2, false, 95),
-    MULTIPLY("*", "multiply", 2, true, 90),
-    DIVIDE("/", "divide", 2, true, 90),
-    REMAINDER("%", "remainder", 2, true, 90),
-    ADD("+", "add", 2, true, 85),
-    SUBTRACT("-", "subtract", 2, true, 85),
-    COMPARE_TO("<>", "compareTo", 2, true, 50),
-    LEFT_SHIFT("<<", "shiftLeft", 2, true, 80), //shifts MUST come before comparisons, as operators are checked in sequential order
-    RIGHT_SHIFT(">>", "shiftRight", 2, true, 80),
-    LESS_THAN_EQUAL_TO("<=", "compareTo", 2, true, true, 75), //equal to's MUST come before <, >, as operators are checked in sequential order
-    GREATER_THAN_EQUAL_TO(">=", "compareTo", 2, true, true, 75),
-    LESS_THAN("<", "compareTo", 2, true, true, 75),
-    GREATER_THAN(">", "compareTo", 2, true, true, 75),
-    EQUAL("==", "equals", 2, true, false, 70),
-    NOT_EQUAL("!=", "equals", 2, true, false, 70),
-    NOT("!", "not", 1, true, false, true, 100), //not MUST come after !=, as operators are checked in sequential order
-    LOGICAL_AND("&&", "and", 2, true, false, true, 50), //logical MUST come before bitwise, as operators are checked in sequential order
-    LOGICAL_OR("||", "or", 2, true, false, true, 45),
-    BITWISE_AND("&", "band", 2, true, 65),
-    BITIWSE_XOR("`", "bxor", 2, true, 60),
-    BITWISE_OR("|", "bor", 2, true, 55),
-    MAP(":::", "map", 2, true, 50),
-    FOR_EACH("::", "forEach", 2, true, 50),
-    SENTINEL("\0", "sentinel", 0, true, Integer.MIN_VALUE);
+    NEGATIVE("-", "negate", 1, true, 100, false),
+    BITWISE_NOT("~", "bnot", 1, true, 100, false),
+    RANGE("..", "rangeTo", 2, false, 97, true),
+    RAISE("**", "pow", 2, false, 95, true),
+    MULTIPLY("*", "multiply", 2, true, 90, true),
+    DIVIDE("/", "divide", 2, true, 90, true),
+    REMAINDER("%", "remainder", 2, true, 90, true),
+    ADD("+", "add", 2, true, 85, true),
+    SUBTRACT("-", "subtract", 2, true, 85, true),
+    COMPARE_TO("<>", "compareTo", 2, true, 50, true),
+    LEFT_SHIFT("<<", "shiftLeft", 2, true, 80, true), //shifts MUST come before comparisons, as operators are checked in sequential order
+    RIGHT_SHIFT(">>", "shiftRight", 2, true, 80, true),
+    LESS_THAN_EQUAL_TO("<=", "compareTo", 2, true, true, 75, false), //equal to's MUST come before <, >, as operators are checked in sequential order
+    GREATER_THAN_EQUAL_TO(">=", "compareTo", 2, true, true, 75, false),
+    LESS_THAN("<", "compareTo", 2, true, true, 75, false),
+    GREATER_THAN(">", "compareTo", 2, true, true, 75, false),
+    EQUAL_EXACTLY("===", "same", 2, true, false, 70, false),
+    EQUAL("==", "equals", 2, true, false, 70, false),
+    NOT_EQUAL_EXACTLY("!==", "same", 2, true, false, 70, false),
+    NOT_EQUAL("!=", "equals", 2, true, false, 70, false),
+    NOT("!", "not", 1, true, false, true, 100, false), //not MUST come after !=, as operators are checked in sequential order
+    LOGICAL_AND("&&", "and", 2, true, false, true, 50, true), //logical MUST come before bitwise, as operators are checked in sequential order
+    LOGICAL_OR("||", "or", 2, true, false, true, 45, true),
+    BITWISE_AND("&", "band", 2, true, 65, true),
+    BITIWSE_XOR("`", "bxor", 2, true, 60, true),
+    BITWISE_OR("|", "bor", 2, true, 55, true),
+    MAP(":::", "map", 2, true, 50, true),
+    FOR_EACH("::", "forEach", 2, true, 50, true),
+    SENTINEL("\0", "sentinel", 0, true, Integer.MIN_VALUE, false);
 
     private String rep;
     private String func;
@@ -57,16 +59,17 @@ public enum ShnapOperators {
     private boolean comparative;
     private int precedence;
     private boolean bool;
+    private boolean set;
 
-    ShnapOperators(String rep, String func, int arity, boolean leftAssociative, int precedence) {
-        this(rep, func, arity, leftAssociative, false, precedence);
+    ShnapOperators(String rep, String func, int arity, boolean leftAssociative, int precedence, boolean set) {
+        this(rep, func, arity, leftAssociative, false, precedence, set);
     }
 
-    ShnapOperators(String rep, String func, int arity, boolean leftAssociative, boolean comparative, int precedence) {
-        this(rep, func, arity, leftAssociative, comparative, false, precedence);
+    ShnapOperators(String rep, String func, int arity, boolean leftAssociative, boolean comparative, int precedence, boolean set) {
+        this(rep, func, arity, leftAssociative, comparative, false, precedence, set);
     }
 
-    ShnapOperators(String rep, String func, int arity, boolean leftAssociative, boolean comparative, boolean bool, int precedence) {
+    ShnapOperators(String rep, String func, int arity, boolean leftAssociative, boolean comparative, boolean bool, int precedence, boolean set) {
         this.rep = rep;
         this.func = func;
         this.arity = arity;
@@ -74,6 +77,11 @@ public enum ShnapOperators {
         this.comparative = comparative;
         this.precedence = precedence;
         this.bool = bool;
+        this.set = set;
+    }
+
+    public boolean isSet() {
+        return this.set;
     }
 
     public boolean isBool() {

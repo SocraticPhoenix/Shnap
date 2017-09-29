@@ -47,6 +47,7 @@ importFrom = $ mod,field return: get(import(mod), field)
 importTo = $ mod,trgt {absorbFields(import(mod), trgt)}
 importSys = $ return: import("shnap.sys")
 importSysTo = $ trgt {importTo("shnap.sys", trgt)}
+sys = ? importSys()
 
 //Types
 implementNative = native::sys.implementNative
@@ -69,3 +70,6 @@ newArray = native::type.newArray
 int32 = native::type.int32
 int64 = native::type.int64
 float64 = native::type.float64 //Right now there's no float32, since it's introduction would created complex casting rules
+
+//Utils
+escape = native::sys.escape

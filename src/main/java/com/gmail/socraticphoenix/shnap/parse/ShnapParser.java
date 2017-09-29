@@ -86,7 +86,7 @@ public class ShnapParser {
     static {
         List<String> sets = new ArrayList<>();
         for (ShnapOperators operator : ShnapOperators.values()) {
-            if (operator.getArity() == 2 && !operator.isComparative()) {
+            if (operator.isSet()) {
                 sets.add(operator.getRep() + "=");
             }
         }
@@ -817,7 +817,7 @@ public class ShnapParser {
             if (isVarRefNext()) {
                 String nxt = nextVarRef();
                 whitespace();
-                if (stream.isNext('=') && !stream.isNext("==")) {
+                if (stream.isNext('=') && !isEqualsCompareNext()) {
                     defaulting = true;
                     named = true;
                     stream.consume('=');
@@ -866,7 +866,7 @@ public class ShnapParser {
         }
 
         whitespace();
-        if (stream.isNext('=') && !stream.isNext("==")) {
+        if (stream.isNext('=') && !isEqualsCompareNext()) {
             stream.next();
             ShnapInstruction theValue = this.safeNextInst();
             return sliceMode ? ShnapFactory.makeSliceSet(loc1, target, params, namedParams, theValue) : ShnapFactory.makeSet(loc1, target, params, namedParams, theValue);
@@ -897,7 +897,7 @@ public class ShnapParser {
                 if (isVarRefNext()) {
                     String nxt = nextVarRef();
                     whitespace();
-                    if (stream.isNext('=') && !stream.isNext("==")) {
+                    if (stream.isNext('=') && !isEqualsCompareNext()) {
                         defaulting = true;
                         named = true;
                         stream.consume('=');
@@ -1296,7 +1296,7 @@ public class ShnapParser {
     }
 
     private boolean isSetOpNext() {
-        if (stream.isNext('=') && !stream.isNext("==")) {
+        if (stream.isNext('=') && !isEqualsCompareNext()) {
             return true;
         } else {
             for (String op : operatorSets) {
@@ -1306,6 +1306,10 @@ public class ShnapParser {
             }
             return false;
         }
+    }
+
+    private boolean isEqualsCompareNext() {
+        return stream.isNext("==") || stream.isNext("===");
     }
 
     public String nextVarRef() {

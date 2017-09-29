@@ -153,6 +153,25 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
                         }
                     });
                 })));
+        this.set("multiply", func(
+                Items.buildList(param("arg"), param("order", ShnapNumberNative.valueOf(1))),
+                inst((ctx, trc) -> ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asNum(trc).mapIfNormal(en -> {
+                    BigDecimal target = ShnapNumberNative.asDec(((ShnapNumberNative) en.getValue()).getNumber());
+                    BigInteger intPart = target.toBigInteger();
+                    BigDecimal decPart = target.subtract(new BigDecimal(intPart));
+                    StringBuilder res = new StringBuilder();
+                    while ((intPart = intPart.subtract(BigInteger.ONE)).compareTo(BigInteger.ZERO) >= 0) {
+                        res.append(this.value);
+                    }
+
+                    int index = decPart.multiply(new BigDecimal(this.pts.length)).intValue();
+                    for (int i = 0; i < index; i++) {
+                        res.appendCodePoint(this.pts[i]);
+                    }
+
+                    return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), res.toString()), trc, this.getLocation());
+                })))
+        ));
         this.set("len", noArg(instSimple(() -> ShnapNumberNative.valueOf(this.pts.length))));
         this.set("get", oneArg(inst((ctx, trc) -> {
             int order = 1;

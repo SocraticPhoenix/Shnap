@@ -46,26 +46,103 @@ fib_internal = @ count,seedOne=0,seedTwo=1 {
         return: ret
     }
 
-        forEach = $ func,order=1 {
-            if order == 1 {
-                for this
-                    func(it)
-                return: this
-            }
-            return: void
+    forEach = $ func,order=1 {
+        if order == 1 {
+            for this
+                func(it)
+            return: this
         }
+        return: void
+    }
 
-        map = $ func,order=1 {
-            if order == 1
-                return: import("shnap.collections.mapping").mappingIterator(this, func)
-            else
-                return: void
+    map = $ func,order=1 {
+        if order == 1
+            return: import("shnap.collections.mapping").mappingIterator(this, func)
+        else
+            return: void
+    }
+
+}
+
+fib_like_internal = @ count,seeds=[0,1] {
+    cache = seeds
+    counter = 0
+
+    hasNext = $ {
+        return: counter < count
+    }
+
+    next = $ {
+        temp = cache[0]
+        counter += 1
+        cache.append(sum(cache))
+        cache.remove(0)
+        return: temp
+    }
+
+    forEach = $ func,order=1 {
+        if order == 1 {
+            for this
+                func(it)
+            return: this
         }
+        return: void
+    }
+
+    map = $ func,order=1 {
+        if order == 1
+            return: import("shnap.collections.mapping").mappingIterator(this, func)
+        else
+            return: void
+    }
+
+}
+
+fib_like_infinite_internal = @ seeds=[0,1] {
+    cache = seeds
+
+    cache.append(sum(cache))
+
+    hasNext = $ return: true
+
+    next = $ {
+        temp = cache[0]
+        counter += 1
+        cache.append(sum(cache))
+        cache.remove(0)
+        return: temp
+    }
+
+    forEach = $ func,order=1 {
+        if order == 1 {
+            for this
+                func(it)
+            return: this
+        }
+        return: void
+    }
+
+    map = $ func,order=1 {
+        if order == 1
+            return: import("shnap.collections.mapping").mappingIterator(this, func)
+        else
+            return: void
+    }
 
 }
 
 private fib_infinite_internal
 private fib_internal
+private fib_like_internal
+private fib_like_infinite_internal
+
+fibLike = $ count=void,seeds=[0,1] {
+    if count == void {
+        return: fib_like_infinite_internal(seeds)
+    } else {
+        return: fib_like_internal(count, seeds)
+    }
+}
 
 fib = $ count=void,seedOne=0,seedTwo=1 {
     if count == void {
