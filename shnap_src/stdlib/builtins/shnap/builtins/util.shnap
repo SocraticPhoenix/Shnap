@@ -8,3 +8,5 @@ lazy = $ func {
     }
 
 }
+
+len = $ a => a.len()

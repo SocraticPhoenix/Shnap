@@ -224,15 +224,31 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
             })));
             return ShnapExecution.normal(iterator, trc, this.getLocation());
         })));
-
+        this.set("isEmpty", noArg(instSimple(() -> ShnapBooleanNative.of(this.pts.length == 0))));
+        this.set("equalsIgnoreCase", oneArg(inst((ctx, trc) -> ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asString(trc).mapIfNormal(strE -> {
+            String comp = ((ShnapStringNative) strE.getValue()).getValue();
+            return ShnapExecution.normal(ShnapBooleanNative.of(this.value.equalsIgnoreCase(comp)), trc, this.getLocation());
+        })))));
+        this.set("getSlice", func(
+                Items.buildList(param("start"), param("end")),
+                inst((ctx, trc) -> ctx.get("start", trc).mapIfNormal(se -> se.getValue().asNum(trc).mapIfNormal(sne -> ctx.get("end", trc).mapIfNormal(ee -> ee.getValue().asNum(trc).mapIfNormal(ene -> {
+                    int start = ((ShnapNumberNative) sne.getValue()).getNumber().intValue();
+                    int end = ((ShnapNumberNative) ene.getValue()).getNumber().intValue();
+                    if (end < start) {
+                        return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.RangeError", start + ".." + end, null), trc, this.getLocation());
+                    } else if (start < 0) {
+                        return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", String.valueOf(start), null), trc, this.getLocation());
+                    } else if (end > this.pts.length) {
+                        return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IndexError", String.valueOf(end), null), trc, this.getLocation());
+                    } else {
+                        int len = end - start;
+                        int[] pts = new int[len];
+                        System.arraycopy(this.pts, start, pts, 0, len);
+                        return ShnapExecution.normal(new ShnapStringNative(this.getLocation(), new String(pts, 0, len)));
+                    }
+                })))))
+        ));
         this.descriptor().applyTo(this);
-    }
-
-    private static String remainder(String a, String b) {
-        for (char c : b.toCharArray()) {
-            a = a.replace(String.valueOf(c), "");
-        }
-        return a;
     }
 
     public String getValue() {

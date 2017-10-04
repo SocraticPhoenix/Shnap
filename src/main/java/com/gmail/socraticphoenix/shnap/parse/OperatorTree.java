@@ -21,8 +21,8 @@
  */
 package com.gmail.socraticphoenix.shnap.parse;
 
-import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.program.ShnapOperators;
+import com.gmail.socraticphoenix.shnap.program.instructions.ShnapInstruction;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapOperate;
 
 public class OperatorTree {

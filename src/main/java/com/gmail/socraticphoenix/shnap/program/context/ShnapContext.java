@@ -37,10 +37,12 @@ public class ShnapContext {
     private ShnapContext parent;
     private Map<String, ShnapObject> variables;
     private Map<String, List<Flag>> flags;
+    private boolean ceiling;
 
     public ShnapContext() {
         this.variables = new LinkedHashMap<>();
         this.flags = new LinkedHashMap<>();
+        this.ceiling = false;
     }
 
     public ShnapContext(ShnapContext parent) {
@@ -48,27 +50,16 @@ public class ShnapContext {
         this.parent = parent;
     }
 
-    public Map<String, ShnapObject> getVariables() {
-        return this.variables;
+    public boolean isCeiling() {
+        return this.ceiling;
     }
 
-    public void del(String name) {
-        if (name.startsWith("^")) {
-            this.getParentSafely().del(Strings.cutFirst(name));
-        } else if (name.startsWith(":")) {
-            name = Strings.cutFirst(name);
-            this.variables.remove(name);
-            this.flags.remove(name);
-        } else {
-            if (this.contains(name)) {
-                this.variables.remove(name);
-                this.flags.remove(name);
-            } else if (this.parent != null) {
-                this.parent.del(name);
-                this.variables.remove(name);
-                this.flags.remove(name);
-            }
-        }
+    public void setCeiling(boolean ceiling) {
+        this.ceiling = ceiling;
+    }
+
+    public Map<String, ShnapObject> getVariables() {
+        return this.variables;
     }
 
     public boolean hasFlag(String name, Flag flag) {
@@ -133,8 +124,6 @@ public class ShnapContext {
     }
 
     public void set(String name, ShnapObject object) {
-        this.del(name); //Remove previous value (takes care of flags)
-
         if (name.startsWith("^")) {
             this.getParentSafely().set(Strings.cutFirst(name), object);
             return;
@@ -143,10 +132,27 @@ public class ShnapContext {
             return;
         }
 
-        if (this.parent != null && this.parent.contains(name)) {
+        if (this.parent != null && !this.ceiling && this.parent.containsCeilingWise(name)) {
             this.parent.set(name, object);
         } else {
             this.variables.put(name, object);
+        }
+    }
+
+    public void del(String name) {
+        if (name.startsWith("^")) {
+            this.getParentSafely().del(Strings.cutFirst(name));
+        } else if (name.startsWith(":")) {
+            name = Strings.cutFirst(name);
+            this.variables.remove(name);
+            this.flags.remove(name);
+        } else {
+            if (this.parent != null && !this.ceiling && this.parent.containsCeilingWise(name)) {
+                this.parent.del(name);
+            } else {
+                this.variables.remove(name);
+                this.flags.remove(name);
+            }
         }
     }
 
@@ -162,7 +168,7 @@ public class ShnapContext {
             return;
         }
 
-        if (this.parent != null && this.parent.contains(name)) {
+        if (this.parent != null && !this.ceiling && this.parent.containsCeilingWise(name)) {
             this.parent.setFlag(name, flag);
         } else if (this.variables.containsKey(name)) {
             this.flags.computeIfAbsent(name, k -> new ArrayList<>()).add(flag);
@@ -232,6 +238,10 @@ public class ShnapContext {
 
     public boolean contains(String name) {
         return this.variables.containsKey(name) || (this.parent != null && this.parent.contains(name));
+    }
+
+    public boolean containsCeilingWise(String name) {
+        return this.variables.containsKey(name) || (!this.ceiling && this.parent != null && this.parent.contains(name));
     }
 
     public Collection<String> names() {

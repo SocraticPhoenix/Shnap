@@ -83,6 +83,10 @@ public class ShnapExecution {
         return this;
     }
 
+    public static ShnapExecution normal(ShnapObject object) {
+        return ShnapExecution.normal(object, null, null);
+    }
+
     public static ShnapExecution normal(ShnapObject object, ShnapEnvironment trc, ShnapLoc loc) {
         return new ShnapExecution(object, State.NORMAL, trc, loc);
     }

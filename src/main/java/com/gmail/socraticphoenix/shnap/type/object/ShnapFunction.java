@@ -60,6 +60,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class ShnapFunction extends ShnapObject {
@@ -151,6 +152,8 @@ public class ShnapFunction extends ShnapObject {
         functionContext.setLocally("thisFunc", this);
         if (values.size() + defValues.size() > this.paramsSize() && !this.hasVarArgs) {
             return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterSizeError", "Expected at most " + this.paramsSize() + " params, but got " + (values.size() + defValues.size()), null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
+        } else if (values.size() + defValues.size() + (this.hasVarArgs ? 1 : 0) < this.paramSizeId()) {
+            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterSizeError", "Expected at least " + this.paramsSize() + " params, but got " + (values.size() + defValues.size()), null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
         }
 
         for (Map.Entry<String, ShnapObject> def : defValues.entrySet()) {
@@ -172,10 +175,12 @@ public class ShnapFunction extends ShnapObject {
             }
         }
 
+        boolean iter = false;
         for (int i = 0; i < this.paramsSize() && i < values.size(); i++) {
             ShnapParameter parameter = this.params.get(i);
             String name = parameter.getName();
             if (parameter.isVariable()) {
+                iter = true;
                 int len = values.size() - i;
                 ShnapObject[] arr = new ShnapObject[len];
                 for (int j = 0; j < len; j++) {
@@ -188,6 +193,11 @@ public class ShnapFunction extends ShnapObject {
             } else {
                 functionContext.setLocally(name, values.get(i));
             }
+        }
+
+        if (!iter && this.hasVarArgs) {
+            Optional<ShnapParameter> param = this.required.stream().filter(ShnapParameter::isVariable).findFirst();
+            param.ifPresent(shnapParameter -> functionContext.setLocally(shnapParameter.getName(), new ShnapArrayNative(this.getLocation(), 0)));
         }
 
         ShnapExecution e = this.body.exec(functionContext, tracer);

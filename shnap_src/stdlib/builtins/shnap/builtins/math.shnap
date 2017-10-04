@@ -1,5 +1,72 @@
 abs = $ obj {return: if(obj < 0) -obj else obj}
 
+floor = $ x {
+    xn = int(x)
+    if x == xn || x > 0
+        return: xn
+    else
+        return: xn - 1
+}
+ceil = $ x {
+    flr = floor(x)
+    if x == flr
+        return: x
+    else
+        return: flr + 1
+}
+
+primeFactors = $ x {
+    tests = sievePrimes(x**0.5 + 1)
+    res = import("shnap.collections.array_list").arrayList()
+    for tests
+        if (x % it == 0) res.append(it)
+    if (res.len() == 0) res.append(x)
+    return: res
+}
+
+factors = $ x {
+    res = import("shnap.collections.array_list").arrayList()
+    for range(x,inclusive=true)
+        if (x % it == 0) res.append(it)
+    return: res
+}
+
+prime = $ x {
+    if (x < 2) return: false
+    if(x == 2 || x == 3) return: true
+    if(x % 2 == 0 || x % 3 == 0) return: false
+    rt = x**0.5
+    i = 6
+    while (i <= rt) {
+        if ((x % (i - 1) == 0) || (x % (i + 1) == 0)) return: false
+        i += 6
+    }
+
+    return: true
+}
+
+sievePrimes = $ limit {
+    bools = newArray(limit-1)
+    primes = import("shnap.collections.array_list").arrayList()
+
+    for range(bools.len()) bools[it] = true
+
+    for range(2, limit) {
+        if bools[it-2] {
+            j = it*2
+            while (j <= limit) {
+                bools[j-2] = false
+                j += it
+            }
+        }
+    }
+
+    for range(bools.len())
+        if (bools[it]) primes.append(it+2)
+
+    return: primes
+}
+
 sum = $ val,vals...=void {
     if vals == void {
         res = 0

@@ -62,6 +62,8 @@ public class ShnapObject extends AbstractShnapLocatable {
     public ShnapObject(ShnapLoc loc, ShnapContext context) {
         super(loc);
         this.context = context;
+        this.context.setLocally("this", this);
+        this.context.setFlag("this", ShnapContext.Flag.DONT_IMPORT);
     }
 
     public ShnapObject copyWith(ShnapContext context) {

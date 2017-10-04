@@ -44,6 +44,7 @@ public class ShnapMakeObj extends AbstractShnapLocatable implements ShnapInstruc
     public ShnapExecution exec(ShnapContext context, ShnapEnvironment tracer) {
         ShnapObject object = new ShnapObject(this.getLocation());
         object.init(context);
+        object.getContext().setCeiling(true);
 
         ShnapExecution exe = this.instruction.exec(object.getContext(), tracer);
         if(exe.isAbnormal()) {

@@ -5,8 +5,8 @@ sleep = native::sys.sleep
 print = native::sys.print
 printErr = native::sys.printErr
 
-println = $ arg="" print(arg + "\n")
-printlnErr = $ arg="" printErr(arg + "\n")
+println = $ arg="" {print(arg) print("\n")}
+printlnErr = $ arg="" {printErr(arg) printErr("\n")}
 
 //Field manipulation & reflection
 paramCount = native::sys.paramCount

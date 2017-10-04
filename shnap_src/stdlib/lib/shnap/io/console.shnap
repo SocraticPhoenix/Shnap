@@ -8,3 +8,11 @@ input = $ prompt=void {
     if (prompt != void) print(prompt)
     return: str(scanner_internal.method_nextLine())
 }
+
+next = $=> str(scanner_internal.method_next())
+
+nextDecimal = $=> dec(scanner_internal.method_nextBigDecimal())
+
+nextInteger = $radix=10 => dec(scanner_internal.method_nextBigInteger(javaCast(radix, "int")))
+
+nextLine = input
