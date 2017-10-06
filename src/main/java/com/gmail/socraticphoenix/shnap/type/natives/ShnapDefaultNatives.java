@@ -66,6 +66,17 @@ public class ShnapDefaultNatives {
             return ShnapExecution.normal(ShnapObject.getVoid(), trc, ShnapLoc.BUILTIN);
         }))));
 
+        ShnapNativeFuncRegistry.register("type.setType", func(
+                Items.buildList(param("object"), param("type")),
+                inst((ctx, trc) -> ctx.get("type", trc).mapIfNormal(te -> te.getValue().asString(trc).mapIfNormal(strE -> ctx.get("object", trc).mapIfNormal(valE -> {
+                    String type = ((ShnapStringNative) strE.getValue()).getValue();
+                    valE.getValue().setType(type);
+                    return ShnapExecution.normal(ShnapObject.getVoid());
+                }))))
+        ));
+
+        ShnapNativeFuncRegistry.register("type.type", oneArg(inst((ctx, trc) -> ctx.get("arg", trc).mapIfNormal(e -> ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, e.getValue().getType()))))));
+
         ShnapNativeFuncRegistry.register("sys.escape", oneArg(inst((ctx, trc) -> ctx.get("arg", trc).mapIfNormal(e -> e.getValue().asString(trc).mapIfNormal(strE -> {
             String val = ((ShnapStringNative) strE.getValue()).getValue();
             return ShnapExecution.normal(new ShnapStringNative(ShnapLoc.BUILTIN, Strings.escape(val)), trc, ShnapLoc.BUILTIN);
@@ -377,7 +388,7 @@ public class ShnapDefaultNatives {
                 ShnapObject[] arr = new ShnapObject[names.size()];
                 int k = 0;
                 for (String s : names) {
-                    ShnapObject field = new ShnapObject(ShnapLoc.BUILTIN);
+                    ShnapObject field = new ShnapObject(ShnapLoc.BUILTIN, "field");
                     field.set("name", new ShnapStringNative(ShnapLoc.BUILTIN, s));
                     field.set("resolvedValue", obj.get(s, trc).resolve(trc).mapIfAbnormal(ex -> ex.setState(ShnapExecution.State.NORMAL).setValue(ShnapObject.getVoid())).getValue());
                     field.set("exactValue", obj.getContext().getExactly(s));

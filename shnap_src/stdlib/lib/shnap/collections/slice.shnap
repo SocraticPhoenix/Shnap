@@ -1,4 +1,6 @@
 slice = @ (arr,begin,end) {
+    setType(this, "list")
+
     private begin
     private end
 
@@ -88,6 +90,8 @@ slice = @ (arr,begin,end) {
     }
 
     iterator = @ {
+        setType(this, "iterator")
+
         index = 0
 
         hasNext = $ return: index < len()

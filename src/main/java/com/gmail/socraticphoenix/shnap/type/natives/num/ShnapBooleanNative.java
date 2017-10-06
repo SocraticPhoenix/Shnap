@@ -66,7 +66,7 @@ public class ShnapBooleanNative extends ShnapObject implements ShnapNumberNative
     private Boolean value;
 
     private ShnapBooleanNative(ShnapLoc loc, Boolean value) {
-        super(loc);
+        super(loc, "bool");
         this.value = value;
         ShnapNumberNative.implementFunctions(this, this);
         this.set(ShnapObject.AS_STRING, ShnapFactory.noArg(instSimple(() -> new ShnapStringNative(this.getLocation(), String.valueOf(this.value)))));

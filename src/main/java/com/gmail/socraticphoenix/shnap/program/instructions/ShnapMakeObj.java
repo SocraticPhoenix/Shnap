@@ -30,10 +30,16 @@ import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 
 public class ShnapMakeObj extends AbstractShnapLocatable implements ShnapInstruction {
     private ShnapInstruction instruction;
+    private String type;
 
-    public ShnapMakeObj(ShnapLoc loc, ShnapInstruction instruction) {
+    public ShnapMakeObj(ShnapLoc loc, ShnapInstruction instruction, String type) {
         super(loc);
         this.instruction = instruction;
+        this.type = type;
+    }
+
+    public String getType() {
+        return this.type;
     }
 
     public ShnapInstruction getInstruction() {
@@ -42,7 +48,7 @@ public class ShnapMakeObj extends AbstractShnapLocatable implements ShnapInstruc
 
     @Override
     public ShnapExecution exec(ShnapContext context, ShnapEnvironment tracer) {
-        ShnapObject object = new ShnapObject(this.getLocation());
+        ShnapObject object = new ShnapObject(this.getLocation(), this.type);
         object.init(context);
         object.getContext().setCeiling(true);
 

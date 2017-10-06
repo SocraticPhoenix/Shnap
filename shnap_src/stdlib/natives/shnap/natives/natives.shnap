@@ -17,7 +17,7 @@ setField = native::sys.set
 delField = native::sys.del
 setFlag = native::sys.setFlag
 fields = native::sys.fieldData
-has = $ obj,field,params=void {
+hasField = $ obj,field,params=void {
     if params == void {
         return: getField(obj, field) != void
     } else if params == null {
@@ -28,12 +28,12 @@ has = $ obj,field,params=void {
         return: val != void && reqParamCount(val) == params
     }
 }
-hasFunction = $ (obj,field,params=null) return: has(obj, field, params)
+hasFunction = $ (obj,field,params=null) return: hasField(obj, field, params)
 absorbFields = $ src,dst {
-    data = fieldData(src)
+    data = fields(src)
     for data {
         if !it.isNoimport && !it.isPrivate {
-            set(dst, it.name, it.exactValue)
+            setField(dst, it.name, it.exactValue)
         }
     }
 }
@@ -70,6 +70,9 @@ newArray = native::type.newArray
 int32 = native::type.int32
 int64 = native::type.int64
 float64 = native::type.float64 //Right now there's no float32, since it's introduction would created complex casting rules
+
+type = native::type.type
+setType = native::type.setType
 
 //Utils
 escape = native::sys.escape

@@ -43,11 +43,11 @@
  */
 package com.gmail.socraticphoenix.shnap.type.natives.num;
 
+import ch.obermuhlner.math.big.BigDecimalMath;
 import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLocatable;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
-import com.gmail.socraticphoenix.shnap.repack.org.nevec.rjm.BigDecimalMath;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapArrayNative;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapJavaBackedNative;
 import com.gmail.socraticphoenix.shnap.type.natives.ShnapNativeType;
@@ -243,13 +243,19 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
                                     result = op.apply(right, left);
                                 }
 
-                                if (doCast && result instanceof ShnapNumberNative) {
-                                    Number resNum = ((ShnapNumberNative) result).getNumber();
+                                Number resNum = ((ShnapNumberNative) result).getNumber();
+                                if (doCast) {
                                     if (argNative.castingPrecedence(resNum) > target.castingPrecedence(resNum)) {
                                         result = argNative.copyWith(resNum);
                                     } else {
                                         result = target.copyWith(resNum);
                                     }
+
+                                    resNum = ((ShnapNumberNative) result).getNumber();
+                                }
+
+                                if (resNum instanceof BigDecimal) {
+                                    result = ShnapNumberNative.valueOf(((BigDecimal) resNum).stripTrailingZeros());
                                 }
 
                                 return ShnapExecution.normal(result, t, target.getLocation());
@@ -325,7 +331,7 @@ public interface ShnapNumberNative extends ShnapJavaBackedNative, ShnapLocatable
         if (a.compareTo(BigDecimal.ZERO) < 0) {
             throw new ArithmeticException("I don't know how to raise a negative number to a decimal power...");
         }
-        return BigDecimalMath.pow(a, b);
+        return BigDecimalMath.pow(a, b, MathContext.DECIMAL128);
     }
 
     static Number intPower(BigDecimal a, BigInteger b) {

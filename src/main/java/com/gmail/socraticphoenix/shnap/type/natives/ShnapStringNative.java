@@ -49,7 +49,7 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
     private int[] pts;
 
     public ShnapStringNative(ShnapLoc loc, String value) {
-        super(loc);
+        super(loc, "str");
         this.pts = value.codePoints().toArray();
         this.value = value.intern();
         //Conversion functions
@@ -197,7 +197,7 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
             return ShnapExecution.normal(ShnapBooleanNative.of(this.value.contains(((ShnapStringNative) arg.getValue()).getValue())), trc, this.getLocation());
         })));
         this.set("iterator", noArg(inst((ctx, trc) -> {
-            ShnapObject iterator = new ShnapObject(this.getLocation());
+            ShnapObject iterator = new ShnapObject(this.getLocation(), "iterator");
             iterator.init(ctx);
             iterator.set("index", ShnapNumberNative.valueOf(0));
             iterator.set("hasNext", noArg(inst((con, tra) -> {

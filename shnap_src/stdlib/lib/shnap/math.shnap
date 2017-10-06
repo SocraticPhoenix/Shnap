@@ -1,4 +1,6 @@
 fib_infinite_internal = @ seedOne=0,seedTwo=1 {
+    setType(this, "iterator")
+
     currentVal = seedOne
     nextVal = seedTwo
 
@@ -30,6 +32,8 @@ fib_infinite_internal = @ seedOne=0,seedTwo=1 {
 }
 
 fib_internal = @ count,seedOne=0,seedTwo=1 {
+    setType(this, "iterator")
+
     currentVal = seedOne
     nextVal = seedTwo
     counter = 0
@@ -65,6 +69,8 @@ fib_internal = @ count,seedOne=0,seedTwo=1 {
 }
 
 fib_like_internal = @ count,seeds=[0,1] {
+    setType(this, "iterator")
+
     cache = seeds
     counter = 0
 
@@ -99,6 +105,8 @@ fib_like_internal = @ count,seeds=[0,1] {
 }
 
 fib_like_infinite_internal = @ seeds=[0,1] {
+    setType(this, "iterator")
+
     cache = seeds
 
     cache.append(sum(cache))
@@ -150,4 +158,49 @@ fib = $ count=void,seedOne=0,seedTwo=1 {
     } else {
         return: fib_internal(count, seedOne, seedTwo)
     }
+}
+
+primeFactors = $ x {
+    tests = sievePrimes(x**0.5 + 2)
+    res = import("shnap.collections.array_list").arrayList()
+    for tests
+        if (x % it == 0) res.append(it)
+    if (res.len() == 0) res.append(x)
+    return: res
+}
+
+prime = $ x {
+    if (x < 2) return: false
+    if(x == 2 || x == 3) return: true
+    if(x % 2 == 0 || x % 3 == 0) return: false
+    rt = x**0.5
+    i = 6
+    while (i <= rt) {
+        if ((x % (i - 1) == 0) || (x % (i + 1) == 0)) return: false
+        i += 6
+    }
+
+    return: true
+}
+
+sievePrimes = $ limit {
+    bools = newArray(limit-1)
+    primes = import("shnap.collections.array_list").arrayList()
+
+    for range(bools.len()) bools[it] = true
+
+    for range(2, limit) {
+        if bools[it-2] {
+            j = it*2
+            while (j <= limit) {
+                bools[j-2] = false
+                j += it
+            }
+        }
+    }
+
+    for range(bools.len())
+        if (bools[it]) primes.append(it+2)
+
+    return: primes
 }

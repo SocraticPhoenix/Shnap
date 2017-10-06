@@ -1,0 +1,2 @@
+importTo("shnap.math", this)
+println(sievePrimes(100))

@@ -31,7 +31,7 @@ public class ShnapDoubleNative extends ShnapObject implements ShnapNumberNative 
     private Double aDouble;
 
     public ShnapDoubleNative(ShnapLoc loc, Double aDouble) {
-        super(loc);
+        super(loc, "float64");
         this.aDouble = aDouble;
         ShnapNumberNative.implementFunctions(this, this);
     }

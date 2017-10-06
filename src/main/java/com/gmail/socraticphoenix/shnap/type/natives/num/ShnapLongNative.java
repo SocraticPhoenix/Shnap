@@ -31,7 +31,7 @@ public class ShnapLongNative extends ShnapObject implements ShnapNumberNative {
     private Long aLong;
 
     public ShnapLongNative(ShnapLoc loc, Long aLong) {
-        super(loc);
+        super(loc, "int64");
         this.aLong = aLong;
         ShnapNumberNative.implementFunctions(this, this);
     }

@@ -1,5 +1,14 @@
 abs = $ obj {return: if(obj < 0) -obj else obj}
 
+gcd = $ a,b {
+    while b != 0 {
+        t = b
+        b = a % b
+        a = t
+    }
+    return: a
+}
+
 floor = $ x {
     xn = int(x)
     if x == xn || x > 0
@@ -7,6 +16,7 @@ floor = $ x {
     else
         return: xn - 1
 }
+
 ceil = $ x {
     flr = floor(x)
     if x == flr
@@ -15,56 +25,11 @@ ceil = $ x {
         return: flr + 1
 }
 
-primeFactors = $ x {
-    tests = sievePrimes(x**0.5 + 1)
-    res = import("shnap.collections.array_list").arrayList()
-    for tests
-        if (x % it == 0) res.append(it)
-    if (res.len() == 0) res.append(x)
-    return: res
-}
-
 factors = $ x {
     res = import("shnap.collections.array_list").arrayList()
     for range(x,inclusive=true)
         if (x % it == 0) res.append(it)
     return: res
-}
-
-prime = $ x {
-    if (x < 2) return: false
-    if(x == 2 || x == 3) return: true
-    if(x % 2 == 0 || x % 3 == 0) return: false
-    rt = x**0.5
-    i = 6
-    while (i <= rt) {
-        if ((x % (i - 1) == 0) || (x % (i + 1) == 0)) return: false
-        i += 6
-    }
-
-    return: true
-}
-
-sievePrimes = $ limit {
-    bools = newArray(limit-1)
-    primes = import("shnap.collections.array_list").arrayList()
-
-    for range(bools.len()) bools[it] = true
-
-    for range(2, limit) {
-        if bools[it-2] {
-            j = it*2
-            while (j <= limit) {
-                bools[j-2] = false
-                j += it
-            }
-        }
-    }
-
-    for range(bools.len())
-        if (bools[it]) primes.append(it+2)
-
-    return: primes
 }
 
 sum = $ val,vals...=void {
@@ -115,7 +80,9 @@ min = $ val,vals...=void {
     return: res
 }
 
-complex = @ (real=0.0,imaginary=0.0) {
+complex = @(real=0.0,imaginary=0.0) {
+    setType(this, "complex")
+
     real = dec(real)
     imaginary = dec(imaginary)
 
@@ -148,12 +115,95 @@ complex = @ (real=0.0,imaginary=0.0) {
         }
     }
 
+    equals = $ clx,order=1 {
+        return: type(clx) == "complex" && real == clx.real && imaginary == clx.imaginary
+    }
+
+    compareTo = $ clx,order=1 {
+        if order == 1
+            return: absoluteValueSquared() <> clx.absoluteValueSquared()
+        else
+            return: clx.absoluteValueSquared() <> absoluteValueSquared()
+    }
+
+    absoluteValueSquared = $ {
+        return: real**2 + imaginary**2
+    }
+
+    absoluteValue = $ {
+        return: absoluteValueSquared()**0.5
+    }
+
     asString = $ {
         return: str(real) + " + " + str(imaginary) + "i"
     }
 
     round = $ n {
         return: complex(real.round(n), imaginary.round(n))
+    }
+
+}
+
+rational = @(numerator=0,denominator=1,reduce=true) {
+    setType(this, "rational")
+
+    numerator = int(numerator)
+    denominator = int(denominator)
+
+    if reduce {
+        common = gcd(numerator,denominator)
+        numerator = numerator / common
+        denominator = denominator / common
+    }
+
+    add = $ rat,order=1 {
+        common = denominator * rat.denominator
+        num = numerator * rat.denominator + rat.numerator * denominator
+        return: rational(num, common)
+    }
+
+    subtract = $ rat,order=1 {
+        common = denominator * rat.denominator
+        if order == 1
+            ^num = numerator * rat.denominator - rat.numerator * denominator
+        else
+            ^num = rat.numerator * denominator - numerator * rat.denominator
+
+        return: rational(num, common)
+    }
+
+    multiply = $ rat,order=1 {
+        return: rational(numerator * rat.numerator, denominator * rat.denominator)
+    }
+
+    divide = $ rat,order=1 {
+        if order == 1
+            return: this * rat.inverse()
+        else
+            return: rat * this.inverse()
+    }
+
+    equals = $ rat,order=1 {
+        return: type(rat) == "rational" && denominator == rat.denominator && numerator == rat.numerator
+    }
+
+    compareTo = $ rat,order=1 {
+        if order == 1
+            return: numerator * rat.denominator <> rat.numerator * denominator
+        else
+            return: rat.numerator * denominator <> numerator * rat.denominator
+    }
+
+    inverse = $ {
+        return: rational(denominator, numerator, false)
+    }
+
+    asString = $ {
+        return: str(numerator) + if (denominator != 1) "/" + denominator else ""
+    }
+
+    asNum = $ {
+        return: dec(numerator) / dec(denominator)
     }
 
 }

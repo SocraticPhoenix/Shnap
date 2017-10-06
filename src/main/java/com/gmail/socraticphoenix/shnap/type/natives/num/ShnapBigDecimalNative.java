@@ -54,7 +54,7 @@ public class ShnapBigDecimalNative extends ShnapObject implements ShnapNumberNat
     private BigDecimal value;
 
     public ShnapBigDecimalNative(ShnapLoc loc, BigDecimal value) {
-        super(loc);
+        super(loc, "dec");
         this.value = value;
         ShnapNumberNative.implementFunctions(this, this);
     }

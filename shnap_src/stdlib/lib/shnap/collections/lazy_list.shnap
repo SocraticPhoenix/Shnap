@@ -1,6 +1,8 @@
 arrayList = import("shnap.collections.array_list").arrayList
 
 lazyList = @ iter {
+    setType(this, "list")
+
     cache = arrayList()
 
     genTo = $ n {
@@ -90,6 +92,8 @@ lazyList = @ iter {
     }
     
     iterator = @ {
+        setType(this, "iterator")
+
         index = 0
 
         hasNext = $ return: index < cache.len() || iter.hasNext()

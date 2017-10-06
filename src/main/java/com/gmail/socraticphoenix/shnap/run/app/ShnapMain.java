@@ -128,7 +128,8 @@ public class ShnapMain {
                 .flag("exec", "A name of a script to execute", validScript)
                 .flag("reloadHome", "If present, update the standard libraries", s -> null)
                 .flag("noSource", "If present, tracebacks will not display source code (only line & column numbers)", s -> null)
-                .flag("shell", "If present, arg, exec and compile flags will be ignored and the Shnap shell will start", s -> null);
+                .flag("shell", "If present, arg, exec and compile flags will be ignored and the Shnap shell will start", s -> null)
+                .flag("install", "If present, installs the standard libraries", s -> null);
 
         Switch<Arguments, String> as = parser.parse(a);
         boolean needsHelp = false;
@@ -156,13 +157,26 @@ public class ShnapMain {
             settings.getBuiltin().addAll(builtin);
             settings.getNormal().addAll(normal);
 
-            if (!args.hasFlag("compile")) {
+            if (args.hasFlag("install")) {
+                settings.setReloadHome(true);
+                ShnapExecutor executor = new ShnapExecutor(settings);
+                try {
+                    executor.performPreLoading(plugins);
+                    System.exit(0);
+                    return;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.exit(1);
+                    return;
+                }
+            } else if (!args.hasFlag("compile")) {
                 if (args.hasFlag("shell")) {
                     ShnapShell shell = new ShnapShell(settings);
                     Scanner scanner = new Scanner(System.in);
                     try {
                         shell.performPreLoading(plugins);
                         if(!loadPlugins(environmentSettings, plugins)) {
+                            System.exit(1);
                             return;
                         }
 
@@ -242,6 +256,7 @@ public class ShnapMain {
                         try {
                             executor.performPreLoading(plugins);
                             if(!loadPlugins(environmentSettings, plugins)) {
+                                System.exit(1);
                                 return;
                             }
 
@@ -298,6 +313,7 @@ public class ShnapMain {
         if (needsHelp) {
             System.err.println(parser.help());
             System.exit(1);
+            return;
         }
     }
 

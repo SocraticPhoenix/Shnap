@@ -1,4 +1,5 @@
 mappingIterator = @(iterator,function) {
+    setType(this, "iterator")
 
     hasNext = $ return: iterator.hasNext()
 

@@ -52,7 +52,7 @@ public class ShnapJavaObject extends ShnapObject implements ShnapJavaBackedNativ
     private Object object;
 
     public ShnapJavaObject(ShnapLoc loc, Object object) {
-        super(loc);
+        super(loc, "java.obj." + object.getClass().getName());
         this.object = object;
     }
 

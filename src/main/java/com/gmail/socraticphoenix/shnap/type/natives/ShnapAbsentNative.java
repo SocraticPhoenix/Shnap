@@ -35,7 +35,7 @@ public class ShnapAbsentNative extends ShnapObject implements ShnapJavaBackedNat
     private String name;
 
     public ShnapAbsentNative(ShnapLoc loc, String name) {
-        super(loc);
+        super(loc, "absent");
         this.name = name;
         this.set(ShnapObject.AS_BOOLEAN, noArg(instSimple(() -> ShnapBooleanNative.of(false))));
         this.set("equals", ShnapFactory.func(

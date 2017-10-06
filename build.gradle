@@ -45,6 +45,7 @@ dependencies {
     library "com.github.PlutoPowered:Conventional:master-SNAPSHOT"
     library "com.github.PlutoPowered:Mirror:master-SNAPSHOT"
     library "com.github.ShnapLang:Shnap-Docs:master-SNAPSHOT"
+    library "ch.obermuhlner:big-math:1.2.1"
 }
 //End Repositories and Dependencies
 
@@ -72,6 +73,7 @@ jar {
 shadowJar {
     classifier = "shadow"
     relocate "org.ow2.asm", "com.gmail.socraticphoenix.shnap.repack.org.ow2.asm"
+    relocate "ch.obermuhlner", "com.gmail.socraticphoenix.shnap.repack.ch.obermuhlner"
 }
 //End Tasks
 

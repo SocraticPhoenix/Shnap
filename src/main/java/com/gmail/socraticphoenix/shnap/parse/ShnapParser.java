@@ -602,6 +602,11 @@ public class ShnapParser {
         whitespace();
         ShnapLoc loc = this.loc();
         stream.next();
+        String type = "object";
+        /*if (this.isJustIdentifierNext()) {
+            type = this.parseNextPathIdentifier();
+        }*/
+        whitespace();
         List<ShnapParameter> params = this.parseParenthesizedParams();
         whitespace();
         this.consumeArrow();
@@ -637,7 +642,7 @@ public class ShnapParser {
             stream.consume('}');
         }
         ShnapInstruction body = new ShnapInstructionSequence(loc2, instructions);
-        return ShnapFactory.makeClass(loc, params, body, clsProperties);
+        return ShnapFactory.makeClass(loc, params, body, clsProperties, type);
     }
 
     private ShnapInstruction parseNextClsInst() {
@@ -655,9 +660,13 @@ public class ShnapParser {
         ShnapLoc loc = this.loc();
         stream.next();
         whitespace();
+        String type = "object";
+        /*if (this.isJustIdentifierNext()) {
+            type = this.parseNextPathIdentifier();
+        }*/
         this.consumeArrow();
         ShnapInstruction body = parseNextSequence();
-        return new ShnapMakeObj(loc, body);
+        return new ShnapMakeObj(loc, body, type);
     }
 
     public boolean isResolverNext() {
@@ -1328,6 +1337,13 @@ public class ShnapParser {
         int index = stream.index();
         stream.consumeAll('^');
         stream.consume(':');
+        boolean flag = isIdentifierNext() && !(this.tokenIsNext("static") || isFlagNext() || isStateChangeNext() || isFalseTrueVoidNullNext() || isNativeNext() || isForBlockNext() || isTryBlockNext() || isWhileBlockNext() || isDoWhileBlockNext() || isIfBlockNext());
+        stream.jumpTo(index);
+        return flag;
+    }
+
+    public boolean isJustIdentifierNext() {
+        int index = stream.index();
         boolean flag = isIdentifierNext() && !(this.tokenIsNext("static") || isFlagNext() || isStateChangeNext() || isFalseTrueVoidNullNext() || isNativeNext() || isForBlockNext() || isTryBlockNext() || isWhileBlockNext() || isDoWhileBlockNext() || isIfBlockNext());
         stream.jumpTo(index);
         return flag;

@@ -31,7 +31,7 @@ public class ShnapIntNative extends ShnapObject implements ShnapNumberNative {
     private Integer integer;
 
     public ShnapIntNative(ShnapLoc loc, Integer integer) {
-        super(loc);
+        super(loc, "int32");
         this.integer = integer;
         ShnapNumberNative.implementFunctions(this, this);
     }

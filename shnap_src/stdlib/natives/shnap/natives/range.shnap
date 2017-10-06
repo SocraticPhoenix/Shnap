@@ -1,4 +1,6 @@
 range_internal_exclusive_up = @(min,max,step=1) {
+    native::type.setType(this, "iterator")
+
     state = min
 
     hasNext = ${
@@ -30,6 +32,8 @@ range_internal_exclusive_up = @(min,max,step=1) {
 }
 
 range_internal_inclusive_up = @(min,max,step=1){
+    native::type.setType(this, "iterator")
+
     state = min
 
     hasNext = $ {
@@ -64,6 +68,8 @@ private range_internal_exclusive_up
 private range_internal_inclusive_up
 
 range_internal_exclusive_down = @(max,min,step=1) {
+    native::type.setType(this, "iterator")
+
     step = -step
     state = max
 
@@ -96,6 +102,8 @@ range_internal_exclusive_down = @(max,min,step=1) {
 }
 
 range_internal_inclusive_down = @(max,min,step=1) {
+    native::type.setType(this, "iterator")
+
     step = -step
     state = max
 
@@ -131,6 +139,7 @@ private range_internal_exclusive_down
 private range_internal_inclusive_down
 
 infrange = @(start,step=1) {
+    native::type.setType(this, "iterator")
 
     state = start
 

@@ -58,7 +58,7 @@ public class ShnapCharNative extends ShnapObject implements ShnapNumberNative {
     private Integer value;
 
     public ShnapCharNative(ShnapLoc loc, Integer value) {
-        super(loc);
+        super(loc, "char");
         this.value = value;
         ShnapNumberNative.implementFunctions(this, this);
         this.set(ShnapObject.AS_STRING, ShnapFactory.noArg(instSimple(() -> new ShnapStringNative(this.getLocation(), new String(new int[]{this.value}, 0, 1)))));

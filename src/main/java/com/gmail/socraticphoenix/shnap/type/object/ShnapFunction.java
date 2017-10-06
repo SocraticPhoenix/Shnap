@@ -74,7 +74,7 @@ public class ShnapFunction extends ShnapObject {
     private boolean hasVarArgs;
 
     public ShnapFunction(ShnapLoc loc, List<ShnapParameter> parameters, ShnapInstruction body) {
-        super(loc, new ShnapContext());
+        super(loc, new ShnapContext(), "function");
         this.loc = loc;
         this.params = parameters;
         this.names = new HashSet<>();

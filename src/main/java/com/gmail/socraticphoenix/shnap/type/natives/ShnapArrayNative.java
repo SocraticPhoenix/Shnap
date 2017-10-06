@@ -49,13 +49,13 @@ public class ShnapArrayNative extends ShnapObject implements ShnapNativeType {
     private ShnapObject[] value;
 
     public ShnapArrayNative(ShnapLoc loc, ShnapObject... value) {
-        super(loc);
+        super(loc, "array");
         this.value = value;
         this.applyFunctions();
     }
 
     public ShnapArrayNative(ShnapLoc loc, int size) {
-        super(loc);
+        super(loc, "array");
         this.value = new ShnapObject[size];
         Arrays.fill(this.value, ShnapObject.getNull());
         this.applyFunctions();
@@ -261,7 +261,7 @@ public class ShnapArrayNative extends ShnapObject implements ShnapNativeType {
         this.set("len", noArg(instSimple(() -> ShnapNumberNative.valueOf(this.value.length))));
 
         this.set("iterator", noArg(inst((ctx, trc) -> {
-            ShnapObject iterator = new ShnapObject(this.getLocation());
+            ShnapObject iterator = new ShnapObject(this.getLocation(), "iterator");
             iterator.init(ctx);
             iterator.set("index", ShnapNumberNative.valueOf(0));
             iterator.set("hasNext", noArg(inst((con, tra) -> {

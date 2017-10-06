@@ -102,8 +102,8 @@ public interface ShnapFactory {
         return trc.getModuleExecution("shnap.builtins").mapIfNormal(e -> e.getValue().get(name, trc));
     }
 
-    static ShnapInstruction makeClass(ShnapLoc loc, List<ShnapParameter> params, ShnapInstruction body, List<ShnapInstruction> clsInsts) {
-        return new ShnapMakeFunc(loc, params, clsInsts, new ShnapInstructionSequence(loc, Items.buildList(new ShnapStateChange(loc, State.RETURNING, new ShnapMakeObj(body.getLocation(), body)))));
+    static ShnapInstruction makeClass(ShnapLoc loc, List<ShnapParameter> params, ShnapInstruction body, List<ShnapInstruction> clsInsts, String type) {
+        return new ShnapMakeFunc(loc, params, clsInsts, new ShnapInstructionSequence(loc, Items.buildList(new ShnapStateChange(loc, State.RETURNING, new ShnapMakeObj(body.getLocation(), body, type)))));
     }
 
     static ShnapInstruction makeGet(ShnapLoc loc, ShnapInstruction target, List<ShnapInstruction> params, Map<String, ShnapInstruction> defParams) {
@@ -160,7 +160,7 @@ public interface ShnapFactory {
         }
         actualParents[actualParents.length - 1] = new ShnapStringNative(ShnapLoc.BUILTIN, "shnap.Error");
 
-        ShnapObject err = new ShnapObject(ShnapLoc.BUILTIN);
+        ShnapObject err = new ShnapObject(ShnapLoc.BUILTIN, "error");
         err.set("isError", literalObj(true));
         err.set("name", new ShnapStringNative(ShnapLoc.BUILTIN, name));
         err.set("message", message == null ? ShnapObject.getNull() : new ShnapStringNative(ShnapLoc.BUILTIN, message));

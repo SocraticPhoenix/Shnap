@@ -54,7 +54,7 @@ public class ShnapBigIntegerNative extends ShnapObject implements ShnapNumberNat
     private BigInteger value;
 
     public ShnapBigIntegerNative(ShnapLoc loc, BigInteger value) {
-        super(loc);
+        super(loc, "int");
         this.value = value;
         ShnapNumberNative.implementFunctions(this, this);
     }

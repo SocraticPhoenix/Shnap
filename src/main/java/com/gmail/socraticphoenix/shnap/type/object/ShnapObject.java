@@ -51,23 +51,34 @@ public class ShnapObject extends AbstractShnapLocatable {
     public static final String AS_JAVA = "asJava";
 
     protected ShnapContext context;
+    private String type;
 
-    public ShnapObject(ShnapLoc loc) {
+    public ShnapObject(ShnapLoc loc, String type) {
         super(loc);
+        this.type = type;
         this.context = new ShnapContext();
         this.context.setLocally("this", this);
         this.context.setFlag("this", ShnapContext.Flag.DONT_IMPORT);
     }
 
-    public ShnapObject(ShnapLoc loc, ShnapContext context) {
+    public ShnapObject(ShnapLoc loc, ShnapContext context, String type) {
         super(loc);
+        this.type = type;
         this.context = context;
         this.context.setLocally("this", this);
         this.context.setFlag("this", ShnapContext.Flag.DONT_IMPORT);
     }
 
+    public String getType() {
+        return this.type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public ShnapObject copyWith(ShnapContext context) {
-        return new ShnapObject(this.loc, context);
+        return new ShnapObject(this.loc, context, this.type);
     }
 
     public ShnapExecution resolve(ShnapEnvironment trc) {
@@ -357,4 +368,12 @@ public class ShnapObject extends AbstractShnapLocatable {
         });
     }
 
+    public String safeAsString(ShnapEnvironment tracer) {
+        ShnapExecution exec = this.asString(tracer);
+        if (exec.isAbnormal()) {
+            return this.defaultToString();
+        } else {
+            return ((ShnapStringNative) exec.getValue()).getValue();
+        }
+    }
 }

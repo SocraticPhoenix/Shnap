@@ -1,6 +1,8 @@
 defaultCapacity = 20
 
 arrayList = @(capacity=defaultCapacity,elements=void) {
+    setType(this, "list")
+
     backing = newArray(capacity)
     size = 0
 
@@ -103,6 +105,8 @@ arrayList = @(capacity=defaultCapacity,elements=void) {
     }
 
     iterator = @ {
+        setType(this, "iterator")
+
         index = 0
 
         hasNext = $ return: index < len()

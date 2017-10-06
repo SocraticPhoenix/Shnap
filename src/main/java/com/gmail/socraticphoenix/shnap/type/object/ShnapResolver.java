@@ -33,7 +33,7 @@ public class ShnapResolver extends ShnapObject {
     protected Function<ShnapEnvironment, ShnapExecution> resolver;
 
     public ShnapResolver(ShnapLoc loc, Function<ShnapEnvironment, ShnapExecution> resolver) {
-        super(loc);
+        super(loc, "resolver");
         this.resolver = resolver;
     }
 

@@ -172,9 +172,10 @@ public class ShnapDefaultHandlers {
                 new SimpleNodeHandler<>(ShnapMakeObj.class, (stream, node) -> {
                     writeLoc(stream, node.getLocation());
                     write(stream, node.getInstruction());
+                    Bytes.writeString(stream, node.getType());
                 }, (stream, building) -> {
                     ShnapLoc loc = readLoc(stream, building);
-                    return new ShnapMakeObj(loc, read(stream, building));
+                    return new ShnapMakeObj(loc, read(stream, building), Bytes.readString(stream));
                 }),
                 new SimpleNodeHandler<>(ShnapMakeFunc.class, (stream, node) -> {
                     writeLoc(stream, node.getLocation());

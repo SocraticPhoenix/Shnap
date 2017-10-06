@@ -32,6 +32,7 @@ import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution.State;
 import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapLiteral;
+import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
 public class ShnapForBlock extends AbstractShnapLocatable implements ShnapInstruction {
     private ShnapInstruction name;
@@ -164,10 +165,7 @@ public class ShnapForBlock extends AbstractShnapLocatable implements ShnapInstru
 
             return ret;
         } else {
-            ShnapContext sub = ShnapContext.childOf(context);
-            sub.setLocally(this.varName, iterator);
-            sub.setLocally("_" + this.varName, ShnapObject.getVoid());
-            return this.instruction.exec(sub, tracer);
+            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.IterationError", iterator.safeAsString(tracer) + " is not iterable", null), tracer, this.getLocation());
         }
     }
 

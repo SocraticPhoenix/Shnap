@@ -78,7 +78,7 @@ public class ShnapScript extends ShnapObject {
     public boolean initialized;
 
     public ShnapScript(String name, String fileName) {
-        super(null);
+        super(null, "script");
         this.loc = new ShnapLoc(0, 0, this);
         this.name = name;
         this.fileName = fileName;

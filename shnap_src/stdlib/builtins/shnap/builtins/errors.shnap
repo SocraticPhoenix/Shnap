@@ -1,4 +1,5 @@
 error = @(name,message,cause=null,parents=null){
+    setType(this, "error")
 
     if parents == null {
         parents = ["shnap.Error"]
