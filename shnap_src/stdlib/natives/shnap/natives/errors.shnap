@@ -1,3 +1,9 @@
+isIterator = $ (obj) return: hasFunction(obj,"next",0) && hasFunction(obj,"hasNext",0)
+isIterable = $ (obj) return: hasFunction(obj,"iterator",0) || isIterator(obj)
+
+private isIterator
+private isIterable
+
 error = @(name,message,cause=null,parents=null){
     setType(this, "error")
 
@@ -58,3 +64,5 @@ parseError = errorCls("shnap.ParseError")
 indexError = errorCls("shnap.IndexError")
 rangeError = errorCls("shnap.RangeError")
 absentFieldError = errorCls("shnap.AbsentFieldError")
+
+iterationError = errorCls("shnap.IterationError")

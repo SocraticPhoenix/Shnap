@@ -161,7 +161,7 @@ fib = $ count=void,seedOne=0,seedTwo=1 {
 }
 
 primeFactors = $ x {
-    tests = sievePrimes(x**0.5 + 2)
+    tests = sievePrimes(x)
     res = import("shnap.collections.array_list").arrayList()
     for tests
         if (x % it == 0) res.append(it)

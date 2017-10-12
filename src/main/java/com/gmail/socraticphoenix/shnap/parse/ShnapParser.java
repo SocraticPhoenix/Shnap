@@ -1594,8 +1594,17 @@ public class ShnapParser {
     }
 
     private void parseDigits(StringBuilder num) {
-        while (stream.isNext(digits)) {
-            num.append(stream.next().get());
+        while (stream.isNext(digits) || stream.isNext('_')) {
+            if (stream.isNext('_')) {
+                int index = stream.index();
+                stream.next();
+                if (!stream.isNext(digits)) {
+                    stream.jumpTo(index);
+                    return;
+                }
+            } else {
+                num.append(stream.next().get());
+            }
         }
     }
 

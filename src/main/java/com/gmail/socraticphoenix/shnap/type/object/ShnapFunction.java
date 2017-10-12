@@ -148,67 +148,71 @@ public class ShnapFunction extends ShnapObject {
     }
 
     protected ShnapExecution invokePrivate(List<ShnapObject> values, Map<String, ShnapObject> defValues, ShnapEnvironment tracer) {
-        ShnapContext functionContext = this.getContext().copy();
-        functionContext.setLocally("thisFunc", this);
-        if (values.size() + defValues.size() > this.paramsSize() && !this.hasVarArgs) {
-            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterSizeError", "Expected at most " + this.paramsSize() + " params, but got " + (values.size() + defValues.size()), null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
-        } else if (values.size() + defValues.size() + (this.hasVarArgs ? 1 : 0) < this.paramSizeId()) {
-            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterSizeError", "Expected at least " + this.paramsSize() + " params, but got " + (values.size() + defValues.size()), null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
-        }
-
-        for (Map.Entry<String, ShnapObject> def : defValues.entrySet()) {
-            String name = def.getKey();
-            if (this.names.contains(name)) {
-                functionContext.setLocally(name, def.getValue());
-            } else {
-                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterMismatchError", "Unexpected parameter for " + name, null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
+        try {
+            ShnapContext functionContext = this.getContext().copy();
+            functionContext.setLocally("thisFunc", this);
+            if (values.size() + defValues.size() > this.paramsSize() && !this.hasVarArgs) {
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterSizeError", "Expected at most " + this.paramsSize() + " params, but got " + (values.size() + defValues.size()), null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
+            } else if (values.size() + defValues.size() + (this.hasVarArgs ? 1 : 0) < this.paramSizeId()) {
+                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterSizeError", "Expected at least " + this.paramsSize() + " params, but got " + (values.size() + defValues.size()), null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
             }
-        }
 
-        for (ShnapParameter def : this.def) {
-            if (!defValues.containsKey(def.getName())) {
-                ShnapExecution res = def.getValue().exec(context, tracer);
-                if (res.isAbnormal()) {
-                    return res;
+            for (Map.Entry<String, ShnapObject> def : defValues.entrySet()) {
+                String name = def.getKey();
+                if (this.names.contains(name)) {
+                    functionContext.setLocally(name, def.getValue());
+                } else {
+                    return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterMismatchError", "Unexpected parameter for " + name, null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
                 }
-                functionContext.setLocally(def.getName(), res.getValue());
             }
-        }
 
-        boolean iter = false;
-        for (int i = 0; i < this.paramsSize() && i < values.size(); i++) {
-            ShnapParameter parameter = this.params.get(i);
-            String name = parameter.getName();
-            if (parameter.isVariable()) {
-                iter = true;
-                int len = values.size() - i;
-                ShnapObject[] arr = new ShnapObject[len];
-                for (int j = 0; j < len; j++) {
-                    arr[j] = values.get(j + i);
+            for (ShnapParameter def : this.def) {
+                if (!defValues.containsKey(def.getName())) {
+                    ShnapExecution res = def.getValue().exec(context, tracer);
+                    if (res.isAbnormal()) {
+                        return res;
+                    }
+                    functionContext.setLocally(def.getName(), res.getValue());
                 }
-                functionContext.setLocally(name, new ShnapArrayNative(parameter.getLocation(), arr));
-                break;
-            } else if (defValues.containsKey(name)) {
-                return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterMismatchError", "Unexpected duplicate parameter for " + name, null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
-            } else {
-                functionContext.setLocally(name, values.get(i));
             }
-        }
 
-        if (!iter && this.hasVarArgs) {
-            Optional<ShnapParameter> param = this.required.stream().filter(ShnapParameter::isVariable).findFirst();
-            param.ifPresent(shnapParameter -> functionContext.setLocally(shnapParameter.getName(), new ShnapArrayNative(this.getLocation(), 0)));
-        }
+            boolean iter = false;
+            for (int i = 0; i < this.paramsSize() && i < values.size(); i++) {
+                ShnapParameter parameter = this.params.get(i);
+                String name = parameter.getName();
+                if (parameter.isVariable()) {
+                    iter = true;
+                    int len = values.size() - i;
+                    ShnapObject[] arr = new ShnapObject[len];
+                    for (int j = 0; j < len; j++) {
+                        arr[j] = values.get(j + i);
+                    }
+                    functionContext.setLocally(name, new ShnapArrayNative(parameter.getLocation(), arr));
+                    break;
+                } else if (defValues.containsKey(name)) {
+                    return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.ParameterMismatchError", "Unexpected duplicate parameter for " + name, null, "shnap.ParameterError", "shnap.InvocationError"), tracer, this.getLocation());
+                } else {
+                    functionContext.setLocally(name, values.get(i));
+                }
+            }
 
-        ShnapExecution e = this.body.exec(functionContext, tracer);
-        if (e.getState() == State.THROWING) {
-            return e;
-        } else if (e.getState() == State.RETURNING) {
-            tracer.popTraceback();
-            return ShnapExecution.normal(e.getValue(), tracer, this.getLocation());
-        } else {
-            tracer.popTraceback();
-            return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
+            if (!iter && this.hasVarArgs) {
+                Optional<ShnapParameter> param = this.required.stream().filter(ShnapParameter::isVariable).findFirst();
+                param.ifPresent(shnapParameter -> functionContext.setLocally(shnapParameter.getName(), new ShnapArrayNative(this.getLocation(), 0)));
+            }
+
+            ShnapExecution e = this.body.exec(functionContext, tracer);
+            if (e.getState() == State.THROWING) {
+                return e;
+            } else if (e.getState() == State.RETURNING) {
+                tracer.popTraceback();
+                return ShnapExecution.normal(e.getValue(), tracer, this.getLocation());
+            } else {
+                tracer.popTraceback();
+                return ShnapExecution.normal(ShnapObject.getVoid(), tracer, this.getLocation());
+            }
+        } catch (StackOverflowError e) {
+            return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.StackOverflowError", "Recursed too deeply",null), tracer, this.getLocation());
         }
     }
 

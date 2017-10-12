@@ -32,7 +32,7 @@ public enum ShnapOperators {
     ADD("+", "add", 2, true, 85, true),
     SUBTRACT("-", "subtract", 2, true, 85, true),
     COMPARE_TO("<>", "compareTo", 2, true, 50, true),
-    LEFT_SHIFT("<<", "shiftLeft", 2, true, 80, true), //shifts MUST come before comparisons, as operators are checked in sequential order
+    LEFT_SHIFT("<<", "shiftLeft", 2, true, 80, true), //shifts MUST come before <, >, as operators are checked in sequential order
     RIGHT_SHIFT(">>", "shiftRight", 2, true, 80, true),
     LESS_THAN_EQUAL_TO("<=", "compareTo", 2, true, true, 75, false), //equal to's MUST come before <, >, as operators are checked in sequential order
     GREATER_THAN_EQUAL_TO(">=", "compareTo", 2, true, true, 75, false),

@@ -10,14 +10,51 @@ iterableStr = $ arr {
 
 isIterator = $ (obj) return: hasFunction(obj,"next",0) && hasFunction(obj,"hasNext",0)
 isIterable = $ (obj) return: hasFunction(obj,"iterator",0) || isIterator(obj)
+
+flatten = $ (val=[],vals...=void) {
+    toProcess = []
+    if vals == void {
+        toProcess = val
+    } else {
+        vals.insert(0, val)
+        toProcess = vals
+    }
+
+    res = import("shap.collections.array_list").arrayList()
+    for e : toProcess {
+        if isIterable(e) {
+            for sub : e {
+                if isIterable(sub) {
+                    res.appendAll(flatten(sub))
+                } else {
+                    res.append(e)
+                }
+            }
+        } else {
+            res.append(e)
+        }
+    }
+
+    return: res
+}
 iterator = $ (obj) {
     if hasFunction(obj,"iterator",0)
         return: obj.iterator()
-    else
+    else if isIterator(obj)
         return: obj
+    else
+        throw: iterationError(str(obj) + " is not iterable")
 }
 
-list = $ (val=[]) return: import("shnap.collections.array_list").arrayList(elements=val)
+list = $ (val=[],vals...=void) {
+    arrayList = import("shnap.collections.array_list").arrayList
+    if vals == void {
+        return: arrayList(elements=val)
+    } else {
+        vals.insert(0, val)
+        return: arrayList(elements=vals)
+    }
+}
 lazyList = $ iter return: import("shnap.collections.lazy_list").lazyList(iter)
 
 len = $ a => a.len()

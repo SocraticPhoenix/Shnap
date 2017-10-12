@@ -1,2 +1,17 @@
-importTo("shnap.math", this)
-println(sievePrimes(100))
+arr = [3, 2, 1]
+a = $ n {
+    if n < len(arr)
+        return: arr[n]
+    else
+        return: a((n-1)-a(n-1))
+}
+
+for range(0,10)
+    println(a(it))
+
+println()
+
+f = $a=>k=$n=>if n<len(a)a[n]else k(n-1-k(n-1))
+for range(0,10) {
+    println(f(arr)(it))
+}

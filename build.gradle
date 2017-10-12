@@ -37,6 +37,7 @@ repositories {
 }
 
 dependencies {
+    library "com.intellij:forms_rt:7.0.3"
     library "org.ow2.asm:asm-debug-all:5.2"
     library "com.github.PlutoPowered:Occurence:master-SNAPSHOT"
     library "com.github.PlutoPowered:PIO:master-SNAPSHOT"

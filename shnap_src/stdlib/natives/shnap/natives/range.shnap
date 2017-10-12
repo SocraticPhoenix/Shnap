@@ -24,7 +24,7 @@ range_internal_exclusive_up = @(min,max,step=1) {
 
     map = $ func,order=1 {
         if order == 1
-            return: import("shnap.collections.mapping").mappingIterator(this, func)
+            return: native::sys.import("shnap.collections.mapping").mappingIterator(this, func)
         else
             return: void
     }
@@ -57,7 +57,7 @@ range_internal_inclusive_up = @(min,max,step=1){
 
     map = $ func,order=1 {
         if order == 1
-            return: import("shnap.collections.mapping").mappingIterator(this, func)
+            return: native::sys.import("shnap.collections.mapping").mappingIterator(this, func)
         else
             return: void
     }
@@ -94,7 +94,7 @@ range_internal_exclusive_down = @(max,min,step=1) {
 
     map = $ func,order=1 {
         if order == 1
-            return: import("shnap.collections.mapping").mappingIterator(this, func)
+            return: native::sys.import("shnap.collections.mapping").mappingIterator(this, func)
         else
             return: void
     }
@@ -128,7 +128,7 @@ range_internal_inclusive_down = @(max,min,step=1) {
 
     map = $ func,order=1 {
         if order == 1
-            return: import("shnap.collections.mapping").mappingIterator(this, func)
+            return: native::sys.import("shnap.collections.mapping").mappingIterator(this, func)
         else
             return: void
     }
@@ -162,7 +162,7 @@ infrange = @(start,step=1) {
 
     map = $ func,order=1 {
         if order == 1
-            return: import("shnap.collections.mapping").mappingIterator(this, func)
+            return: native::sys.import("shnap.collections.mapping").mappingIterator(this, func)
         else
             return: void
     }
