@@ -126,4 +126,8 @@ lazyList = @ iter {
         return: import("shnap.collections.util").deepToString(this)
     }
 
+    asBoolean = $ {
+        return: len(this) != 0
+    }
+
 }

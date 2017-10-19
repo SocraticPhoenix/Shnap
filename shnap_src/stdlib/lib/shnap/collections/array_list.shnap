@@ -148,6 +148,10 @@ arrayList = @(capacity=defaultCapacity,elements=void) {
         return: import("shnap.collections.util").deepToString(this)
     }
 
+    asBoolean = $ {
+        return: len(this) != 0
+    }
+
     if (elements != void) {
         for elements
             append(it)

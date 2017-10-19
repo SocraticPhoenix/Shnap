@@ -32,6 +32,14 @@ factors = $ x {
     return: res
 }
 
+avg = $ val,vals...=void {
+    if vals == void {
+        return: if (val.len() == 0) 0 else sum(val) / val.len()
+    } else {
+        return: sum(val,vals) / (vals.len() + 1)
+    }
+}
+
 sum = $ val,vals...=void {
     if vals == void {
         res = 0
@@ -86,6 +94,18 @@ complex = @(real=0.0,imaginary=0.0) {
     real = dec(real)
     imaginary = dec(imaginary)
 
+    pow = $ n,order=1 {
+        if order == 1 {
+            if int(n) != n
+                throw: runtimeError("Cannot raise complex to a decimal, since DeMoirve's Theorem is not yet implemented")
+
+             res = complex(1,0)
+             for range(n)
+                res *= this
+             return: res
+        }
+    }
+
     add = $ clx,order=1 {
         return: complex(real + clx.real, imaginary + clx.imaginary)
     }
@@ -135,7 +155,12 @@ complex = @(real=0.0,imaginary=0.0) {
     }
 
     asString = $ {
-        return: str(real) + " + " + str(imaginary) + "i"
+        if imaginary == 0
+            return: str(real)
+        if imaginary > 0
+            return: str(real) + " + " + str(imaginary) + "i"
+        if imaginary < 0
+            return: str(real) + " - " + str(-imaginary) + "i"
     }
 
     round = $ n {
@@ -154,6 +179,11 @@ rational = @(numerator=0,denominator=1,reduce=true) {
         common = gcd(numerator,denominator)
         numerator = numerator / common
         denominator = denominator / common
+    }
+
+    pow = $ n,order=1 {
+        if order == 1
+            return: rational(numerator**n, denominator**n)
     }
 
     add = $ rat,order=1 {

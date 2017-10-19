@@ -37,7 +37,7 @@ flatten = $ (val=[],vals...=void) {
 
     return: res
 }
-iterator = $ (obj) {
+asIterator = $ (obj) {
     if hasFunction(obj,"iterator",0)
         return: obj.iterator()
     else if isIterator(obj)

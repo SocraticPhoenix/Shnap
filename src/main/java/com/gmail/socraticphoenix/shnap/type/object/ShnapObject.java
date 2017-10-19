@@ -78,7 +78,7 @@ public class ShnapObject extends AbstractShnapLocatable {
     }
 
     public ShnapObject copyWith(ShnapContext context) {
-        return new ShnapObject(this.loc, context, this.type);
+        return new ShnapObject(this.loc, ShnapContext.childOf(context), this.type);
     }
 
     public ShnapExecution resolve(ShnapEnvironment trc) {

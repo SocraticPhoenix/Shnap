@@ -224,8 +224,13 @@ public class ShnapParser {
     }
 
     public void prepareNextStatement() {
+        int index = stream.index();
         whitespace();
-        stream.consumeAll(';');
+        if (stream.isNext(';')) {
+            stream.consumeAll(';');
+        } else {
+            stream.jumpTo(index);
+        }
     }
 
     public ShnapInstruction nextInst() {
@@ -265,7 +270,6 @@ public class ShnapParser {
                 }
                 primary = simple.getA();
                 sequence.add(Switch.ofA(primary));
-                whitespace();
             } else if (this.isAppendedInvokeNext()) {
                 Pair<List<ShnapInstruction>, Map<String, ShnapInstruction>> params = parseFilledParenthesizedParams();
                 primary = new ShnapInvoke(loc, primary, params.getA(), params.getB());
@@ -716,9 +720,10 @@ public class ShnapParser {
                 clsProperties.add(inst);
             } else {
                 ShnapInstruction inst = nextInst();
-                this.prepareNextStatement();
                 if (inst == null) {
                     break;
+                } else {
+                    this.prepareNextStatement();
                 }
                 instructions.add(inst);
             }
@@ -727,8 +732,8 @@ public class ShnapParser {
                 break;
             }
         }
-        whitespace();
         if (sequence) {
+            whitespace();
             stream.consume('}');
         }
         ShnapInstruction body = new ShnapInstructionSequence(loc2, instructions);

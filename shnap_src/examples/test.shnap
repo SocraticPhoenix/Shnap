@@ -1,17 +1,15 @@
-arr = [3, 2, 1]
-a = $ n {
-    if n < len(arr)
-        return: arr[n]
-    else
-        return: a((n-1)-a(n-1))
-}
+f=$k=>{c=1for i:0..len(k)if k[i]<avg(k[0:i])c=0c}
 
-for range(0,10)
-    println(a(it))
+tests = list([
 
-println()
+[1,4,3,8,6],
+[3],
+[2,12],
+[3,2],
+[4,5,6,4],
+[4,2,1,5,7]
 
-f = $a=>k=$n=>if n<len(a)a[n]else k(n-1-k(n-1))
-for range(0,10) {
-    println(f(arr)(it))
-}
+])
+
+for tests
+    println(f(it))

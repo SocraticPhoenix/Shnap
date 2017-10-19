@@ -213,6 +213,8 @@ public class ShnapFunction extends ShnapObject {
             }
         } catch (StackOverflowError e) {
             return ShnapExecution.throwing(ShnapFactory.makeExceptionObj("shnap.StackOverflowError", "Recursed too deeply",null), tracer, this.getLocation());
+        } catch (Throwable other) {
+            return ShnapExecution.throwing(ShnapFactory.mimicJavaException(other), tracer, this.getLocation());
         }
     }
 

@@ -48,6 +48,8 @@ error = @(name,message,cause=null,parents=null){
 errorCls = $ (name,parents=null) return: $ (message,cause=null) return: error(name,message,cause,parents)
 noimport errorCls
 
+runtimeError = errorCls("shnap.RuntimeError")
+
 ioError = errorCls("shnap.IOError")
 fileNotFoundError = errorCls("shnap.FileNotFoundError", ["shnap.IOError"])
 typeError = errorCls("shnap.TypeError")
