@@ -1,3 +1,5 @@
+math = ? import("shnap.math")
+
 abs = $ obj {return: if(obj < 0) -obj else obj}
 
 gcd = $ a,b {

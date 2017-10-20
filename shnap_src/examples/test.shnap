@@ -1,15 +1,2 @@
-f=$k=>{c=1for i:0..len(k)if k[i]<avg(k[0:i])c=0c}
-
-tests = list([
-
-[1,4,3,8,6],
-[3],
-[2,12],
-[3,2],
-[4,5,6,4],
-[4,2,1,5,7]
-
-])
-
-for tests
-    println(f(it))
+f = $ a,a => a
+println(f(10))

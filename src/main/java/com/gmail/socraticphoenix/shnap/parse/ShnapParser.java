@@ -976,6 +976,7 @@ public class ShnapParser {
                 }
                 throw err("Expected parameter identifier");
             }
+            ShnapLoc nameLoc = this.loc();
             String name = nextVarRef();
             whitespace();
             boolean variable = stream.isNext("...");
@@ -984,6 +985,9 @@ public class ShnapParser {
             }
             ShnapInstruction def = null;
             if (stream.isNext("=>")) {
+                if (params.stream().anyMatch(p -> p.getName().equals(name))) {
+                    throw err(nameLoc, "Duplicate parameter name");
+                }
                 params.add(new ShnapParameter(loc, name, def, variable));
                 break;
             } else if (stream.isNext('=') && !stream.isNext("=>")) {
@@ -992,13 +996,16 @@ public class ShnapParser {
                 whitespace();
                 def = safeNextInst();
             } else if (defaulting) {
-                throw err(loc, "non-default parameter after default parameter");
+                throw err(loc, "Non-default parameter after default parameter");
             } else if (wasVariable && variable) {
-                throw err(loc, "var-args parameter not at end of function");
+                throw err(loc, "Var-args parameter not at end of function");
             }
             wasVariable = variable || wasVariable;
             whitespace();
 
+            if (params.stream().anyMatch(p -> p.getName().equals(name))) {
+                throw err(nameLoc, "Duplicate parameter name");
+            }
             params.add(new ShnapParameter(loc, name, def, variable));
             if (stream.isNext(',')) {
                 stream.next();
