@@ -39,13 +39,12 @@ repositories {
 dependencies {
     library "com.intellij:forms_rt:7.0.3"
     library "org.ow2.asm:asm-debug-all:5.2"
-    library "com.github.PlutoPowered:Occurence:master-SNAPSHOT"
-    library "com.github.PlutoPowered:PIO:master-SNAPSHOT"
-    library "com.github.PlutoPowered:Parse:master-SNAPSHOT"
-    library "com.github.PlutoPowered:Collect:master-SNAPSHOT"
-    library "com.github.PlutoPowered:Conventional:master-SNAPSHOT"
-    library "com.github.PlutoPowered:Mirror:master-SNAPSHOT"
-    library "com.github.ShnapLang:Shnap-Docs:master-SNAPSHOT"
+    library "com.github.SocraticPhoenix:PIO:master-SNAPSHOT"
+    library "com.github.SocraticPhoenix:Parse:master-SNAPSHOT"
+    library "com.github.SocraticPhoenix:Collect:master-SNAPSHOT"
+    library "com.github.SocraticPhoenix:Conventional:master-SNAPSHOT"
+    library "com.github.SocraticPhoenix:Mirror:master-SNAPSHOT"
+    library "com.github.SocraticPhoenix:Shnap-Docs:master-SNAPSHOT"
     library "ch.obermuhlner:big-math:1.2.1"
 }
 //End Repositories and Dependencies
@@ -78,20 +77,6 @@ shadowJar {
 }
 //End Tasks
 
-//Configurations
-configurations.all {
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-}
-//End configurations
-
 apply plugin: 'java'
 
 sourceCompatibility = 1.8
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-}
