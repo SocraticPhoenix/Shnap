@@ -1,2 +1,1 @@
-f = $ a,a => a
-println(f(10))
+println("hello world")

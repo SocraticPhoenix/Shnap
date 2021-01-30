@@ -38,7 +38,6 @@ repositories {
 
 dependencies {
     library "com.intellij:forms_rt:7.0.3"
-    library "org.ow2.asm:asm-debug-all:5.2"
     library "com.github.SocraticPhoenix:PIO:master-SNAPSHOT"
     library "com.github.SocraticPhoenix:Parse:master-SNAPSHOT"
     library "com.github.SocraticPhoenix:Collect:master-SNAPSHOT"
@@ -72,11 +71,6 @@ jar {
 
 shadowJar {
     classifier = "shadow"
-    relocate "org.ow2.asm", "com.gmail.socraticphoenix.shnap.repack.org.ow2.asm"
     relocate "ch.obermuhlner", "com.gmail.socraticphoenix.shnap.repack.ch.obermuhlner"
 }
 //End Tasks
-
-apply plugin: 'java'
-
-sourceCompatibility = 1.8
