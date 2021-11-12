@@ -25,6 +25,7 @@ import com.gmail.socraticphoenix.collect.Items;
 import com.gmail.socraticphoenix.parse.Strings;
 import com.gmail.socraticphoenix.shnap.parse.ShnapLoc;
 import com.gmail.socraticphoenix.shnap.program.context.ShnapExecution;
+import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBigDecimalNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBigIntegerNative;
 import com.gmail.socraticphoenix.shnap.type.natives.num.ShnapBooleanNative;
@@ -249,6 +250,16 @@ public class ShnapStringNative extends ShnapObject implements ShnapJavaBackedNat
                 })))))
         ));
         this.descriptor().applyTo(this);
+    }
+
+    @Override
+    public ShnapExecution asString(ShnapEnvironment tracer) {
+        return ShnapExecution.normal(this, tracer, ShnapLoc.BUILTIN);
+    }
+
+    @Override
+    public String safeAsString(ShnapEnvironment tracer) {
+        return getValue();
     }
 
     public String getValue() {

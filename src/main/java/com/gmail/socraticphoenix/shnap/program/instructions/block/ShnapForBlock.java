@@ -34,6 +34,8 @@ import com.gmail.socraticphoenix.shnap.run.env.ShnapEnvironment;
 import com.gmail.socraticphoenix.shnap.program.instructions.ShnapLiteral;
 import com.gmail.socraticphoenix.shnap.util.ShnapFactory;
 
+import java.math.BigDecimal;
+
 public class ShnapForBlock extends AbstractShnapLocatable implements ShnapInstruction {
     private ShnapInstruction name;
     private String varName;

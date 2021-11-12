@@ -5,7 +5,7 @@ deepToString = $ (iter,seen=arrayList()) {
     if !seen.contains(iter) {
         seen.append(iter)
         for iter {
-            if isIterable(it) {
+            if isIterable(it) && type(it) != "str" {
                 s += deepToString(it,seen)
             } else {
                 s += str(it)
