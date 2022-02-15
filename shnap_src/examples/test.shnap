@@ -1,3 +1,16 @@
-arr = ["1", 2, "3"]
+hackHashMap = @ {
 
-println(iterableStr(arr))
+    set = $ k, v {
+        setField(this, "_" + k, v)
+    }
+
+    get = $ k {
+        return: getField(this, "_" + k)
+    }
+
+}
+
+dict = hackHashMap()
+
+dict["key"] = 5
+println(dict["key"])

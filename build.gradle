@@ -1,66 +1,28 @@
-//Plugins
 plugins {
-    id "net.ltgt.apt" version "0.10"
-    id "com.github.johnrengelman.shadow" version "2.0.1"
+    id 'java'
+    id 'maven-publish'
 }
 
-apply plugin : 'java'
-apply plugin : 'maven'
-apply plugin : 'idea'
-//End Plugins
+sourceCompatibility = 1.16
+targetCompatibility = 1.16
 
-//Program Specific Variables
-def programVersion = "0.0.12"
-def programGroup = "com.gmail.socraticphoenix"
-//End Variables
+group 'honeyroasted.cello'
+version '0.0.12'
 
-//Gradle Variables
-group = "$programGroup"
-version = "$programVersion"
-sourceCompatibility = 1.8
-//End Gradle Variables
-
-configurations {
-    library
-    compile.extendsFrom library
-    runtime.extendsFrom library
-}
-
-//Repositories and Dependencies
 repositories {
     mavenCentral()
-
-    maven {
-        name "jitpack.io"
-        url "https://jitpack.io"
-    }
+    maven { url = 'https://jitpack.io' }
 }
 
 dependencies {
-    library "com.intellij:forms_rt:7.0.3"
-    library "com.github.SocraticPhoenix:PIO:master-SNAPSHOT"
-    library "com.github.SocraticPhoenix:Parse:master-SNAPSHOT"
-    library "com.github.SocraticPhoenix:Collect:master-SNAPSHOT"
-    library "com.github.SocraticPhoenix:Conventional:master-SNAPSHOT"
-    library "com.github.SocraticPhoenix:Mirror:master-SNAPSHOT"
-    library "com.github.SocraticPhoenix:Shnap-Docs:master-SNAPSHOT"
-    library "ch.obermuhlner:big-math:1.2.1"
-}
-//End Repositories and Dependencies
-
-//Tasks
-task sourceJar(type: Jar) {
-    classifier = "source"
-    from sourceSets.main.allJava
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc){
-    classifier = "javadoc"
-    from javadoc.destinationDir
-}
-
-javadoc {
-    destinationDir = file("docs")
+    implementation "com.intellij:forms_rt:7.0.3"
+    implementation "com.github.SocraticPhoenix:PIO:master-SNAPSHOT"
+    implementation "com.github.SocraticPhoenix:Parse:master-SNAPSHOT"
+    implementation "com.github.SocraticPhoenix:Collect:master-SNAPSHOT"
+    implementation "com.github.SocraticPhoenix:Conventional:master-SNAPSHOT"
+    implementation "com.github.SocraticPhoenix:Mirror:master-SNAPSHOT"
+    implementation "com.github.SocraticPhoenix:Shnap-Docs:master-SNAPSHOT"
+    implementation "ch.obermuhlner:big-math:1.2.1"
 }
 
 jar {
@@ -69,8 +31,48 @@ jar {
     }
 }
 
-shadowJar {
-    classifier = "shadow"
-    relocate "ch.obermuhlner", "com.gmail.socraticphoenix.shnap.repack.ch.obermuhlner"
+task ghpagesJavadocs(type: Javadoc) {
+    destinationDir = file("/docs")
+
+    source = sourceSets.main.allJava
+    classpath = configurations.runtimeClasspath
 }
-//End Tasks
+
+task fatJar(type: Jar) {
+    from configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    with jar
+
+    exclude("**/module-info.class")
+
+    classifier("fat")
+
+    manifest {
+        attributes("Main-Class":"com.gmail.socraticphoenix.shnap.run.app.ShnapMain")
+    }
+}
+
+task zipCompiled(type: Zip) {
+    from fileTree("shnap_src/compiled")
+    destinationDirectory = file("src/main/resources/com/gmail/socraticphoenix/shnap/resources")
+    archiveFileName = "shnap.zip"
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+
+    classifier("javadoc")
+}
+
+artifacts {
+    archives javadocJar, fatJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = rootProject.name
+
+            from components.java
+        }
+    }
+}
